@@ -39,7 +39,7 @@ const Header: React.FC<HeaderProps> = ({
             to="/ar" 
             className={`text-sm px-4 py-2 rounded-full transition-all duration-300 ${
               location.pathname === '/ar' 
-                ? 'bg-accent-500 text-white' 
+                ? 'bg-accent text-accent-foreground' 
                 : 'bg-heritage-100 text-heritage-800 hover:bg-heritage-200'
             }`}
           >

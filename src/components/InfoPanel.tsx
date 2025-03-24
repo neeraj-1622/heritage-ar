@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { HistoricalSite } from './SiteCard';
+import { Button } from '@/components/ui/button';
 
 interface InfoPanelProps {
   site: HistoricalSite;
@@ -25,9 +26,9 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ site, className = '' }) => {
         </p>
 
         <div className="pt-2">
-          <button className="button-primary">
+          <Button className="button-primary">
             View in AR
-          </button>
+          </Button>
         </div>
       </div>
     </div>
