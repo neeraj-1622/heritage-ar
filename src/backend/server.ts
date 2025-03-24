@@ -3,7 +3,9 @@ import express from 'express';
 import cors from 'cors';
 import { connectToDatabase, closeDatabaseConnection } from './database/connection';
 import { SiteService } from './services/siteService';
+import { UserService } from './services/userService';
 import { defaultSites } from './data/defaultSites';
+import { authMiddleware } from './middleware/authMiddleware';
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -14,12 +16,14 @@ app.use(express.json());
 
 // Connect to MongoDB
 let siteService: SiteService;
+let userService: UserService;
 
 // Initialize database connection and services
 async function initializeServices() {
   try {
     const { db } = await connectToDatabase();
     siteService = new SiteService(db);
+    userService = new UserService(db);
     
     // Initialize default data if the collection is empty
     await siteService.initializeDefaultData(defaultSites);
@@ -29,7 +33,34 @@ async function initializeServices() {
   }
 }
 
-// Routes
+// Authentication Routes
+app.post('/api/auth/register', async (req, res) => {
+  try {
+    const newUser = await userService.registerUser(req.body);
+    if (!newUser) {
+      return res.status(400).json({ message: 'User already exists with this email' });
+    }
+    res.status(201).json(newUser);
+  } catch (error) {
+    console.error('Error registering user:', error);
+    res.status(500).json({ message: 'Failed to register user' });
+  }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const user = await userService.loginUser(req.body);
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+    res.json(user);
+  } catch (error) {
+    console.error('Error logging in:', error);
+    res.status(500).json({ message: 'Failed to login' });
+  }
+});
+
+// Protected site routes
 app.get('/api/sites', async (req, res) => {
   try {
     const sites = await siteService.getAllSites();
@@ -40,7 +71,8 @@ app.get('/api/sites', async (req, res) => {
   }
 });
 
-app.get('/api/sites/:id', async (req, res) => {
+// Protected routes (require authentication)
+app.get('/api/sites/:id', authMiddleware(userService), async (req, res) => {
   try {
     const site = await siteService.getSiteById(req.params.id);
     if (!site) {
@@ -53,7 +85,7 @@ app.get('/api/sites/:id', async (req, res) => {
   }
 });
 
-app.post('/api/sites', async (req, res) => {
+app.post('/api/sites', authMiddleware(userService), async (req, res) => {
   try {
     const newSite = await siteService.createSite(req.body);
     res.status(201).json(newSite);
@@ -63,7 +95,7 @@ app.post('/api/sites', async (req, res) => {
   }
 });
 
-app.put('/api/sites/:id', async (req, res) => {
+app.put('/api/sites/:id', authMiddleware(userService), async (req, res) => {
   try {
     const updatedSite = await siteService.updateSite(req.params.id, req.body);
     if (!updatedSite) {
@@ -76,7 +108,7 @@ app.put('/api/sites/:id', async (req, res) => {
   }
 });
 
-app.delete('/api/sites/:id', async (req, res) => {
+app.delete('/api/sites/:id', authMiddleware(userService), async (req, res) => {
   try {
     const success = await siteService.deleteSite(req.params.id);
     if (!success) {

@@ -1,14 +1,27 @@
 
-// API client for historical sites
+import { HistoricalSite, HistoricalSiteInput } from '../../backend/models/HistoricalSite';
 
-const BASE_URL = 'http://localhost:5000/api';
+const API_URL = 'http://localhost:5000/api';
 
-export const fetchAllSites = async () => {
+// Helper function to get auth headers
+const getAuthHeaders = () => {
+  const user = localStorage.getItem('heritageAR_user');
+  if (!user) return {};
+  
+  const { token } = JSON.parse(user);
+  return {
+    'Authorization': `Bearer ${token}`
+  };
+};
+
+export const fetchAllSites = async (): Promise<HistoricalSite[]> => {
   try {
-    const response = await fetch(`${BASE_URL}/sites`);
+    const response = await fetch(`${API_URL}/sites`);
+    
     if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+      throw new Error(`Error fetching sites: ${response.statusText}`);
     }
+    
     return await response.json();
   } catch (error) {
     console.error('Error fetching sites:', error);
@@ -16,31 +29,40 @@ export const fetchAllSites = async () => {
   }
 };
 
-export const fetchSiteById = async (id: string) => {
+export const fetchSiteById = async (id: string): Promise<HistoricalSite> => {
   try {
-    const response = await fetch(`${BASE_URL}/sites/${id}`);
+    const response = await fetch(`${API_URL}/sites/${id}`, {
+      headers: {
+        ...getAuthHeaders(),
+      }
+    });
+    
     if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+      throw new Error(`Error fetching site ${id}: ${response.statusText}`);
     }
+    
     return await response.json();
   } catch (error) {
-    console.error(`Error fetching site with ID ${id}:`, error);
+    console.error(`Error fetching site ${id}:`, error);
     throw error;
   }
 };
 
-export const createSite = async (siteData: any) => {
+export const createSite = async (siteData: HistoricalSiteInput): Promise<HistoricalSite> => {
   try {
-    const response = await fetch(`${BASE_URL}/sites`, {
+    const response = await fetch(`${API_URL}/sites`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...getAuthHeaders(),
       },
       body: JSON.stringify(siteData),
     });
+    
     if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+      throw new Error(`Error creating site: ${response.statusText}`);
     }
+    
     return await response.json();
   } catch (error) {
     console.error('Error creating site:', error);
@@ -48,36 +70,42 @@ export const createSite = async (siteData: any) => {
   }
 };
 
-export const updateSite = async (id: string, siteData: any) => {
+export const updateSite = async (id: string, siteData: Partial<HistoricalSiteInput>): Promise<HistoricalSite> => {
   try {
-    const response = await fetch(`${BASE_URL}/sites/${id}`, {
+    const response = await fetch(`${API_URL}/sites/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
+        ...getAuthHeaders(),
       },
       body: JSON.stringify(siteData),
     });
+    
     if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+      throw new Error(`Error updating site ${id}: ${response.statusText}`);
     }
+    
     return await response.json();
   } catch (error) {
-    console.error(`Error updating site with ID ${id}:`, error);
+    console.error(`Error updating site ${id}:`, error);
     throw error;
   }
 };
 
-export const deleteSite = async (id: string) => {
+export const deleteSite = async (id: string): Promise<void> => {
   try {
-    const response = await fetch(`${BASE_URL}/sites/${id}`, {
+    const response = await fetch(`${API_URL}/sites/${id}`, {
       method: 'DELETE',
+      headers: {
+        ...getAuthHeaders(),
+      },
     });
+    
     if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+      throw new Error(`Error deleting site ${id}: ${response.statusText}`);
     }
-    return true;
   } catch (error) {
-    console.error(`Error deleting site with ID ${id}:`, error);
+    console.error(`Error deleting site ${id}:`, error);
     throw error;
   }
 };
