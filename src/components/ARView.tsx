@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { HistoricalSite } from './SiteCard';
 
 interface ARViewProps {
@@ -9,18 +9,29 @@ interface ARViewProps {
 const ARView: React.FC<ARViewProps> = ({ selectedSite }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isModelLoaded, setIsModelLoaded] = useState(false);
+  const [cameraReady, setCameraReady] = useState(false);
+  const [modelPosition, setModelPosition] = useState({ x: 0, y: 0, z: 0 });
+  const [rotation, setRotation] = useState(0);
 
   // Simulate AR loading process
-  React.useEffect(() => {
+  useEffect(() => {
     if (!selectedSite) return;
     
-    const timer1 = setTimeout(() => {
-      setIsLoading(false);
-    }, 2000);
+    // Reset state when site changes
+    setIsLoading(true);
+    setIsModelLoaded(false);
+    setCameraReady(false);
     
+    // Camera initialization
+    const timer1 = setTimeout(() => {
+      setCameraReady(true);
+      setIsLoading(false);
+    }, 1500);
+    
+    // Model loading
     const timer2 = setTimeout(() => {
       setIsModelLoaded(true);
-    }, 3500);
+    }, 3000);
     
     return () => {
       clearTimeout(timer1);
@@ -28,10 +39,40 @@ const ARView: React.FC<ARViewProps> = ({ selectedSite }) => {
     };
   }, [selectedSite]);
 
+  // Simulate model rotation
+  useEffect(() => {
+    if (!isModelLoaded) return;
+    
+    const rotationInterval = setInterval(() => {
+      setRotation(prev => (prev + 0.5) % 360);
+    }, 50);
+    
+    return () => clearInterval(rotationInterval);
+  }, [isModelLoaded]);
+
+  // Mouse movement affects model position slightly
+  useEffect(() => {
+    if (!isModelLoaded) return;
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      const x = (e.clientX / window.innerWidth - 0.5) * 10;
+      const y = (e.clientY / window.innerHeight - 0.5) * 5;
+      
+      setModelPosition({
+        x: x,
+        y: y,
+        z: 0
+      });
+    };
+    
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [isModelLoaded]);
+
   if (!selectedSite) {
     return (
       <div className="relative h-full w-full flex items-center justify-center bg-heritage-100">
-        <div className="text-center p-6">
+        <div className="text-center p-6 animate-fade-in">
           <h3 className="text-xl font-medium text-heritage-800">No Site Selected</h3>
           <p className="mt-2 text-heritage-600">
             Please select a historical site to view in AR
@@ -42,39 +83,89 @@ const ARView: React.FC<ARViewProps> = ({ selectedSite }) => {
   }
 
   return (
-    <div className="relative h-full w-full bg-black">
+    <div className="relative h-full w-full bg-black overflow-hidden">
       {/* Simulated camera view */}
       <div className="absolute inset-0 z-0">
         <img 
           src="https://images.unsplash.com/photo-1581591524425-c7e0978865fc?q=80&w=2070" 
           alt="Camera view" 
-          className="h-full w-full object-cover opacity-70"
+          className={`h-full w-full object-cover transition-opacity duration-1000 ${
+            cameraReady ? 'opacity-90' : 'opacity-0'
+          }`}
         />
+        
+        {/* Grid overlay - simulates AR floor detection */}
+        {cameraReady && !isModelLoaded && (
+          <div className="absolute inset-0 z-5 animate-fade-in">
+            <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/20 to-transparent"></div>
+            <div 
+              className="absolute inset-x-0 bottom-0 h-1/3 transform-gpu perspective-1000"
+              style={{
+                backgroundImage: `repeating-linear-gradient(0deg, rgba(255,255,255,0.3) 0px, transparent 1px, transparent 20px),
+                                repeating-linear-gradient(90deg, rgba(255,255,255,0.3) 0px, transparent 1px, transparent 20px)`,
+                transform: 'rotateX(60deg)',
+                transformOrigin: 'bottom',
+                backgroundSize: '20px 20px',
+              }}
+            ></div>
+          </div>
+        )}
       </div>
 
-      {/* AR overlay */}
+      {/* AR scene elements */}
       {isModelLoaded && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center animate-fade-in">
-          <img 
-            src={selectedSite.imageUrl} 
-            alt={`AR model of ${selectedSite.name}`} 
-            className="h-4/5 object-contain opacity-90"
-          />
+        <div className="absolute inset-0 z-10 flex items-center justify-center perspective preserve-3d animate-fade-in">
+          {/* Ground shadow */}
+          <div 
+            className="absolute w-60 h-20 rounded-full bg-black/30 blur-sm transform-gpu"
+            style={{ 
+              transform: `translateX(${modelPosition.x}px) translateY(120px) rotateX(60deg)`,
+            }}
+          ></div>
+          
+          {/* 3D model */}
+          <div 
+            className="relative transform-gpu"
+            style={{ 
+              transform: `translateX(${modelPosition.x}px) translateY(${modelPosition.y}px) rotateY(${rotation}deg)`,
+              transition: 'transform 0.1s ease-out',
+            }}
+          >
+            <img 
+              src={selectedSite.imageUrl} 
+              alt={`AR model of ${selectedSite.name}`} 
+              className="h-96 object-contain"
+              style={{
+                filter: 'drop-shadow(0 10px 8px rgba(0, 0, 0, 0.4))',
+              }}
+            />
+            
+            {/* Interactive hot spots */}
+            <div className="absolute top-1/4 left-1/4 w-6 h-6 rounded-full bg-accent/80 animate-pulse-slow flex items-center justify-center" 
+                 style={{ transform: `rotateY(${-rotation}deg)` }}>
+              <div className="w-3 h-3 rounded-full bg-white"></div>
+            </div>
+            
+            <div className="absolute bottom-1/3 right-1/4 w-6 h-6 rounded-full bg-accent/80 animate-pulse-slow flex items-center justify-center"
+                 style={{ transform: `rotateY(${-rotation}deg)` }}>
+              <div className="w-3 h-3 rounded-full bg-white"></div>
+            </div>
+          </div>
         </div>
       )}
 
       {/* Loading indicators */}
       {isLoading && (
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm">
           <div className="h-16 w-16 rounded-full border-4 border-white/20 border-t-white animate-spin"></div>
           <p className="mt-4 text-white text-lg">Initializing AR environment...</p>
         </div>
       )}
 
-      {!isLoading && !isModelLoaded && (
+      {cameraReady && !isModelLoaded && (
         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center">
-          <div className="p-6 rounded-2xl glass-panel max-w-xs text-center">
-            <p className="text-heritage-800">
+          <div className="p-6 rounded-2xl glass-panel max-w-xs text-center animate-float">
+            <p className="text-white">
               Point your camera at a flat surface to place the {selectedSite.name} model
             </p>
           </div>
@@ -82,12 +173,23 @@ const ARView: React.FC<ARViewProps> = ({ selectedSite }) => {
       )}
 
       {/* Controls overlay */}
-      <div className="absolute bottom-0 left-0 right-0 z-30 p-4">
-        <div className="glass-panel rounded-2xl p-4 max-w-lg mx-auto">
-          <h3 className="text-lg font-medium text-heritage-900">{selectedSite.name}</h3>
-          <p className="text-sm text-heritage-700 mt-1">{selectedSite.shortDescription}</p>
+      {isModelLoaded && (
+        <div className="absolute bottom-20 left-0 right-0 z-30 p-4">
+          <div className="glass-panel rounded-2xl p-4 max-w-lg mx-auto animate-slide-up">
+            <h3 className="text-lg font-medium text-white">{selectedSite.name}</h3>
+            <p className="text-sm text-white/80 mt-1">{selectedSite.shortDescription}</p>
+            
+            <div className="mt-3 flex space-x-2">
+              <button className="px-3 py-1.5 text-xs font-medium rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors">
+                More Info
+              </button>
+              <button className="px-3 py-1.5 text-xs font-medium rounded-full bg-accent/80 text-white hover:bg-accent transition-colors">
+                Next Site
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
