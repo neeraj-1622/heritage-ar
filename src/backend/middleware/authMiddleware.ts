@@ -3,6 +3,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { UserService } from '../services/userService';
 
+// Extend the Request interface to include user property
 interface AuthRequest extends Request {
   user?: {
     id: string;
@@ -11,7 +12,7 @@ interface AuthRequest extends Request {
 }
 
 export const authMiddleware = (userService: UserService) => {
-  return async (req: AuthRequest, res: Response, next: NextFunction) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
     try {
       const authHeader = req.headers.authorization;
       
@@ -26,7 +27,8 @@ export const authMiddleware = (userService: UserService) => {
         return res.status(401).json({ message: 'Invalid or expired token' });
       }
       
-      req.user = { id: user.id, email: user.email };
+      // Cast to AuthRequest to add user property
+      (req as AuthRequest).user = { id: user.id, email: user.email };
       next();
     } catch (error) {
       console.error('Authentication error:', error);
