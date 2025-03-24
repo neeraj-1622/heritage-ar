@@ -1,69 +1,111 @@
-# Welcome to your Lovable project
 
-## Project info
+# HeritageAR: Reconstructing History in Augmented Reality
 
-**URL**: https://lovable.dev/projects/dcc29b3a-ae0a-407d-8bdf-c1af2a75ed70
+This project allows users to explore historical sites in augmented reality. Users can browse a gallery of historical sites, view detailed information, and experience 3D reconstructions in AR.
 
-## How can I edit this code?
+## Project Structure
 
-There are several ways of editing your application.
+The project is organized into frontend and backend folders:
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/dcc29b3a-ae0a-407d-8bdf-c1af2a75ed70) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+HeritageAR/
+├── src/
+│   ├── frontend/            # Frontend React components and API clients
+│   │   └── api/
+│   │       └── sitesApi.ts  # API client for historical sites
+│   ├── backend/             # Backend Express.js server and MongoDB integration
+│   │   ├── database/        # Database connection and utilities
+│   │   ├── models/          # Data models and types
+│   │   ├── repositories/    # Data access layer
+│   │   ├── services/        # Business logic
+│   │   ├── data/            # Default/seed data
+│   │   ├── scripts/         # Utility scripts
+│   │   └── server.ts        # Express server entry point
+│   ├── components/          # Shared React components
+│   └── pages/               # Page components
 ```
 
-**Edit a file directly in GitHub**
+## Technologies Used
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+- **Frontend**: React, React Router, TanStack Query, Tailwind CSS
+- **Backend**: Express.js, MongoDB
+- **AR Technology**: Web-based AR (planned integration)
 
-**Use GitHub Codespaces**
+## Getting Started
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Prerequisites
 
-## What technologies are used for this project?
+- Node.js (v16 or higher)
+- MongoDB (local installation or MongoDB Atlas account)
 
-This project is built with .
+### Installation
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+1. Clone the repository:
+   ```
+   git clone https://github.com/your-username/heritageAR.git
+   cd heritageAR
+   ```
 
-## How can I deploy this project?
+2. Install dependencies:
+   ```
+   npm install
+   ```
 
-Simply open [Lovable](https://lovable.dev/projects/dcc29b3a-ae0a-407d-8bdf-c1af2a75ed70) and click on Share -> Publish.
+3. Start MongoDB:
+   ```
+   # If using local MongoDB
+   mongod --dbpath=/data
+   ```
 
-## I want to use a custom domain - is that possible?
+4. Start the backend server:
+   ```
+   cd src/backend
+   npm run dev
+   ```
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+5. In a new terminal, start the frontend:
+   ```
+   npm run dev
+   ```
+
+6. Open your browser and navigate to:
+   ```
+   http://localhost:5173
+   ```
+
+## Development
+
+### Seeding the Database
+
+To populate the database with sample data:
+
+```
+cd src/backend
+npm run seed
+```
+
+### API Endpoints
+
+The backend provides the following API endpoints:
+
+- `GET /api/sites` - Get all historical sites
+- `GET /api/sites/:id` - Get a specific historical site by ID
+- `POST /api/sites` - Create a new historical site
+- `PUT /api/sites/:id` - Update an existing historical site
+- `DELETE /api/sites/:id` - Delete a historical site
+
+## Features
+
+- Browse a gallery of historical sites
+- View detailed information about each site
+- Experience 3D reconstructions in augmented reality (coming soon)
+- Admin panel for managing historical sites data (planned)
+
+## License
+
+MIT
+
+## Acknowledgments
+
+- Images sourced from Unsplash
+- 3D models sourced from various public domain repositories

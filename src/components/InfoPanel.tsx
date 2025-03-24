@@ -26,7 +26,8 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ site, className = '' }) => {
         </p>
 
         <div className="pt-2">
-          <Button className="button-primary">
+          <Button className="px-6 py-2 bg-heritage-500 text-white rounded-full transition-all duration-300 
+                hover:bg-heritage-600 active:scale-95 focus:outline-none focus:ring-2 focus:ring-heritage-500 focus:ring-opacity-50">
             View in AR
           </Button>
         </div>
