@@ -19,17 +19,19 @@ const SiteDetail: React.FC = () => {
     queryKey: ['site', id],
     queryFn: () => fetchSiteById(id || ''),
     enabled: !!id,
-    retry: 2,
-    onSettled: (data, error) => {
-      if (error) {
-        toast({
-          title: "Error loading site",
-          description: "Could not load site details. Please try again later.",
-          variant: "destructive",
-        });
-      }
-    }
+    retry: 2
   });
+
+  // Show error toast if there's an error
+  React.useEffect(() => {
+    if (error) {
+      toast({
+        title: "Error loading site",
+        description: "Could not load site details. Please try again later.",
+        variant: "destructive",
+      });
+    }
+  }, [error]);
 
   const handleARExperience = () => {
     navigate(`/ar?siteId=${id}`);
