@@ -42,7 +42,7 @@ const AnimatedHeader: React.FC<HeaderProps> = ({ title, showBackButton = false }
     <header 
       className={`fixed w-full top-0 left-0 z-50 transition-all duration-300 ${
         isScrolled 
-          ? 'py-2 bg-white/80 backdrop-blur-lg shadow-sm' 
+          ? 'py-2 bg-heritage-900/90 backdrop-blur-lg shadow-md' 
           : 'py-4 bg-transparent'
       }`}
     >
@@ -51,7 +51,7 @@ const AnimatedHeader: React.FC<HeaderProps> = ({ title, showBackButton = false }
           {showBackButton && (
             <button
               onClick={() => navigate(-1)}
-              className="mr-3 p-2 rounded-full text-heritage-700 hover:text-heritage-900 hover:bg-heritage-100 transition-colors"
+              className="mr-3 p-2 rounded-full text-white hover:text-accent hover:bg-heritage-800/50 transition-colors"
               aria-label="Go back"
             >
               <ChevronLeft className="h-5 w-5" />
@@ -63,7 +63,7 @@ const AnimatedHeader: React.FC<HeaderProps> = ({ title, showBackButton = false }
               <div className="absolute inset-0 bg-gradient-to-tr from-accent to-accent-400 rounded-md animate-pulse-slow"></div>
               <span className="relative font-bold text-white z-10">AR</span>
             </div>
-            <h1 className={`font-bold ${title ? 'text-lg' : 'text-xl'} text-heritage-900`}>
+            <h1 className={`font-bold ${title ? 'text-lg' : 'text-xl'} text-white`}>
               {title || "HeritageAR"}
             </h1>
           </Link>
@@ -72,29 +72,35 @@ const AnimatedHeader: React.FC<HeaderProps> = ({ title, showBackButton = false }
         <div className="hidden md:flex items-center space-x-6">
           <Link 
             to="/" 
-            className="text-heritage-700 hover:text-heritage-900 hover-lift relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:scale-x-0 after:bg-accent hover:after:scale-x-100 after:transition-transform after:origin-left"
+            className="text-white transition-all duration-300 relative rainbow-hover-effect"
           >
             Home
           </Link>
           <Link 
             to="/ar" 
-            className="text-heritage-700 hover:text-heritage-900 hover-lift relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:scale-x-0 after:bg-accent hover:after:scale-x-100 after:transition-transform after:origin-left"
+            className="text-white transition-all duration-300 relative rainbow-hover-effect"
           >
             AR Experience
+          </Link>
+          <Link 
+            to="/contact" 
+            className="text-white transition-all duration-300 relative rainbow-hover-effect"
+          >
+            Contact
           </Link>
           
           {isAuthenticated ? (
             <div className="relative group">
-              <button className="flex items-center space-x-1 text-heritage-700 hover:text-heritage-900 hover-lift">
+              <button className="flex items-center space-x-1 text-white hover:text-accent">
                 <User className="h-4 w-4" />
                 <span>Account</span>
               </button>
               
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg overflow-hidden z-20 opacity-0 translate-y-2 invisible group-hover:opacity-100 group-hover:translate-y-0 group-hover:visible transition-all duration-200">
+              <div className="absolute right-0 mt-2 w-48 bg-heritage-800 rounded-md shadow-lg overflow-hidden z-20 opacity-0 translate-y-2 invisible group-hover:opacity-100 group-hover:translate-y-0 group-hover:visible transition-all duration-200">
                 <div className="py-1">
                   <button
                     onClick={handleLogout}
-                    className="flex items-center w-full px-4 py-2 text-sm text-heritage-700 hover:text-heritage-900 hover:bg-heritage-50"
+                    className="flex items-center w-full px-4 py-2 text-sm text-heritage-300 hover:text-white hover:bg-heritage-700"
                   >
                     <LogOut className="h-4 w-4 mr-2" />
                     Sign out
@@ -117,34 +123,41 @@ const AnimatedHeader: React.FC<HeaderProps> = ({ title, showBackButton = false }
           className="p-2 rounded-md md:hidden"
           aria-label="Toggle menu"
         >
-          {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          {isMenuOpen ? <X className="h-6 w-6 text-white" /> : <Menu className="h-6 w-6 text-white" />}
         </button>
       </div>
       
       {/* Mobile menu */}
-      <div className={`md:hidden absolute w-full bg-white shadow-md transition-all duration-300 ease-in-out ${
+      <div className={`md:hidden absolute w-full bg-heritage-800/95 backdrop-blur-md shadow-md transition-all duration-300 ease-in-out ${
         isMenuOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0 pointer-events-none'
       } overflow-hidden`}>
         <div className="container mx-auto px-4 py-4 space-y-3">
           <Link 
             to="/" 
-            className="block py-2 text-heritage-700 hover:text-heritage-900"
+            className="block py-2 text-white hover:text-accent hover:pl-2 transition-all"
             onClick={() => setIsMenuOpen(false)}
           >
             Home
           </Link>
           <Link 
             to="/ar" 
-            className="block py-2 text-heritage-700 hover:text-heritage-900"
+            className="block py-2 text-white hover:text-accent hover:pl-2 transition-all"
             onClick={() => setIsMenuOpen(false)}
           >
             AR Experience
+          </Link>
+          <Link 
+            to="/contact" 
+            className="block py-2 text-white hover:text-accent hover:pl-2 transition-all"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            Contact
           </Link>
           
           {isAuthenticated ? (
             <button
               onClick={handleLogout}
-              className="flex items-center w-full py-2 text-heritage-700 hover:text-heritage-900"
+              className="flex items-center w-full py-2 text-white hover:text-accent hover:pl-2 transition-all"
             >
               <LogOut className="h-4 w-4 mr-2" />
               Sign out
@@ -152,7 +165,7 @@ const AnimatedHeader: React.FC<HeaderProps> = ({ title, showBackButton = false }
           ) : (
             <Link 
               to="/login" 
-              className="block py-2 text-heritage-700 hover:text-heritage-900"
+              className="block py-2 text-white hover:text-accent hover:pl-2 transition-all"
               onClick={() => setIsMenuOpen(false)}
             >
               Sign in
