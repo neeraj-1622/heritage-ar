@@ -138,7 +138,7 @@ const LoadingAnimation: React.FC<LoadingAnimationProps> = ({ onComplete }) => {
         `}
       </style>
       
-      <div className="relative mb-12">
+      <div className="relative mb-12 flex items-center justify-center">
         <div className="portal-ring"></div>
         
         {/* Orbiting elements */}
@@ -194,7 +194,7 @@ const LoadingAnimation: React.FC<LoadingAnimationProps> = ({ onComplete }) => {
       </motion.div>
       
       <motion.div 
-        className="mt-2 text-heritage-400 text-sm"
+        className="mt-2 text-white text-sm"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8, delay: 1 }}

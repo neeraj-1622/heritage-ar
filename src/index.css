@@ -74,6 +74,18 @@
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
   }
+
+  p, h1, h2, h3, h4, h5, h6, span, a, div, label {
+    @apply text-white;
+  }
+
+  .text-heritage-100, .text-heritage-200, .text-heritage-300 {
+    @apply text-white/90;
+  }
+
+  .text-heritage-400, .text-heritage-500 {
+    @apply text-white/80;
+  }
 }
 
 @layer components {
@@ -163,6 +175,7 @@
     );
     transform-origin: bottom right;
     transition: transform 0.3s ease-out;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
   }
   
   .rainbow-hover-effect:hover::after {

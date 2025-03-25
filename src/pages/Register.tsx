@@ -67,7 +67,7 @@ const Register = () => {
                   <FormItem>
                     <FormLabel className="text-white">Username</FormLabel>
                     <FormControl>
-                      <Input placeholder="username" {...field} className="bg-heritage-800 text-white border-heritage-700" />
+                      <Input placeholder="username" {...field} className="bg-heritage-800/70 text-white border-heritage-700 placeholder:text-heritage-400" />
                     </FormControl>
                     <FormMessage className="text-red-300" />
                   </FormItem>
@@ -81,7 +81,7 @@ const Register = () => {
                   <FormItem>
                     <FormLabel className="text-white">Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="your.email@example.com" {...field} className="bg-heritage-800 text-white border-heritage-700" />
+                      <Input placeholder="your.email@example.com" {...field} className="bg-heritage-800/70 text-white border-heritage-700 placeholder:text-heritage-400" />
                     </FormControl>
                     <FormMessage className="text-red-300" />
                   </FormItem>
@@ -95,7 +95,7 @@ const Register = () => {
                   <FormItem>
                     <FormLabel className="text-white">Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} className="bg-heritage-800 text-white border-heritage-700" />
+                      <Input type="password" placeholder="••••••••" {...field} className="bg-heritage-800/70 text-white border-heritage-700 placeholder:text-heritage-400" />
                     </FormControl>
                     <FormMessage className="text-red-300" />
                   </FormItem>
@@ -109,7 +109,7 @@ const Register = () => {
                   <FormItem>
                     <FormLabel className="text-white">Confirm Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} className="bg-heritage-800 text-white border-heritage-700" />
+                      <Input type="password" placeholder="••••••••" {...field} className="bg-heritage-800/70 text-white border-heritage-700 placeholder:text-heritage-400" />
                     </FormControl>
                     <FormMessage className="text-red-300" />
                   </FormItem>
@@ -118,7 +118,7 @@ const Register = () => {
               
               <Button 
                 type="submit" 
-                className="w-full bg-accent hover:bg-accent-600" 
+                className="w-full bg-accent hover:bg-accent-600 text-white" 
                 disabled={loading}
               >
                 {loading ? 'Creating account...' : 'Register'}
@@ -126,7 +126,7 @@ const Register = () => {
             </form>
           </Form>
           
-          <div className="mt-6 text-center text-sm text-heritage-300">
+          <div className="mt-6 text-center text-sm text-white">
             Already have an account?{' '}
             <Link to="/login" className="text-accent font-medium hover:underline">
               Login

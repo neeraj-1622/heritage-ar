@@ -34,7 +34,7 @@ const queryClient = new QueryClient({
 const pageVariants = {
   initial: {
     opacity: 0,
-    y: 20
+    y: 10
   },
   in: {
     opacity: 1,
@@ -42,14 +42,14 @@ const pageVariants = {
   },
   out: {
     opacity: 0,
-    y: -20
+    y: -10
   }
 };
 
 const pageTransition = {
   type: "tween",
   ease: "anticipate",
-  duration: 0.4
+  duration: 0.3
 };
 
 // AnimationLayout component to handle page transitions
@@ -68,17 +68,7 @@ const AnimationLayout = () => {
       document.head.appendChild(newLink);
     }
   }, []);
-  
-  // Set toast duration to 2 seconds
-  useEffect(() => {
-    const toastElements = document.querySelectorAll('[data-sonner-toast]');
-    toastElements.forEach(el => {
-      setTimeout(() => {
-        (el as HTMLElement).style.display = 'none';
-      }, 2000);
-    });
-  }, [location.pathname]);
-  
+
   return (
     <AnimatePresence mode="wait">
       <motion.div

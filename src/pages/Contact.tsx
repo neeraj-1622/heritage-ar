@@ -66,12 +66,12 @@ const Contact: React.FC = () => {
         <div className="container mx-auto px-4">
           <motion.div className="max-w-3xl mx-auto mb-12 text-center" variants={itemVariants}>
             <div className="flex justify-center mb-6">
-              <div className="p-3 rounded-full bg-accent/20 text-accent">
+              <div className="p-3 rounded-full bg-accent/20 text-accent inline-flex items-center justify-center">
                 <Mail className="h-8 w-8" />
               </div>
             </div>
             
-            <h1 className="text-4xl font-bold text-heritage-100 mb-4">Get in Touch</h1>
+            <h1 className="text-4xl font-bold text-white mb-4">Get in Touch</h1>
             <p className="text-heritage-300 text-lg">
               Have questions about HeritageAR? Want to collaborate with us? 
               We'd love to hear from you!
@@ -81,7 +81,7 @@ const Contact: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
             <motion.div className="lg:col-span-1" variants={itemVariants}>
               <div className="glass-panel rounded-2xl p-6">
-                <h2 className="text-2xl font-bold text-heritage-100 mb-6">Contact Information</h2>
+                <h2 className="text-2xl font-bold text-white mb-6">Contact Information</h2>
                 
                 <div className="space-y-6">
                   <div className="flex items-start">
@@ -89,8 +89,8 @@ const Contact: React.FC = () => {
                       <Mail className="h-5 w-5 text-accent" />
                     </div>
                     <div>
-                      <p className="text-heritage-400 text-sm">Email</p>
-                      <p className="text-heritage-100">contact@heritagear.example.com</p>
+                      <p className="text-heritage-300 text-sm">Email</p>
+                      <p className="text-white">contact@heritagear.example.com</p>
                     </div>
                   </div>
                   
@@ -99,8 +99,8 @@ const Contact: React.FC = () => {
                       <Phone className="h-5 w-5 text-accent" />
                     </div>
                     <div>
-                      <p className="text-heritage-400 text-sm">Phone</p>
-                      <p className="text-heritage-100">+1 (555) 123-4567</p>
+                      <p className="text-heritage-300 text-sm">Phone</p>
+                      <p className="text-white">+1 (555) 123-4567</p>
                     </div>
                   </div>
                   
@@ -109,15 +109,15 @@ const Contact: React.FC = () => {
                       <MapPin className="h-5 w-5 text-accent" />
                     </div>
                     <div>
-                      <p className="text-heritage-400 text-sm">Address</p>
-                      <p className="text-heritage-100">123 Heritage Street</p>
-                      <p className="text-heritage-100">Tech City, CA 94107</p>
+                      <p className="text-heritage-300 text-sm">Address</p>
+                      <p className="text-white">123 Heritage Street</p>
+                      <p className="text-white">Tech City, CA 94107</p>
                     </div>
                   </div>
                 </div>
                 
                 <div className="mt-8 pt-6 border-t border-heritage-800">
-                  <h3 className="text-xl font-medium text-heritage-100 mb-4">Office Hours</h3>
+                  <h3 className="text-xl font-medium text-white mb-4">Office Hours</h3>
                   <p className="text-heritage-300">Monday - Friday: 9AM - 5PM</p>
                   <p className="text-heritage-300">Saturday - Sunday: Closed</p>
                 </div>
@@ -126,12 +126,12 @@ const Contact: React.FC = () => {
             
             <motion.div className="lg:col-span-2" variants={itemVariants}>
               <div className="glass-panel rounded-2xl p-6">
-                <h2 className="text-2xl font-bold text-heritage-100 mb-6">Send a Message</h2>
+                <h2 className="text-2xl font-bold text-white mb-6">Send a Message</h2>
                 
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label htmlFor="name" className="block text-sm font-medium text-heritage-300 mb-1">
+                      <label htmlFor="name" className="block text-sm font-medium text-white mb-1">
                         Your Name
                       </label>
                       <Input 
@@ -139,13 +139,13 @@ const Contact: React.FC = () => {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         required
-                        className="bg-heritage-800/50 border-heritage-700 text-heritage-100"
+                        className="bg-heritage-800/50 border-heritage-700 text-white placeholder:text-heritage-400"
                         placeholder="John Doe"
                       />
                     </div>
                     
                     <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-heritage-300 mb-1">
+                      <label htmlFor="email" className="block text-sm font-medium text-white mb-1">
                         Email Address
                       </label>
                       <Input 
@@ -154,14 +154,14 @@ const Contact: React.FC = () => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
-                        className="bg-heritage-800/50 border-heritage-700 text-heritage-100"
+                        className="bg-heritage-800/50 border-heritage-700 text-white placeholder:text-heritage-400"
                         placeholder="john@example.com"
                       />
                     </div>
                   </div>
                   
                   <div>
-                    <label htmlFor="subject" className="block text-sm font-medium text-heritage-300 mb-1">
+                    <label htmlFor="subject" className="block text-sm font-medium text-white mb-1">
                       Subject
                     </label>
                     <Input 
@@ -169,13 +169,13 @@ const Contact: React.FC = () => {
                       value={subject}
                       onChange={(e) => setSubject(e.target.value)}
                       required
-                      className="bg-heritage-800/50 border-heritage-700 text-heritage-100"
+                      className="bg-heritage-800/50 border-heritage-700 text-white placeholder:text-heritage-400"
                       placeholder="How can we help you?"
                     />
                   </div>
                   
                   <div>
-                    <label htmlFor="message" className="block text-sm font-medium text-heritage-300 mb-1">
+                    <label htmlFor="message" className="block text-sm font-medium text-white mb-1">
                       Message
                     </label>
                     <Textarea 
@@ -183,7 +183,7 @@ const Contact: React.FC = () => {
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
                       required
-                      className="bg-heritage-800/50 border-heritage-700 text-heritage-100 min-h-[150px]"
+                      className="bg-heritage-800/50 border-heritage-700 text-white placeholder:text-heritage-400 min-h-[150px]"
                       placeholder="Tell us more about your inquiry..."
                     />
                   </div>

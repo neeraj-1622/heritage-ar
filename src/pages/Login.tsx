@@ -60,7 +60,7 @@ const Login = () => {
                   <FormItem>
                     <FormLabel className="text-white">Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="your.email@example.com" {...field} className="bg-heritage-800 text-white border-heritage-700" />
+                      <Input placeholder="your.email@example.com" {...field} className="bg-heritage-800/70 text-white border-heritage-700 placeholder:text-heritage-400" />
                     </FormControl>
                     <FormMessage className="text-red-300" />
                   </FormItem>
@@ -74,7 +74,7 @@ const Login = () => {
                   <FormItem>
                     <FormLabel className="text-white">Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} className="bg-heritage-800 text-white border-heritage-700" />
+                      <Input type="password" placeholder="••••••••" {...field} className="bg-heritage-800/70 text-white border-heritage-700 placeholder:text-heritage-400" />
                     </FormControl>
                     <FormMessage className="text-red-300" />
                   </FormItem>
@@ -83,7 +83,7 @@ const Login = () => {
               
               <Button 
                 type="submit" 
-                className="w-full bg-accent hover:bg-accent-600" 
+                className="w-full bg-accent hover:bg-accent-600 text-white" 
                 disabled={loading}
               >
                 {loading ? 'Logging in...' : 'Login'}
@@ -91,7 +91,7 @@ const Login = () => {
             </form>
           </Form>
           
-          <div className="mt-6 text-center text-sm text-heritage-300">
+          <div className="mt-6 text-center text-sm text-white">
             Don't have an account?{' '}
             <Link to="/register" className="text-accent font-medium hover:underline">
               Register
