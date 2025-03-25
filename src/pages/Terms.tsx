@@ -1,107 +1,150 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
+import AnimatedHeader from '../components/AnimatedHeader';
 import { motion } from 'framer-motion';
-import Header from '@/components/Header';
+import { FileText, Shield, AlertTriangle, Copyright, AlertCircle } from 'lucide-react';
 
 const Terms: React.FC = () => {
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
-  const sections = [
-    {
-      title: "1. Acceptance of Terms",
-      content: "By accessing and using HeritageAR, you accept and agree to be bound by the terms and provisions of this agreement. If you do not agree to these terms, please do not use our application."
-    },
-    {
-      title: "2. Changes to Terms",
-      content: "HeritageAR reserves the right to modify these terms at any time. We will provide notice of any significant changes. Your continued use of the application after such modifications will constitute your acknowledgment of the modified terms."
-    },
-    {
-      title: "3. Using Our Services",
-      content: "You must follow any policies made available to you within the HeritageAR services. You may only use our services as permitted by law. We may suspend or stop providing our services to you if you do not comply with our terms or policies or if we are investigating suspected misconduct."
-    },
-    {
-      title: "4. AR Content",
-      content: "HeritageAR provides augmented reality content related to historical sites and artifacts. This content is provided for educational and entertainment purposes only. While we strive for accuracy, we cannot guarantee that all historical information is completely accurate or up to date."
-    },
-    {
-      title: "5. User Safety",
-      content: "When using AR features, please be aware of your surroundings. Do not use the AR features while driving, operating heavy machinery, or in any situation where your attention should be fully on your environment. HeritageAR is not responsible for any accidents or injuries resulting from inattention while using our application."
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        when: "beforeChildren",
+        staggerChildren: 0.1
+      }
     }
-  ];
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { type: "spring", stiffness: 100 }
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-heritage-950 to-heritage-900 text-heritage-100">
-      <Header title="Terms of Service" showBackButton />
-
-      <motion.div 
-        className="container mx-auto px-4 py-24 md:py-32"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
+    <div className="min-h-screen flex flex-col">
+      <AnimatedHeader title="Terms of Service" showBackButton />
+      
+      <motion.main 
+        className="flex-1 pt-24 pb-12"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
       >
-        <motion.h1 
-          className="text-4xl md:text-5xl font-bold text-center mb-12 text-gradient"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-        >
-          Terms of Service
-        </motion.h1>
-
-        <motion.div 
-          className="max-w-3xl mx-auto glass-panel rounded-2xl p-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-        >
-          <div className="space-y-8">
-            {sections.map((section, index) => (
-              <motion.section 
-                key={index}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 + (index * 0.1), duration: 0.5 }}
-              >
-                <h2 className="text-xl font-semibold mb-3 text-accent">{section.title}</h2>
-                <p className="text-heritage-300 leading-relaxed">{section.content}</p>
-              </motion.section>
-            ))}
-
-            <motion.section
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 + (sections.length * 0.1), duration: 0.5 }}
-            >
-              <h2 className="text-xl font-semibold mb-3 text-accent">6. Intellectual Property</h2>
-              <p className="text-heritage-300 leading-relaxed">
-                The HeritageAR application, including all content, features, and functionality, is owned by HeritageAR and is protected by international copyright, trademark, patent, trade secret, and other intellectual property laws.
+        <div className="container mx-auto px-4">
+          <motion.div className="max-w-3xl mx-auto mb-10" variants={itemVariants}>
+            <div className="flex justify-center mb-8">
+              <div className="p-4 rounded-full bg-heritage-800 text-accent">
+                <FileText className="h-12 w-12" />
+              </div>
+            </div>
+            
+            <h1 className="text-4xl font-bold text-center text-heritage-100 mb-4">Terms of Service</h1>
+            <p className="text-heritage-300 text-center">
+              Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+            </p>
+          </motion.div>
+          
+          <div className="max-w-3xl mx-auto glass-panel rounded-2xl p-8">
+            <motion.div className="mb-8" variants={itemVariants}>
+              <div className="flex items-center mb-4">
+                <FileText className="h-6 w-6 text-accent mr-3" />
+                <h2 className="text-2xl font-bold text-heritage-100">Agreement to Terms</h2>
+              </div>
+              <p className="text-heritage-300 mb-4">
+                By accessing or using the HeritageAR website and mobile application (the "Service"), you agree to be bound 
+                by these Terms of Service and all applicable laws and regulations. If you do not agree with any of these terms, 
+                you are prohibited from using or accessing the Service.
               </p>
-            </motion.section>
-
-            <motion.section
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 + ((sections.length + 1) * 0.1), duration: 0.5 }}
-            >
-              <h2 className="text-xl font-semibold mb-3 text-accent">7. Contact Us</h2>
-              <p className="text-heritage-300 leading-relaxed">
+              <p className="text-heritage-300">
+                We may modify these Terms at any time. We will notify you of any changes by posting the new Terms on this page. 
+                Your continued use of the Service after any such changes constitutes your acceptance of the new Terms.
+              </p>
+            </motion.div>
+            
+            <motion.div className="mb-8" variants={itemVariants}>
+              <div className="flex items-center mb-4">
+                <Shield className="h-6 w-6 text-accent mr-3" />
+                <h2 className="text-2xl font-bold text-heritage-100">User Accounts</h2>
+              </div>
+              <p className="text-heritage-300 mb-4">
+                When you create an account with us, you must provide information that is accurate, complete, and current at all times. 
+                Failure to do so constitutes a breach of the Terms, which may result in immediate termination of your account.
+              </p>
+              <p className="text-heritage-300 mb-4">
+                You are responsible for safeguarding the password that you use to access the Service and for any activities or actions 
+                under your password. You agree not to disclose your password to any third party. You must notify us immediately upon 
+                becoming aware of any breach of security or unauthorized use of your account.
+              </p>
+            </motion.div>
+            
+            <motion.div className="mb-8" variants={itemVariants}>
+              <div className="flex items-center mb-4">
+                <Copyright className="h-6 w-6 text-accent mr-3" />
+                <h2 className="text-2xl font-bold text-heritage-100">Intellectual Property</h2>
+              </div>
+              <p className="text-heritage-300 mb-4">
+                The Service and its original content, features, and functionality are and will remain the exclusive property of 
+                HeritageAR and its licensors. The Service is protected by copyright, trademark, and other laws of both the United States 
+                and foreign countries. Our trademarks and trade dress may not be used in connection with any product or service without 
+                the prior written consent of HeritageAR.
+              </p>
+              <p className="text-heritage-300 mb-4">
+                Historical information, 3D models, and educational content provided through the Service are based on public domain 
+                information, licensed materials, or original content created by HeritageAR. Attribution for specific content is 
+                provided where applicable.
+              </p>
+            </motion.div>
+            
+            <motion.div className="mb-8" variants={itemVariants}>
+              <div className="flex items-center mb-4">
+                <AlertTriangle className="h-6 w-6 text-accent mr-3" />
+                <h2 className="text-2xl font-bold text-heritage-100">User Safety and AR Usage</h2>
+              </div>
+              <p className="text-heritage-300 mb-4">
+                The augmented reality features of our Service require the use of your device's camera and movement in physical spaces. 
+                By using these features, you agree to:
+              </p>
+              <ul className="list-disc pl-6 text-heritage-300 space-y-2">
+                <li>Be aware of your surroundings at all times while using AR features</li>
+                <li>Not use the AR features while operating vehicles or machinery</li>
+                <li>Comply with all applicable laws regarding personal safety and the safety of others</li>
+                <li>Use the AR features in a safe environment free from obstacles or hazards</li>
+                <li>Take regular breaks when using AR features for extended periods</li>
+              </ul>
+              <p className="text-heritage-300 mt-4">
+                HeritageAR is not responsible for any injuries, accidents, or property damage that may occur while using the AR features 
+                of the Service.
+              </p>
+            </motion.div>
+            
+            <motion.div variants={itemVariants}>
+              <div className="flex items-center mb-4">
+                <AlertCircle className="h-6 w-6 text-accent mr-3" />
+                <h2 className="text-2xl font-bold text-heritage-100">Limitation of Liability</h2>
+              </div>
+              <p className="text-heritage-300 mb-4">
+                In no event shall HeritageAR, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any 
+                indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, 
+                goodwill, or other intangible losses, resulting from:
+              </p>
+              <ul className="list-disc pl-6 text-heritage-300 space-y-2">
+                <li>Your access to or use of or inability to access or use the Service</li>
+                <li>Any conduct or content of any third party on the Service</li>
+                <li>Any content obtained from the Service</li>
+                <li>Unauthorized access, use or alteration of your transmissions or content</li>
+              </ul>
+              <p className="text-heritage-300 mt-4">
                 If you have any questions about these Terms, please contact us at terms@heritagear.example.com.
               </p>
-            </motion.section>
+            </motion.div>
           </div>
-        </motion.div>
-
-        <motion.p 
-          className="text-center text-heritage-400 mt-12"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8, duration: 0.5 }}
-        >
-          Last updated: June 2023
-        </motion.p>
-      </motion.div>
+        </div>
+      </motion.main>
     </div>
   );
 };

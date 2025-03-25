@@ -93,11 +93,11 @@ const EnhancedCursor: React.FC = () => {
       case 'link':
         return {
           outer: {
-            width: '44px',
-            height: '44px',
+            width: '32px',
+            height: '32px',
             backgroundColor: 'rgba(56, 189, 248, 0.15)',
             border: '1px solid rgba(56, 189, 248, 0.4)',
-            mixBlendMode: 'screen',
+            mixBlendMode: 'screen' as React.CSSProperties['mixBlendMode'],
           },
           inner: {
             backgroundColor: 'rgba(56, 189, 248, 0.8)',
@@ -106,8 +106,8 @@ const EnhancedCursor: React.FC = () => {
       case 'input':
         return {
           outer: {
-            width: '24px',
-            height: '24px',
+            width: '20px',
+            height: '20px',
             backgroundColor: 'rgba(255, 255, 255, 0.1)',
             border: '1px solid rgba(255, 255, 255, 0.3)',
           },
@@ -121,8 +121,8 @@ const EnhancedCursor: React.FC = () => {
       default:
         return {
           outer: {
-            width: '28px',
-            height: '28px',
+            width: '24px',
+            height: '24px',
             backgroundColor: 'rgba(210, 220, 240, 0.1)',
             border: '1px solid rgba(210, 220, 240, 0.2)',
           },

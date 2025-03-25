@@ -1,126 +1,127 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
+import AnimatedHeader from '../components/AnimatedHeader';
 import { motion } from 'framer-motion';
-import Header from '@/components/Header';
+import { BookOpen, Camera, Globe, History, Server } from 'lucide-react';
 
 const About: React.FC = () => {
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
+        when: "beforeChildren",
         staggerChildren: 0.1
       }
     }
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { y: 20, opacity: 0 },
     visible: {
-      opacity: 1,
       y: 0,
-      transition: {
-        type: "spring",
-        stiffness: 100,
-        damping: 15
-      }
+      opacity: 1,
+      transition: { type: "spring", stiffness: 100 }
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-heritage-950 to-heritage-900 text-heritage-100">
-      <Header title="About HeritageAR" showBackButton />
+  const features = [
+    {
+      icon: <Camera className="h-8 w-8 text-accent" />,
+      title: "AR Visualization",
+      description: "Experience historical sites in augmented reality directly through your device's camera."
+    },
+    {
+      icon: <History className="h-8 w-8 text-accent" />,
+      title: "Historical Context",
+      description: "Access detailed information about each site including its historical significance and cultural impact."
+    },
+    {
+      icon: <Globe className="h-8 w-8 text-accent" />,
+      title: "Global Coverage",
+      description: "Explore historical sites from different civilizations and time periods across the world."
+    },
+    {
+      icon: <Server className="h-8 w-8 text-accent" />,
+      title: "Offline Access",
+      description: "Download content for offline access when traveling to locations with limited connectivity."
+    },
+    {
+      icon: <BookOpen className="h-8 w-8 text-accent" />,
+      title: "Educational Resources",
+      description: "Access educational materials and guided tours designed for different age groups and learning levels."
+    }
+  ];
 
-      <motion.div 
-        className="container mx-auto px-4 py-24 md:py-32"
+  return (
+    <div className="min-h-screen flex flex-col">
+      <AnimatedHeader title="About HeritageAR" showBackButton />
+      
+      <motion.main 
+        className="flex-1 pt-24 pb-12"
+        variants={containerVariants}
         initial="hidden"
         animate="visible"
-        variants={containerVariants}
       >
-        <motion.h1 
-          className="text-4xl md:text-5xl font-bold text-center mb-12 text-gradient"
-          variants={itemVariants}
-        >
-          About HeritageAR
-        </motion.h1>
-
-        <motion.div 
-          className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-6xl mx-auto"
-          variants={itemVariants}
-        >
-          <div className="bg-heritage-800/40 rounded-2xl overflow-hidden glass-panel hover-lift">
-            <motion.div 
-              className="p-8"
-              variants={itemVariants}
-            >
-              <h2 className="text-2xl font-semibold mb-4 text-accent">Our Mission</h2>
-              <p className="text-heritage-300 leading-relaxed">
-                HeritageAR is dedicated to bringing history to life through cutting-edge augmented reality technology. Our mission is to make historical education engaging, immersive, and accessible to everyone regardless of their location or background.
-              </p>
-            </motion.div>
-          </div>
-
-          <div className="bg-heritage-800/40 rounded-2xl overflow-hidden glass-panel hover-lift">
-            <motion.div 
-              className="p-8"
-              variants={itemVariants}
-            >
-              <h2 className="text-2xl font-semibold mb-4 text-accent">Our Vision</h2>
-              <p className="text-heritage-300 leading-relaxed">
-                We envision a world where history is no longer confined to textbooks and museums, but instead comes alive in the spaces around us. Through augmented reality, we're creating a new dimension of historical understanding and appreciation.
-              </p>
-            </motion.div>
-          </div>
-        </motion.div>
-
-        <motion.div 
-          className="mt-16 max-w-4xl mx-auto glass-panel rounded-2xl p-8 hover-lift"
-          variants={itemVariants}
-        >
-          <h2 className="text-2xl font-semibold mb-4 text-accent">Our Technology</h2>
-          <p className="text-heritage-300 leading-relaxed mb-6">
-            HeritageAR utilizes advanced computer vision and augmented reality technologies to recognize historical artifacts and overlay detailed 3D models and information. Our platform is designed to work seamlessly across different devices:
-          </p>
+        <div className="container mx-auto px-4">
+          <motion.div className="max-w-3xl mx-auto mb-16" variants={itemVariants}>
+            <div className="flex justify-center mb-8">
+              <div className="relative w-16 h-16 flex items-center justify-center">
+                <div className="absolute inset-0 bg-gradient-to-tr from-accent to-accent/70 rounded-md"></div>
+                <span className="relative font-bold text-white text-2xl z-10">AR</span>
+              </div>
+            </div>
+            
+            <h1 className="text-4xl font-bold text-center text-heritage-100 mb-4">Our Mission</h1>
+            <p className="text-heritage-300 text-lg text-center">
+              At HeritageAR, we're on a mission to make history more accessible and engaging through 
+              the power of augmented reality. We believe that by allowing people to visualize and interact 
+              with historical sites and artifacts in their own environments, we can create more meaningful 
+              connections to our shared human heritage.
+            </p>
+          </motion.div>
           
-          <ul className="list-disc list-inside space-y-2 text-heritage-300">
-            <li className="ml-4">Mobile AR experiences through our iOS and Android apps</li>
-            <li className="ml-4">Web-based exploration of historical sites</li>
-            <li className="ml-4">Integration with AR glasses and headsets</li>
-            <li className="ml-4">Support for educational institutions with custom content</li>
-          </ul>
-        </motion.div>
-
-        <motion.div 
-          className="mt-16 text-center"
-          variants={itemVariants}
-        >
-          <h2 className="text-2xl font-semibold mb-6 text-gradient">Our Team</h2>
-          <p className="text-heritage-300 max-w-2xl mx-auto mb-12">
-            HeritageAR is built by a passionate team of historians, developers, designers, and educators dedicated to preserving and sharing our collective heritage.
-          </p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {[1, 2, 3].map((i) => (
-              <motion.div 
-                key={i}
-                className="glass-panel rounded-2xl p-6 text-center hover-lift"
-                variants={itemVariants}
-                whileHover={{ y: -5, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)" }}
-              >
-                <div className="w-24 h-24 bg-heritage-700 rounded-full mx-auto mb-4 overflow-hidden">
-                  <div className="w-full h-full bg-gradient-to-br from-accent-400 to-accent-600 opacity-80"></div>
-                </div>
-                <h3 className="text-xl font-medium text-heritage-100">Team Member {i}</h3>
-                <p className="text-heritage-400 text-sm mt-1">Role Title</p>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-      </motion.div>
+          <motion.div variants={itemVariants} className="mb-16">
+            <h2 className="text-3xl font-bold text-center text-heritage-100 mb-12">Key Features</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {features.map((feature, index) => (
+                <motion.div
+                  key={index}
+                  className="glass-panel rounded-2xl p-6 hover-lift"
+                  whileHover={{ y: -5, transition: { duration: 0.2 } }}
+                >
+                  <div className="flex items-center mb-4">
+                    {feature.icon}
+                    <h3 className="text-xl font-semibold text-heritage-100 ml-3">{feature.title}</h3>
+                  </div>
+                  <p className="text-heritage-300">{feature.description}</p>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+          
+          <motion.div className="glass-panel rounded-2xl p-8 max-w-3xl mx-auto" variants={itemVariants}>
+            <h2 className="text-3xl font-bold text-heritage-100 mb-4">Our Story</h2>
+            <p className="text-heritage-300 mb-4">
+              HeritageAR began as a collaborative project between historians, archaeologists, and technologists 
+              who shared a passion for making history more engaging and accessible to everyone. We recognized that 
+              while museums and historical sites offer invaluable experiences, not everyone has the opportunity to 
+              visit these locations in person.
+            </p>
+            <p className="text-heritage-300 mb-4">
+              By leveraging augmented reality technology, we've created a platform that brings historical sites 
+              and artifacts directly to users, regardless of their location. Our team works closely with historians 
+              and cultural institutions to ensure that our digital reconstructions are accurate and respectful of 
+              the cultural significance of each site.
+            </p>
+            <p className="text-heritage-300">
+              Today, HeritageAR is used by educators, students, tourists, and history enthusiasts around the world. 
+              We continue to expand our library of historical sites and improve our technology to provide the most 
+              immersive and educational experience possible.
+            </p>
+          </motion.div>
+        </div>
+      </motion.main>
     </div>
   );
 };

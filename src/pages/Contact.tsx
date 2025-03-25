@@ -1,227 +1,219 @@
 
 import React, { useState } from 'react';
+import AnimatedHeader from '../components/AnimatedHeader';
 import { motion } from 'framer-motion';
-import { useToast } from '@/hooks/use-toast';
-import Header from '@/components/Header';
-import { Mail, Phone, MapPin, Send } from 'lucide-react';
+import { Send, Mail, Phone, MapPin } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { toast } from '@/hooks/use-toast';
 
 const Contact: React.FC = () => {
-  const { toast } = useToast();
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    subject: '',
-    message: ''
-  });
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [subject, setSubject] = useState('');
+  const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        when: "beforeChildren",
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { type: "spring", stiffness: 100 }
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     // Simulate form submission
     setTimeout(() => {
       toast({
         title: "Message Sent",
         description: "We've received your message and will get back to you soon!",
-        variant: "default",
       });
+      setName('');
+      setEmail('');
+      setSubject('');
+      setMessage('');
       setIsSubmitting(false);
-      setFormData({
-        name: '',
-        email: '',
-        subject: '',
-        message: ''
-      });
     }, 1500);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-heritage-950 to-heritage-900 text-heritage-100">
-      <Header title="Contact Us" showBackButton />
-
-      <motion.div 
-        className="container mx-auto px-4 py-24 md:py-32"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
+    <div className="min-h-screen flex flex-col">
+      <AnimatedHeader title="Contact Us" showBackButton />
+      
+      <motion.main 
+        className="flex-1 pt-24 pb-12"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
       >
-        <motion.h1 
-          className="text-4xl md:text-5xl font-bold text-center mb-6 text-gradient"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-        >
-          Contact Us
-        </motion.h1>
-
-        <motion.p 
-          className="text-center text-heritage-300 max-w-2xl mx-auto mb-16"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-        >
-          Have questions about HeritageAR? Want to partner with us? We'd love to hear from you. Reach out using the form below or through our contact information.
-        </motion.p>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
-          <motion.div 
-            className="glass-panel rounded-2xl p-8"
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4, duration: 0.5 }}
-          >
-            <h2 className="text-2xl font-semibold mb-6 text-accent">Send Us a Message</h2>
-            
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label htmlFor="name" className="block text-heritage-200 mb-2">Your Name</label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-3 rounded-lg bg-heritage-800/50 border border-heritage-700 text-heritage-100 focus:outline-none focus:ring-2 focus:ring-accent"
-                  placeholder="Enter your name"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="email" className="block text-heritage-200 mb-2">Email Address</label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-3 rounded-lg bg-heritage-800/50 border border-heritage-700 text-heritage-100 focus:outline-none focus:ring-2 focus:ring-accent"
-                  placeholder="Enter your email"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="subject" className="block text-heritage-200 mb-2">Subject</label>
-                <input
-                  type="text"
-                  id="subject"
-                  name="subject"
-                  value={formData.subject}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-3 rounded-lg bg-heritage-800/50 border border-heritage-700 text-heritage-100 focus:outline-none focus:ring-2 focus:ring-accent"
-                  placeholder="Enter subject"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="message" className="block text-heritage-200 mb-2">Your Message</label>
-                <textarea
-                  id="message"
-                  name="message"
-                  value={formData.message}
-                  onChange={handleChange}
-                  required
-                  rows={5}
-                  className="w-full px-4 py-3 rounded-lg bg-heritage-800/50 border border-heritage-700 text-heritage-100 focus:outline-none focus:ring-2 focus:ring-accent resize-none"
-                  placeholder="Enter your message"
-                ></textarea>
-              </div>
-              
-              <motion.button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full px-6 py-3 bg-accent text-white rounded-lg hover:bg-accent/90 transition-colors flex items-center justify-center space-x-2"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                {isSubmitting ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Sending...</span>
-                  </>
-                ) : (
-                  <>
-                    <Send size={18} />
-                    <span>Send Message</span>
-                  </>
-                )}
-              </motion.button>
-            </form>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.5, duration: 0.5 }}
-            className="flex flex-col space-y-8"
-          >
-            <div className="glass-panel rounded-2xl p-8 hover-lift">
-              <h2 className="text-2xl font-semibold mb-6 text-accent">Contact Information</h2>
-              
-              <div className="space-y-6">
-                <div className="flex items-start">
-                  <Mail className="w-6 h-6 text-accent mr-4 mt-1" />
-                  <div>
-                    <h3 className="text-lg font-medium text-heritage-100">Email Us</h3>
-                    <p className="text-heritage-300 mt-1">contact@heritagear.example.com</p>
-                    <p className="text-heritage-300">support@heritagear.example.com</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start">
-                  <Phone className="w-6 h-6 text-accent mr-4 mt-1" />
-                  <div>
-                    <h3 className="text-lg font-medium text-heritage-100">Call Us</h3>
-                    <p className="text-heritage-300 mt-1">+1 (555) 123-4567</p>
-                    <p className="text-heritage-300">Mon-Fri, 9am-5pm EST</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start">
-                  <MapPin className="w-6 h-6 text-accent mr-4 mt-1" />
-                  <div>
-                    <h3 className="text-lg font-medium text-heritage-100">Visit Us</h3>
-                    <p className="text-heritage-300 mt-1">
-                      123 Heritage Street<br />
-                      Tech City, TE 12345<br />
-                      United States
-                    </p>
-                  </div>
-                </div>
+        <div className="container mx-auto px-4">
+          <motion.div className="max-w-3xl mx-auto mb-12 text-center" variants={itemVariants}>
+            <div className="flex justify-center mb-6">
+              <div className="p-3 rounded-full bg-accent/20 text-accent">
+                <Mail className="h-8 w-8" />
               </div>
             </div>
             
-            <div className="glass-panel rounded-2xl p-8 hover-lift flex-grow">
-              <h2 className="text-2xl font-semibold mb-6 text-accent">Connect With Us</h2>
-              <p className="text-heritage-300 mb-6">
-                Follow us on social media to stay updated with the latest AR experiences, historical discoveries, and app features.
-              </p>
-              
-              <div className="flex space-x-4">
-                {['facebook', 'twitter', 'instagram', 'youtube'].map((social) => (
-                  <motion.a
-                    key={social}
-                    href="#"
-                    className="w-12 h-12 rounded-full bg-heritage-800 flex items-center justify-center hover:bg-accent transition-colors"
-                    whileHover={{ y: -5 }}
-                    whileTap={{ scale: 0.95 }}
+            <h1 className="text-4xl font-bold text-heritage-100 mb-4">Get in Touch</h1>
+            <p className="text-heritage-300 text-lg">
+              Have questions about HeritageAR? Want to collaborate with us? 
+              We'd love to hear from you!
+            </p>
+          </motion.div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <motion.div className="lg:col-span-1" variants={itemVariants}>
+              <div className="glass-panel rounded-2xl p-6">
+                <h2 className="text-2xl font-bold text-heritage-100 mb-6">Contact Information</h2>
+                
+                <div className="space-y-6">
+                  <div className="flex items-start">
+                    <div className="h-10 w-10 rounded-full bg-heritage-800 flex items-center justify-center mr-4">
+                      <Mail className="h-5 w-5 text-accent" />
+                    </div>
+                    <div>
+                      <p className="text-heritage-400 text-sm">Email</p>
+                      <p className="text-heritage-100">contact@heritagear.example.com</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start">
+                    <div className="h-10 w-10 rounded-full bg-heritage-800 flex items-center justify-center mr-4">
+                      <Phone className="h-5 w-5 text-accent" />
+                    </div>
+                    <div>
+                      <p className="text-heritage-400 text-sm">Phone</p>
+                      <p className="text-heritage-100">+1 (555) 123-4567</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start">
+                    <div className="h-10 w-10 rounded-full bg-heritage-800 flex items-center justify-center mr-4">
+                      <MapPin className="h-5 w-5 text-accent" />
+                    </div>
+                    <div>
+                      <p className="text-heritage-400 text-sm">Address</p>
+                      <p className="text-heritage-100">123 Heritage Street</p>
+                      <p className="text-heritage-100">Tech City, CA 94107</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-8 pt-6 border-t border-heritage-800">
+                  <h3 className="text-xl font-medium text-heritage-100 mb-4">Office Hours</h3>
+                  <p className="text-heritage-300">Monday - Friday: 9AM - 5PM</p>
+                  <p className="text-heritage-300">Saturday - Sunday: Closed</p>
+                </div>
+              </div>
+            </motion.div>
+            
+            <motion.div className="lg:col-span-2" variants={itemVariants}>
+              <div className="glass-panel rounded-2xl p-6">
+                <h2 className="text-2xl font-bold text-heritage-100 mb-6">Send a Message</h2>
+                
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label htmlFor="name" className="block text-sm font-medium text-heritage-300 mb-1">
+                        Your Name
+                      </label>
+                      <Input 
+                        id="name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                        className="bg-heritage-800/50 border-heritage-700 text-heritage-100"
+                        placeholder="John Doe"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="email" className="block text-sm font-medium text-heritage-300 mb-1">
+                        Email Address
+                      </label>
+                      <Input 
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        className="bg-heritage-800/50 border-heritage-700 text-heritage-100"
+                        placeholder="john@example.com"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="subject" className="block text-sm font-medium text-heritage-300 mb-1">
+                      Subject
+                    </label>
+                    <Input 
+                      id="subject"
+                      value={subject}
+                      onChange={(e) => setSubject(e.target.value)}
+                      required
+                      className="bg-heritage-800/50 border-heritage-700 text-heritage-100"
+                      placeholder="How can we help you?"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="message" className="block text-sm font-medium text-heritage-300 mb-1">
+                      Message
+                    </label>
+                    <Textarea 
+                      id="message"
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      required
+                      className="bg-heritage-800/50 border-heritage-700 text-heritage-100 min-h-[150px]"
+                      placeholder="Tell us more about your inquiry..."
+                    />
+                  </div>
+                  
+                  <Button 
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full bg-accent hover:bg-accent/80 text-white"
                   >
-                    <div className="w-6 h-6 bg-heritage-200"></div>
-                  </motion.a>
-                ))}
+                    {isSubmitting ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="mr-2 h-4 w-4" />
+                        Send Message
+                      </>
+                    )}
+                  </Button>
+                </form>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
         </div>
-      </motion.div>
+      </motion.main>
     </div>
   );
 };
