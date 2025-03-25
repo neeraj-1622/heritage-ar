@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, User, LogOut } from 'lucide-react';
@@ -93,13 +92,13 @@ const Header: React.FC<HeaderProps> = ({
             <div className="flex space-x-2">
               <Link 
                 to="/login" 
-                className="text-sm px-4 py-2 bg-heritage-100 text-heritage-800 rounded-full hover:bg-heritage-200 transition-colors duration-200"
+                className="text-sm px-4 py-2 text-white rounded-full hover:bg-heritage-700/50 transition-colors duration-200"
               >
                 Login
               </Link>
               <Link 
                 to="/register" 
-                className="text-sm px-4 py-2 bg-accent text-accent-foreground rounded-full hover:bg-accent/90 transition-colors duration-200"
+                className="text-sm px-4 py-2 bg-accent text-white rounded-full hover:bg-accent/90 transition-colors duration-200"
               >
                 Register
               </Link>
