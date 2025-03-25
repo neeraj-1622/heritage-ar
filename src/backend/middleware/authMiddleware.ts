@@ -1,6 +1,4 @@
-
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
 import { UserService } from '../services/userService';
 
 // Extend the Request interface to include user property
@@ -12,7 +10,7 @@ interface AuthRequest extends Request {
 }
 
 export const authMiddleware = (userService: UserService) => {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void | Response> => {
     try {
       const authHeader = req.headers.authorization;
       
@@ -30,6 +28,7 @@ export const authMiddleware = (userService: UserService) => {
       // Cast to AuthRequest to add user property
       (req as AuthRequest).user = { id: user.id, email: user.email };
       next();
+      return;
     } catch (error) {
       console.error('Authentication error:', error);
       return res.status(401).json({ message: 'Authentication failed' });

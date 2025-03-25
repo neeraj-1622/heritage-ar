@@ -1,4 +1,3 @@
-
 import { Db, ObjectId } from 'mongodb';
 import { HistoricalSite, HistoricalSiteInput } from '../models/HistoricalSite';
 
@@ -61,7 +60,13 @@ export class SiteRepository {
     
     if (count === 0) {
       console.log('Initializing default site data...');
-      await this.db.collection(this.collection).insertMany(sites);
+      const now = new Date();
+      const sitesWithTimestamps = sites.map(site => ({
+        ...site,
+        createdAt: now,
+        updatedAt: now
+      }));
+      await this.db.collection(this.collection).insertMany(sitesWithTimestamps);
       console.log(`${sites.length} default sites inserted.`);
     }
   }
