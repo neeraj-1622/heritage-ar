@@ -10,6 +10,7 @@ export interface HistoricalSite {
   location: string;
   shortDescription: string;
   imageUrl: string;
+  longDescription?: string;
 }
 
 interface SiteCardProps {
@@ -17,6 +18,11 @@ interface SiteCardProps {
 }
 
 const SiteCard: React.FC<SiteCardProps> = ({ site }) => {
+  // Use the Angkor Wat image specifically for the Angkor Wat site
+  const imageUrl = site.name.includes("Angkor Wat") 
+    ? "https://images.unsplash.com/photo-1600096194534-95cf5ece04cf?w=800&auto=format&fit=crop" 
+    : site.imageUrl;
+    
   return (
     <Card3D className="h-full">
       <Link 
@@ -26,7 +32,7 @@ const SiteCard: React.FC<SiteCardProps> = ({ site }) => {
         <div className="relative h-48 w-full overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent z-[1]"></div>
           <img 
-            src={site.imageUrl} 
+            src={imageUrl} 
             alt={site.name} 
             className="h-full w-full object-cover transition-all duration-500 hover:scale-110 hover:rotate-1"
             loading="lazy"

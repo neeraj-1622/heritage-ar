@@ -56,11 +56,23 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    @apply scrollbar-none;
   }
 
   body {
     @apply bg-gradient-to-br from-heritage-950 to-heritage-900 text-foreground min-h-screen scrollbar-none;
     background-attachment: fixed;
+  }
+  
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar,
+  div::-webkit-scrollbar {
+    display: none;
+  }
+  
+  html, body, div {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
   }
 }
 
@@ -118,6 +130,66 @@
 
   .page-transition {
     @apply transition-all duration-300 ease-in-out;
+  }
+  
+  /* Rainbow hover effect for navbar links */
+  .rainbow-hover-effect {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .rainbow-hover-effect::after {
+    content: "";
+    position: absolute;
+    width: 100%;
+    transform: scaleX(0);
+    height: 2px;
+    bottom: -4px;
+    left: 0;
+    background: linear-gradient(
+      90deg, 
+      #ff0000, 
+      #ff8000, 
+      #ffff00, 
+      #80ff00, 
+      #00ff00, 
+      #00ff80, 
+      #00ffff, 
+      #0080ff, 
+      #0000ff, 
+      #8000ff, 
+      #ff00ff, 
+      #ff0080
+    );
+    transform-origin: bottom right;
+    transition: transform 0.3s ease-out;
+  }
+  
+  .rainbow-hover-effect:hover::after {
+    transform: scaleX(1);
+    transform-origin: bottom left;
+  }
+  
+  .rainbow-hover-effect:hover {
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
+    background: linear-gradient(
+      90deg, 
+      #ff0000, 
+      #ff8000, 
+      #ffff00, 
+      #80ff00, 
+      #00ff00, 
+      #00ff80, 
+      #00ffff, 
+      #0080ff, 
+      #0000ff, 
+      #8000ff, 
+      #ff00ff, 
+      #ff0080
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 }
 
@@ -230,4 +302,10 @@
 
 .portal-open {
   animation: portalOpen 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Add a new favicon to match the AR logo */
+link[rel="icon"] {
+  background-color: #0EA5E9;
+  border-radius: 4px;
 }

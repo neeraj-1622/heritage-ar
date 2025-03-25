@@ -49,7 +49,7 @@ const Login = () => {
       
       <main className="flex-1 container mx-auto px-4 pt-20 pb-10">
         <div className="max-w-md mx-auto mt-10 p-6 shadow-lg rounded-lg glass-panel">
-          <h1 className="text-2xl font-bold text-heritage-950 mb-6">Login to HeritageAR</h1>
+          <h1 className="text-2xl font-bold text-white mb-6">Login to HeritageAR</h1>
           
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -58,11 +58,11 @@ const Login = () => {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel className="text-white">Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="your.email@example.com" {...field} />
+                      <Input placeholder="your.email@example.com" {...field} className="bg-heritage-800 text-white border-heritage-700" />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-red-300" />
                   </FormItem>
                 )}
               />
@@ -72,18 +72,18 @@ const Login = () => {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel className="text-white">Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
+                      <Input type="password" placeholder="••••••••" {...field} className="bg-heritage-800 text-white border-heritage-700" />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-red-300" />
                   </FormItem>
                 )}
               />
               
               <Button 
                 type="submit" 
-                className="w-full" 
+                className="w-full bg-accent hover:bg-accent-600" 
                 disabled={loading}
               >
                 {loading ? 'Logging in...' : 'Login'}
@@ -91,9 +91,9 @@ const Login = () => {
             </form>
           </Form>
           
-          <div className="mt-6 text-center text-sm text-heritage-700">
+          <div className="mt-6 text-center text-sm text-heritage-300">
             Don't have an account?{' '}
-            <Link to="/register" className="text-heritage-900 font-medium hover:underline">
+            <Link to="/register" className="text-accent font-medium hover:underline">
               Register
             </Link>
           </div>

@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -56,6 +56,29 @@ const pageTransition = {
 const AnimationLayout = () => {
   const location = useLocation();
   
+  // Update favicon
+  useEffect(() => {
+    const link = document.querySelector("link[rel='icon']") as HTMLLinkElement;
+    if (link) {
+      link.href = "/favicon.svg";
+    } else {
+      const newLink = document.createElement("link");
+      newLink.rel = "icon";
+      newLink.href = "/favicon.svg";
+      document.head.appendChild(newLink);
+    }
+  }, []);
+  
+  // Set toast duration to 2 seconds
+  useEffect(() => {
+    const toastElements = document.querySelectorAll('[data-sonner-toast]');
+    toastElements.forEach(el => {
+      setTimeout(() => {
+        (el as HTMLElement).style.display = 'none';
+      }, 2000);
+    });
+  }, [location.pathname]);
+  
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -65,7 +88,7 @@ const AnimationLayout = () => {
         exit="out"
         variants={pageVariants}
         transition={pageTransition}
-        className="min-h-screen flex flex-col"
+        className="min-h-screen flex flex-col scrollbar-none"
       >
         <Routes location={location} key={location.pathname}>
           <Route path="/" element={<Index />} />

@@ -56,7 +56,7 @@ const Register = () => {
       
       <main className="flex-1 container mx-auto px-4 pt-20 pb-10">
         <div className="max-w-md mx-auto mt-10 p-6 shadow-lg rounded-lg glass-panel">
-          <h1 className="text-2xl font-bold text-heritage-950 mb-6">Create an Account</h1>
+          <h1 className="text-2xl font-bold text-white mb-6">Create an Account</h1>
           
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -65,11 +65,11 @@ const Register = () => {
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Username</FormLabel>
+                    <FormLabel className="text-white">Username</FormLabel>
                     <FormControl>
-                      <Input placeholder="username" {...field} />
+                      <Input placeholder="username" {...field} className="bg-heritage-800 text-white border-heritage-700" />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-red-300" />
                   </FormItem>
                 )}
               />
@@ -79,11 +79,11 @@ const Register = () => {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel className="text-white">Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="your.email@example.com" {...field} />
+                      <Input placeholder="your.email@example.com" {...field} className="bg-heritage-800 text-white border-heritage-700" />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-red-300" />
                   </FormItem>
                 )}
               />
@@ -93,11 +93,11 @@ const Register = () => {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel className="text-white">Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
+                      <Input type="password" placeholder="••••••••" {...field} className="bg-heritage-800 text-white border-heritage-700" />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-red-300" />
                   </FormItem>
                 )}
               />
@@ -107,18 +107,18 @@ const Register = () => {
                 name="confirmPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Confirm Password</FormLabel>
+                    <FormLabel className="text-white">Confirm Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
+                      <Input type="password" placeholder="••••••••" {...field} className="bg-heritage-800 text-white border-heritage-700" />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-red-300" />
                   </FormItem>
                 )}
               />
               
               <Button 
                 type="submit" 
-                className="w-full" 
+                className="w-full bg-accent hover:bg-accent-600" 
                 disabled={loading}
               >
                 {loading ? 'Creating account...' : 'Register'}
@@ -126,9 +126,9 @@ const Register = () => {
             </form>
           </Form>
           
-          <div className="mt-6 text-center text-sm text-heritage-700">
+          <div className="mt-6 text-center text-sm text-heritage-300">
             Already have an account?{' '}
-            <Link to="/login" className="text-heritage-900 font-medium hover:underline">
+            <Link to="/login" className="text-accent font-medium hover:underline">
               Login
             </Link>
           </div>

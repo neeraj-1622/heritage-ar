@@ -2,6 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
 
 const Footer: React.FC = () => {
   const footerLinks = [
@@ -10,6 +11,13 @@ const Footer: React.FC = () => {
     { name: 'Privacy', path: '/privacy' },
     { name: 'Terms', path: '/terms' },
     { name: 'Contact', path: '/contact' },
+  ];
+
+  const socialIcons = [
+    { icon: Facebook, link: "#" },
+    { icon: Twitter, link: "#" },
+    { icon: Instagram, link: "#" },
+    { icon: Youtube, link: "#" },
   ];
 
   const containerVariants = {
@@ -49,19 +57,19 @@ const Footer: React.FC = () => {
               </div>
               <h3 className="text-xl font-bold text-heritage-100">HeritageAR</h3>
             </Link>
-            <p className="text-heritage-400 max-w-md">
+            <p className="text-heritage-300 max-w-md">
               Experience history in a new dimension with augmented reality. HeritageAR brings historical sites and artifacts to life through immersive AR technology.
             </p>
             
             <div className="mt-6 flex space-x-4">
-              {['facebook', 'twitter', 'instagram', 'youtube'].map((social) => (
+              {socialIcons.map((social, index) => (
                 <motion.a
-                  key={social}
-                  href="#"
+                  key={index}
+                  href={social.link}
                   className="w-10 h-10 rounded-full bg-heritage-800/80 flex items-center justify-center hover:bg-accent/80 transition-colors"
                   whileHover={{ y: -3 }}
                 >
-                  <div className="w-5 h-5 bg-heritage-200"></div>
+                  <social.icon className="w-5 h-5 text-heritage-200" />
                 </motion.a>
               ))}
             </div>
@@ -74,7 +82,7 @@ const Footer: React.FC = () => {
                 <li key={link.path}>
                   <Link 
                     to={link.path}
-                    className="text-heritage-400 hover:text-accent transition-colors"
+                    className="text-heritage-300 hover:text-accent transition-colors"
                   >
                     {link.name}
                   </Link>
@@ -85,7 +93,7 @@ const Footer: React.FC = () => {
           
           <motion.div variants={childVariants}>
             <h3 className="text-heritage-100 font-medium mb-4">Contact Us</h3>
-            <ul className="space-y-2 text-heritage-400">
+            <ul className="space-y-2 text-heritage-300">
               <li>contact@heritagear.example.com</li>
               <li>+1 (555) 123-4567</li>
               <li>123 Heritage Street, Tech City</li>
@@ -94,7 +102,7 @@ const Footer: React.FC = () => {
             <div className="mt-6">
               <Link 
                 to="/contact"
-                className="px-4 py-2 rounded-full bg-heritage-800 text-heritage-200 hover:bg-accent hover:text-white transition-colors text-sm"
+                className="inline-block px-4 py-2 rounded-full bg-heritage-800 text-heritage-200 hover:bg-accent hover:text-white transition-colors text-sm"
               >
                 Get in Touch
               </Link>
@@ -106,15 +114,15 @@ const Footer: React.FC = () => {
           variants={childVariants}
           className="mt-12 pt-6 border-t border-heritage-800/30 flex flex-col md:flex-row justify-between items-center"
         >
-          <p className="text-heritage-500 text-sm">
+          <p className="text-heritage-300 text-sm">
             © {new Date().getFullYear()} HeritageAR. All rights reserved.
           </p>
           
           <div className="mt-4 md:mt-0 flex space-x-6">
-            <Link to="/privacy" className="text-heritage-500 hover:text-heritage-300 text-sm">
+            <Link to="/privacy" className="text-heritage-300 hover:text-heritage-100 text-sm">
               Privacy Policy
             </Link>
-            <Link to="/terms" className="text-heritage-500 hover:text-heritage-300 text-sm">
+            <Link to="/terms" className="text-heritage-300 hover:text-heritage-100 text-sm">
               Terms of Service
             </Link>
           </div>
