@@ -7,7 +7,7 @@ import { defaultSites } from './data/defaultSites';
 import { authMiddleware } from './middleware/authMiddleware';
 
 const app = express();
-const port = process.env.PORT || 5001;
+const port = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors());

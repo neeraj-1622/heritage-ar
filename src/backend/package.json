@@ -1,6 +1,5 @@
-
 {
-  "name": "heritageAR-backend",
+  "name": "heritage-ar-backend",
   "version": "1.0.0",
   "description": "Backend API for HeritageAR application",
   "main": "server.ts",
