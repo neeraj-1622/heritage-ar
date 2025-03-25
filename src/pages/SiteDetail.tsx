@@ -20,12 +20,14 @@ const SiteDetail: React.FC = () => {
     queryFn: () => fetchSiteById(id || ''),
     enabled: !!id,
     retry: 2,
-    onError: () => {
-      toast({
-        title: "Error loading site",
-        description: "Could not load site details. Please try again later.",
-        variant: "destructive",
-      });
+    onSettled: (data, error) => {
+      if (error) {
+        toast({
+          title: "Error loading site",
+          description: "Could not load site details. Please try again later.",
+          variant: "destructive",
+        });
+      }
     }
   });
 
