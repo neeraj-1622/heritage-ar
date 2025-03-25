@@ -1,4 +1,3 @@
-
 import { Db, ObjectId } from 'mongodb';
 import { User, UserInput } from '../models/User';
 import bcrypt from 'bcryptjs';
@@ -21,7 +20,32 @@ export class UserRepository {
     }
   }
 
+  private validateUserInput(userData: UserInput): string | null {
+    if (!userData.email || !userData.email.includes('@')) {
+      return 'Invalid email format';
+    }
+    if (!userData.username || userData.username.length < 3) {
+      return 'Username must be at least 3 characters long';
+    }
+    if (!userData.password || userData.password.length < 6) {
+      return 'Password must be at least 6 characters long';
+    }
+    return null;
+  }
+
   async create(userData: UserInput): Promise<User> {
+    // Validate user input
+    const validationError = this.validateUserInput(userData);
+    if (validationError) {
+      throw new Error(validationError);
+    }
+
+    // Check if email already exists
+    const existingUser = await this.findByEmail(userData.email);
+    if (existingUser) {
+      throw new Error('Email already exists');
+    }
+
     // Hash the password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(userData.password, salt);
@@ -34,8 +58,13 @@ export class UserRepository {
       updatedAt: new Date()
     };
 
-    await this.db.collection(this.collection).insertOne(newUser);
-    return newUser;
+    try {
+      await this.db.collection(this.collection).insertOne(newUser);
+      return newUser;
+    } catch (error) {
+      console.error('Error creating user:', error);
+      throw new Error('Failed to create user');
+    }
   }
 
   async findById(id: string): Promise<User | null> {

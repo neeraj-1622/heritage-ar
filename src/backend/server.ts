@@ -49,6 +49,16 @@ app.post('/api/auth/register', async (req: Request, res: Response): Promise<void
     res.status(201).json(newUser);
   } catch (error) {
     console.error('Error registering user:', error);
+    if (error instanceof Error) {
+      // Handle validation errors
+      if (error.message.includes('Invalid email') || 
+          error.message.includes('Username must be') || 
+          error.message.includes('Password must be') ||
+          error.message.includes('Email already exists')) {
+        res.status(400).json({ message: error.message });
+        return;
+      }
+    }
     res.status(500).json({ message: 'Failed to register user' });
   }
 });
