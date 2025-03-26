@@ -8,200 +8,100 @@ interface LoadingAnimationProps {
 
 const LoadingAnimation: React.FC<LoadingAnimationProps> = ({ onComplete }) => {
   const [progress, setProgress] = useState(0);
-  const [loadingText, setLoadingText] = useState('Initializing');
-  const [textIndex, setTextIndex] = useState(0);
-  
-  const loadingTexts = [
-    'Initializing AR environment',
-    'Loading historical data',
-    'Building virtual artifacts',
-    'Preparing time portals',
-    'Connecting to the past'
-  ];
   
   useEffect(() => {
-    const timer = setInterval(() => {
+    const timer = setTimeout(() => {
+      onComplete();
+    }, 3000);
+    
+    const interval = setInterval(() => {
       setProgress(prev => {
-        const newProgress = prev + Math.random() * 3;
+        const newProgress = prev + 2;
         return newProgress >= 100 ? 100 : newProgress;
       });
-    }, 100);
-    
-    const textTimer = setInterval(() => {
-      setTextIndex(prev => (prev + 1) % loadingTexts.length);
-    }, 2000);
+    }, 60);
     
     return () => {
-      clearInterval(timer);
-      clearInterval(textTimer);
+      clearTimeout(timer);
+      clearInterval(interval);
     };
-  }, []);
+  }, [onComplete]);
   
-  useEffect(() => {
-    setLoadingText(loadingTexts[textIndex]);
-  }, [textIndex]);
-  
-  useEffect(() => {
-    if (progress === 100) {
-      const timer = setTimeout(() => {
-        onComplete();
-      }, 1000);
-      
-      return () => clearTimeout(timer);
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        when: "beforeChildren",
+        staggerChildren: 0.2
+      }
+    },
+    exit: { 
+      opacity: 0,
+      transition: { duration: 0.5 }
     }
-  }, [progress, onComplete]);
+  };
+  
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { 
+      y: 0, 
+      opacity: 1,
+      transition: {
+        type: "spring",
+        damping: 12,
+        stiffness: 100
+      }
+    }
+  };
   
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-heritage-950 to-heritage-900 flex flex-col items-center justify-center z-50">
-      <style>
-        {`
-          @keyframes portal-glow {
-            0%, 100% {
-              box-shadow: 0 0 20px 5px rgba(56, 189, 248, 0.4);
-            }
-            50% {
-              box-shadow: 0 0 35px 10px rgba(56, 189, 248, 0.6);
-            }
-          }
+    <motion.div 
+      className="fixed inset-0 flex flex-col items-center justify-center bg-heritage-950 z-50"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+    >
+      <div className="max-w-md text-center px-6">
+        <motion.div variants={itemVariants} className="mb-8 flex flex-col items-center">
+          <div className="relative w-24 h-24 mx-auto mb-8">
+            <div className="absolute inset-0 bg-gradient-to-tr from-accent to-accent-400 rounded-md animate-pulse-slow"></div>
+            <span className="absolute inset-0 flex items-center justify-center font-bold text-4xl text-white">AR</span>
+          </div>
           
-          @keyframes orbital {
-            0% {
-              transform: rotate(0deg) translateX(100px) rotate(0deg);
-            }
-            100% {
-              transform: rotate(360deg) translateX(100px) rotate(-360deg);
-            }
-          }
-
-          .portal-ring {
-            position: relative;
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            border: 4px solid transparent;
-            background: linear-gradient(black, black) padding-box,
-                        linear-gradient(to right, #38bdf8, #38bdf8cc) border-box;
-            animation: portal-glow 3s infinite alternate, spin 20s linear infinite;
-          }
+          <motion.h1 
+            className="text-5xl font-bold text-white mb-4"
+            variants={itemVariants}
+          >
+            HeritageAR
+          </motion.h1>
           
-          .portal-ring::before, .portal-ring::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            border-radius: 50%;
-            background: transparent;
-            border: 2px solid rgba(56, 189, 248, 0.6);
-            transform: translate(-50%, -50%);
-          }
-          
-          .portal-ring::before {
-            width: 220px;
-            height: 220px;
-            animation: spin 12s linear infinite reverse;
-          }
-          
-          .portal-ring::after {
-            width: 250px;
-            height: 250px;
-            border-width: 3px;
-            animation: spin 20s linear infinite;
-          }
-          
-          .orbital {
-            animation: orbital 6s linear infinite;
-          }
-          
-          @keyframes spin {
-            from {
-              transform: rotate(0deg);
-            }
-            to {
-              transform: rotate(360deg);
-            }
-          }
-          
-          .particles {
-            position: absolute;
-            width: 2px;
-            height: 2px;
-            border-radius: 50%;
-            background-color: rgba(56, 189, 248, 0.8);
-            box-shadow: 0 0 10px 2px rgba(56, 189, 248, 0.4);
-          }
-          
-          .particle-1 { animation: orbital 8s linear infinite; }
-          .particle-2 { animation: orbital 12s linear infinite; animation-delay: -2s; }
-          .particle-3 { animation: orbital 10s linear infinite; animation-delay: -4s; }
-          .particle-4 { animation: orbital 14s linear infinite; animation-delay: -6s; }
-          .particle-5 { animation: orbital 9s linear infinite; animation-delay: -8s; }
-        `}
-      </style>
-      
-      <div className="relative mb-12 flex items-center justify-center">
-        <div className="portal-ring"></div>
-        
-        {/* Orbiting elements */}
-        <div className="particle-1 particles"></div>
-        <div className="particle-2 particles"></div>
-        <div className="particle-3 particles"></div>
-        <div className="particle-4 particles"></div>
-        <div className="particle-5 particles"></div>
+          <motion.p 
+            className="text-heritage-300 text-xl"
+            variants={itemVariants}
+          >
+            Explore history in augmented reality
+          </motion.p>
+        </motion.div>
         
         <motion.div 
-          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 h-24 flex items-center justify-center"
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 1, delay: 0.5 }}
+          className="w-full bg-heritage-800 rounded-full h-3 mb-6 overflow-hidden"
+          variants={itemVariants}
         >
-          <div className="relative w-20 h-20 flex items-center justify-center">
-            <div className="absolute inset-0 rounded-md bg-gradient-to-tr from-accent to-accent/70"></div>
-            <span className="relative z-10 text-4xl font-bold text-white">AR</span>
-          </div>
+          <motion.div 
+            className="bg-accent h-full rounded-full"
+            initial={{ width: "0%" }}
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.2 }}
+          ></motion.div>
+        </motion.div>
+        
+        <motion.div className="text-heritage-400 text-sm font-medium" variants={itemVariants}>
+          {progress < 100 ? "Loading experience..." : "Ready!"}
         </motion.div>
       </div>
-      
-      <motion.h2 
-        className="text-2xl font-bold text-white mb-4 text-center"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.8 }}
-      >
-        Welcome to HeritageAR
-      </motion.h2>
-      
-      <motion.div 
-        className="text-accent mb-8 text-center"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.8, delay: 0.4 }}
-      >
-        {loadingText}...
-      </motion.div>
-      
-      <motion.div 
-        className="w-64 h-2 bg-heritage-800 rounded-full overflow-hidden"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.8, delay: 0.8 }}
-      >
-        <motion.div 
-          className="h-full bg-accent"
-          initial={{ width: 0 }}
-          animate={{ width: `${progress}%` }}
-          transition={{ duration: 0.3 }}
-        ></motion.div>
-      </motion.div>
-      
-      <motion.div 
-        className="mt-2 text-white text-sm"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.8, delay: 1 }}
-      >
-        {Math.round(progress)}%
-      </motion.div>
-    </div>
+    </motion.div>
   );
 };
 

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, User, LogOut } from 'lucide-react';
@@ -44,11 +45,11 @@ const Header: React.FC<HeaderProps> = ({
               className="p-2 rounded-full hover:bg-heritage-100 transition-colors duration-200"
               aria-label="Go back"
             >
-              <ArrowLeft size={20} className="text-heritage-800" />
+              <ArrowLeft size={20} className="text-white" />
             </Link>
           )}
           
-          <h1 className="text-xl font-medium tracking-tight text-heritage-950">
+          <h1 className="text-xl font-medium tracking-tight text-white">
             {title}
           </h1>
         </div>
@@ -60,8 +61,8 @@ const Header: React.FC<HeaderProps> = ({
                 to="/ar" 
                 className={`text-sm px-4 py-2 rounded-full transition-all duration-300 ${
                   location.pathname === '/ar' 
-                    ? 'bg-accent text-accent-foreground' 
-                    : 'bg-heritage-100 text-heritage-800 hover:bg-heritage-200'
+                    ? 'bg-accent text-white' 
+                    : 'bg-heritage-100/20 text-white hover:bg-heritage-200/30'
                 }`}
               >
                 AR View
