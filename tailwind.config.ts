@@ -150,6 +150,10 @@ export default {
 				'float': {
 					'0%, 100%': { transform: 'translateY(0)' },
 					'50%': { transform: 'translateY(-8px)' }
+				},
+				'pulse-slow': {
+					'0%, 100%': { opacity: '1' },
+					'50%': { opacity: '0.7' }
 				}
 			},
 			animation: {
@@ -163,7 +167,8 @@ export default {
 				'scale-out': 'scale-out 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
 				'blur-in': 'blur-in 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
 				'blur-out': 'blur-out 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-				'float': 'float 3s ease-in-out infinite'
+				'float': 'float 3s ease-in-out infinite',
+				'pulse-slow': 'pulse-slow 3s ease-in-out infinite'
 			},
 			backdropFilter: {
 				'none': 'none',

@@ -66,6 +66,22 @@ const LoadingAnimation: React.FC<LoadingAnimationProps> = ({ onComplete }) => {
       <div className="max-w-md text-center px-6">
         <motion.div variants={itemVariants} className="mb-8 flex flex-col items-center">
           <div className="relative w-24 h-24 mx-auto mb-8">
+            {/* First ring - clockwise rotation */}
+            <motion.div 
+              className="absolute inset-0 w-full h-full rounded-full border-2 border-accent/70"
+              style={{ width: '120%', height: '120%', top: '-10%', left: '-10%' }}
+              animate={{ rotate: 360 }}
+              transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+            ></motion.div>
+            
+            {/* Second ring - counter-clockwise rotation */}
+            <motion.div 
+              className="absolute inset-0 w-full h-full rounded-full border-2 border-accent-400/70" 
+              style={{ width: '140%', height: '140%', top: '-20%', left: '-20%' }}
+              animate={{ rotate: -360 }}
+              transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+            ></motion.div>
+            
             <div className="absolute inset-0 bg-gradient-to-tr from-accent to-accent-400 rounded-md animate-pulse-slow"></div>
             <span className="absolute inset-0 flex items-center justify-center font-bold text-4xl text-white">AR</span>
           </div>
