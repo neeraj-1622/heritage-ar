@@ -55,6 +55,25 @@ const LoadingAnimation: React.FC<LoadingAnimationProps> = ({ onComplete }) => {
     }
   };
   
+  // New rotating rings animation
+  const clockwiseRing = {
+    rotate: [0, 360],
+    transition: {
+      duration: 8,
+      repeat: Infinity,
+      ease: "linear"
+    }
+  };
+  
+  const counterClockwiseRing = {
+    rotate: [360, 0],
+    transition: {
+      duration: 12,
+      repeat: Infinity,
+      ease: "linear"
+    }
+  };
+  
   return (
     <motion.div 
       className="fixed inset-0 flex flex-col items-center justify-center bg-heritage-950 z-50"
@@ -65,9 +84,27 @@ const LoadingAnimation: React.FC<LoadingAnimationProps> = ({ onComplete }) => {
     >
       <div className="max-w-md text-center px-6">
         <motion.div variants={itemVariants} className="mb-8 flex flex-col items-center">
-          <div className="relative w-24 h-24 mx-auto mb-8">
-            <div className="absolute inset-0 bg-gradient-to-tr from-accent to-accent-400 rounded-md animate-pulse-slow"></div>
-            <span className="absolute inset-0 flex items-center justify-center font-bold text-4xl text-white">AR</span>
+          <div className="relative w-32 h-32 mx-auto mb-8">
+            {/* Outer rotating ring (counterclockwise) */}
+            <motion.div 
+              className="absolute inset-0 w-full h-full rounded-full border-2 border-accent/50"
+              style={{ borderWidth: '3px', borderStyle: 'dashed' }}
+              animate={counterClockwiseRing}
+            ></motion.div>
+            
+            {/* Inner rotating ring (clockwise) */}
+            <motion.div 
+              className="absolute inset-2 w-[calc(100%-16px)] h-[calc(100%-16px)] rounded-full border-2 border-white/50"
+              style={{ borderWidth: '2px' }}
+              animate={clockwiseRing}
+            ></motion.div>
+            
+            {/* AR Logo */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="relative w-24 h-24 bg-gradient-to-tr from-accent to-accent-400 rounded-md animate-pulse-slow">
+                <span className="absolute inset-0 flex items-center justify-center font-bold text-4xl text-white">AR</span>
+              </div>
+            </div>
           </div>
           
           <motion.h1 

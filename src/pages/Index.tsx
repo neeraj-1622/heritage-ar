@@ -48,7 +48,7 @@ const Index: React.FC = () => {
             <div className="absolute bottom-0 right-1/4 w-32 h-32 rounded-full bg-heritage-200/20 blur-3xl"></div>
             
             <motion.span 
-              className="inline-block px-4 py-1.5 text-xs font-medium bg-accent/10 text-accent rounded-full mb-4 animate-float"
+              className="inline-block px-4 py-1.5 text-xs font-medium bg-accent/10 text-accent rounded-full mb-4"
               variants={itemVariants}
             >
               Explore Historical Sites
@@ -74,10 +74,10 @@ const Index: React.FC = () => {
               className="mt-8 flex flex-wrap justify-center gap-4"
               variants={itemVariants}
             >
-              <a href="#gallery" className="button-primary hover-glow animate-float">
+              <a href="#gallery" className="button-primary hover-glow">
                 Explore Sites
               </a>
-              <Link to="/ar" className="button-secondary">
+              <Link to="/ar" className="button-secondary animate-float">
                 Try AR Experience
               </Link>
             </motion.div>
