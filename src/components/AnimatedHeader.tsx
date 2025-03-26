@@ -109,12 +109,20 @@ const AnimatedHeader: React.FC<HeaderProps> = ({ title, showBackButton = false }
               </div>
             </div>
           ) : (
-            <Link 
-              to="/login" 
-              className="px-4 py-2 rounded-full bg-accent text-white shadow-sm hover:shadow-md hover:bg-accent-600 transition-all duration-200"
-            >
-              Sign in
-            </Link>
+            <div className="flex items-center space-x-2">
+              <Link 
+                to="/login" 
+                className="px-4 py-2 text-white hover:text-accent transition-all duration-200"
+              >
+                Sign in
+              </Link>
+              <Link 
+                to="/register" 
+                className="px-4 py-2 rounded-full bg-accent text-white shadow-sm hover:shadow-md hover:bg-accent-600 transition-all duration-200"
+              >
+                Register
+              </Link>
+            </div>
           )}
         </div>
         
@@ -163,13 +171,22 @@ const AnimatedHeader: React.FC<HeaderProps> = ({ title, showBackButton = false }
               Sign out
             </button>
           ) : (
-            <Link 
-              to="/login" 
-              className="block py-2 text-white hover:text-accent hover:pl-2 transition-all"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Sign in
-            </Link>
+            <div className="flex flex-col space-y-2">
+              <Link 
+                to="/login" 
+                className="block py-2 text-white hover:text-accent hover:pl-2 transition-all"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Sign in
+              </Link>
+              <Link 
+                to="/register" 
+                className="block py-2 text-white hover:text-accent hover:pl-2 transition-all"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Register
+              </Link>
+            </div>
           )}
         </div>
       </div>

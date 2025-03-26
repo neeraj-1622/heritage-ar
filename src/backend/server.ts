@@ -1,3 +1,4 @@
+
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { connectToDatabase, closeDatabaseConnection } from './database/connection';
@@ -81,7 +82,7 @@ app.post('/api/auth/login', async (req: Request, res: Response): Promise<void> =
   }
 });
 
-// Protected site routes
+// Public route for all sites
 app.get('/api/sites', async (_req: Request, res: Response): Promise<void> => {
   try {
     if (!services.siteService) {
@@ -96,32 +97,26 @@ app.get('/api/sites', async (_req: Request, res: Response): Promise<void> => {
   }
 });
 
-// Protected routes (require authentication)
+// Public route for single site details
 app.get('/api/sites/:id', async (req: Request, res: Response): Promise<void> => {
-  if (!services.userService) {
-    res.status(500).json({ message: 'Service not initialized' });
-    return;
-  }
-  const auth = authMiddleware(services.userService);
-  auth(req, res, async () => {
-    try {
-      if (!services.siteService) {
-        res.status(500).json({ message: 'Service not initialized' });
-        return;
-      }
-      const site = await services.siteService.getSiteById(req.params.id);
-      if (!site) {
-        res.status(404).json({ message: 'Site not found' });
-        return;
-      }
-      res.json(site);
-    } catch (error) {
-      console.error(`Error fetching site ${req.params.id}:`, error);
-      res.status(500).json({ message: 'Failed to fetch site' });
+  try {
+    if (!services.siteService) {
+      res.status(500).json({ message: 'Service not initialized' });
+      return;
     }
-  });
+    const site = await services.siteService.getSiteById(req.params.id);
+    if (!site) {
+      res.status(404).json({ message: 'Site not found' });
+      return;
+    }
+    res.json(site);
+  } catch (error) {
+    console.error(`Error fetching site ${req.params.id}:`, error);
+    res.status(500).json({ message: 'Failed to fetch site' });
+  }
 });
 
+// Protected routes (require authentication)
 app.post('/api/sites', async (req: Request, res: Response): Promise<void> => {
   if (!services.userService) {
     res.status(500).json({ message: 'Service not initialized' });

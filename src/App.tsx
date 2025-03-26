@@ -34,7 +34,7 @@ const queryClient = new QueryClient({
 const pageVariants = {
   initial: {
     opacity: 0,
-    y: 10
+    y: 8
   },
   in: {
     opacity: 1,
@@ -42,14 +42,14 @@ const pageVariants = {
   },
   out: {
     opacity: 0,
-    y: -10
+    y: -8
   }
 };
 
 const pageTransition = {
   type: "tween",
-  ease: "anticipate",
-  duration: 0.3
+  ease: "easeInOut",
+  duration: 0.35
 };
 
 // AnimationLayout component to handle page transitions
@@ -111,7 +111,7 @@ const App = () => {
           <AuthProvider>
             <TooltipProvider>
               <Toaster />
-              <Sonner closeButton richColors position="top-right" toastOptions={{ duration: 2000 }} />
+              <Sonner closeButton richColors position="top-right" toastOptions={{ duration: 3000 }} />
               <AnimationLayout />
             </TooltipProvider>
           </AuthProvider>

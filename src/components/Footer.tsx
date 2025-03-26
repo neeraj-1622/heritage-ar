@@ -40,7 +40,7 @@ const Footer: React.FC = () => {
   };
 
   return (
-    <footer className="bg-heritage-900/50 backdrop-blur-sm border-t border-heritage-800/30">
+    <footer className="relative z-10 bg-heritage-900/80 backdrop-blur-sm border-t border-heritage-800/30 mt-auto">
       <motion.div 
         className="container mx-auto px-4 py-12"
         variants={containerVariants}
@@ -55,7 +55,7 @@ const Footer: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-tr from-accent to-accent/70 rounded-md"></div>
                 <span className="relative font-bold text-white z-10">AR</span>
               </div>
-              <h3 className="text-xl font-bold text-heritage-100">HeritageAR</h3>
+              <h3 className="text-xl font-bold text-white">HeritageAR</h3>
             </Link>
             <p className="text-heritage-300 max-w-md">
               Experience history in a new dimension with augmented reality. HeritageAR brings historical sites and artifacts to life through immersive AR technology.
@@ -69,14 +69,14 @@ const Footer: React.FC = () => {
                   className="w-10 h-10 rounded-full bg-heritage-800/80 flex items-center justify-center hover:bg-accent/80 transition-colors"
                   whileHover={{ y: -3 }}
                 >
-                  <social.icon className="w-5 h-5 text-heritage-200" />
+                  <social.icon className="w-5 h-5 text-white" />
                 </motion.a>
               ))}
             </div>
           </motion.div>
           
           <motion.div variants={childVariants}>
-            <h3 className="text-heritage-100 font-medium mb-4">Quick Links</h3>
+            <h3 className="text-white font-medium mb-4">Quick Links</h3>
             <ul className="space-y-2">
               {footerLinks.map((link) => (
                 <li key={link.path}>
@@ -92,7 +92,7 @@ const Footer: React.FC = () => {
           </motion.div>
           
           <motion.div variants={childVariants}>
-            <h3 className="text-heritage-100 font-medium mb-4">Contact Us</h3>
+            <h3 className="text-white font-medium mb-4">Contact Us</h3>
             <ul className="space-y-2 text-heritage-300">
               <li>contact@heritagear.example.com</li>
               <li>+1 (555) 123-4567</li>
@@ -102,7 +102,7 @@ const Footer: React.FC = () => {
             <div className="mt-6">
               <Link 
                 to="/contact"
-                className="inline-block px-4 py-2 rounded-full bg-heritage-800 text-heritage-200 hover:bg-accent hover:text-white transition-colors text-sm"
+                className="inline-block px-4 py-2 rounded-full bg-heritage-800 text-white hover:bg-accent hover:text-white transition-colors text-sm"
               >
                 Get in Touch
               </Link>
@@ -119,10 +119,10 @@ const Footer: React.FC = () => {
           </p>
           
           <div className="mt-4 md:mt-0 flex space-x-6">
-            <Link to="/privacy" className="text-heritage-300 hover:text-heritage-100 text-sm">
+            <Link to="/privacy" className="text-heritage-300 hover:text-white text-sm">
               Privacy Policy
             </Link>
-            <Link to="/terms" className="text-heritage-300 hover:text-heritage-100 text-sm">
+            <Link to="/terms" className="text-heritage-300 hover:text-white text-sm">
               Terms of Service
             </Link>
           </div>

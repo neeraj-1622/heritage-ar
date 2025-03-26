@@ -1,111 +1,44 @@
 
-import { HistoricalSite, HistoricalSiteInput } from '../../backend/models/HistoricalSite';
+import { toast } from '@/hooks/use-toast';
 
-const API_URL = 'http://localhost:5000/api';
-
-// Helper function to get auth headers
-const getAuthHeaders = () => {
-  const user = localStorage.getItem('heritageAR_user');
-  if (!user) return {};
-  
-  const { token } = JSON.parse(user);
-  return {
-    'Authorization': `Bearer ${token}`
-  };
-};
-
-export const fetchAllSites = async (): Promise<HistoricalSite[]> => {
+export const fetchAllSites = async () => {
   try {
-    const response = await fetch(`${API_URL}/sites`);
+    const response = await fetch('http://localhost:5000/api/sites');
     
     if (!response.ok) {
-      throw new Error(`Error fetching sites: ${response.statusText}`);
+      const errorData = await response.json();
+      throw new Error(`Error fetching sites: ${errorData.message || response.statusText}`);
     }
     
     return await response.json();
   } catch (error) {
     console.error('Error fetching sites:', error);
+    toast({
+      title: "Error loading sites",
+      description: "Could not load sites. Please try again later.",
+      variant: "destructive",
+    });
     throw error;
   }
 };
 
-export const fetchSiteById = async (id: string): Promise<HistoricalSite> => {
+export const fetchSiteById = async (id: string) => {
   try {
-    const response = await fetch(`${API_URL}/sites/${id}`, {
-      headers: {
-        ...getAuthHeaders(),
-      }
-    });
+    const response = await fetch(`http://localhost:5000/api/sites/${id}`);
     
     if (!response.ok) {
-      throw new Error(`Error fetching site ${id}: ${response.statusText}`);
+      const errorData = await response.json();
+      throw new Error(`Error fetching site ${id}: ${errorData.message || response.statusText}`);
     }
     
     return await response.json();
   } catch (error) {
     console.error(`Error fetching site ${id}:`, error);
-    throw error;
-  }
-};
-
-export const createSite = async (siteData: HistoricalSiteInput): Promise<HistoricalSite> => {
-  try {
-    const response = await fetch(`${API_URL}/sites`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...getAuthHeaders(),
-      },
-      body: JSON.stringify(siteData),
+    toast({
+      title: "Error loading site",
+      description: "Could not load site details. Please try again later.",
+      variant: "destructive",
     });
-    
-    if (!response.ok) {
-      throw new Error(`Error creating site: ${response.statusText}`);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('Error creating site:', error);
-    throw error;
-  }
-};
-
-export const updateSite = async (id: string, siteData: Partial<HistoricalSiteInput>): Promise<HistoricalSite> => {
-  try {
-    const response = await fetch(`${API_URL}/sites/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        ...getAuthHeaders(),
-      },
-      body: JSON.stringify(siteData),
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Error updating site ${id}: ${response.statusText}`);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error(`Error updating site ${id}:`, error);
-    throw error;
-  }
-};
-
-export const deleteSite = async (id: string): Promise<void> => {
-  try {
-    const response = await fetch(`${API_URL}/sites/${id}`, {
-      method: 'DELETE',
-      headers: {
-        ...getAuthHeaders(),
-      },
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Error deleting site ${id}: ${response.statusText}`);
-    }
-  } catch (error) {
-    console.error(`Error deleting site ${id}:`, error);
     throw error;
   }
 };
