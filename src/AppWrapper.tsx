@@ -10,10 +10,14 @@ const AppWrapper: React.FC = () => {
   useEffect(() => {
     // Check if user has visited before to avoid showing animation again
     const hasVisited = localStorage.getItem('hasVisitedBefore');
+    
     if (hasVisited) {
+      // Skip animation if they've visited before
       setLoading(false);
     } else {
+      // Mark as visited to avoid showing on page navigation
       localStorage.setItem('hasVisitedBefore', 'true');
+      
       // After 24 hours, reset the visited flag so they see animation again
       const resetTime = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
       setTimeout(() => {

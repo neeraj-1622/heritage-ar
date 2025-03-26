@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -145,6 +146,10 @@ export default {
 				'blur-out': {
 					from: { filter: 'blur(0)', opacity: '1' },
 					to: { filter: 'blur(4px)', opacity: '0' }
+				},
+				'float': {
+					'0%, 100%': { transform: 'translateY(0)' },
+					'50%': { transform: 'translateY(-8px)' }
 				}
 			},
 			animation: {
@@ -157,7 +162,8 @@ export default {
 				'scale-in': 'scale-in 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
 				'scale-out': 'scale-out 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
 				'blur-in': 'blur-in 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-				'blur-out': 'blur-out 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
+				'blur-out': 'blur-out 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+				'float': 'float 3s ease-in-out infinite'
 			},
 			backdropFilter: {
 				'none': 'none',

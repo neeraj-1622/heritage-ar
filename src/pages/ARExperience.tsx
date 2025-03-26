@@ -69,6 +69,7 @@ const ARExperience: React.FC = () => {
   const [isSiteMenuOpen, setIsSiteMenuOpen] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const [showTip, setShowTip] = useState(false);
+  const [showARModel, setShowARModel] = useState(false);
 
   useEffect(() => {
     // Hide footer when AR Experience mounts and restore when unmounting
@@ -78,6 +79,11 @@ const ARExperience: React.FC = () => {
       document.body.classList.remove('ar-mode');
     };
   }, []);
+
+  useEffect(() => {
+    // When site changes, reset AR model visibility
+    setShowARModel(false);
+  }, [selectedSite]);
 
   useEffect(() => {
     // Simulate AR initialization
@@ -102,7 +108,7 @@ const ARExperience: React.FC = () => {
     <div className="fixed inset-0 bg-black flex flex-col animate-fade-in">
       {/* AR Camera view */}
       <main className="flex-1 relative">
-        <ARView selectedSite={selectedSite} />
+        <ARView selectedSite={selectedSite} showModel={showARModel} />
         
         {/* AR UI Overlay */}
         <div className="absolute inset-0 pointer-events-none">
@@ -115,7 +121,7 @@ const ARExperience: React.FC = () => {
               </div>
             )}
             
-            {showTip && !isInitializing && (
+            {showTip && !isInitializing && !showARModel && (
               <div className="glass-panel px-4 py-2 rounded-full flex items-center animate-slide-up">
                 <Info className="h-4 w-4 text-white mr-2" />
                 <span className="text-sm text-white">Move your device to scan the environment</span>
@@ -125,15 +131,23 @@ const ARExperience: React.FC = () => {
           
           {/* AR interface elements */}
           <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-4 pointer-events-auto">
-            <button className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95">
+            <button 
+              className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
+              onClick={() => setShowARModel(!showARModel)}
+            >
               <Layers className="h-6 w-6 text-white" />
             </button>
             
-            <button className="w-16 h-16 rounded-full bg-white/25 backdrop-blur-md border border-white/40 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95">
+            <button 
+              className="w-16 h-16 rounded-full bg-white/25 backdrop-blur-md border border-white/40 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
+              onClick={() => setShowARModel(!showARModel)}
+            >
               <Camera className="h-8 w-8 text-white" />
             </button>
             
-            <button className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95">
+            <button 
+              className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
+            >
               <Compass className="h-6 w-6 text-white" />
             </button>
           </div>
@@ -185,6 +199,8 @@ const ARExperience: React.FC = () => {
                   onClick={() => {
                     setSelectedSite(site);
                     setIsSiteMenuOpen(false);
+                    // Reset AR model visibility when changing sites
+                    setShowARModel(false);
                   }}
                 >
                   <div className="flex items-center">

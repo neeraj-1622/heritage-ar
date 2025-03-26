@@ -4,9 +4,10 @@ import { HistoricalSite } from './SiteCard';
 
 interface ARViewProps {
   selectedSite?: HistoricalSite;
+  showModel: boolean;
 }
 
-const ARView: React.FC<ARViewProps> = ({ selectedSite }) => {
+const ARView: React.FC<ARViewProps> = ({ selectedSite, showModel }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isModelLoaded, setIsModelLoaded] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
@@ -28,16 +29,31 @@ const ARView: React.FC<ARViewProps> = ({ selectedSite }) => {
       setIsLoading(false);
     }, 1500);
     
-    // Model loading
+    // Model loading - only if showModel is true
     const timer2 = setTimeout(() => {
-      setIsModelLoaded(true);
+      if (showModel) {
+        setIsModelLoaded(true);
+      }
     }, 3000);
     
     return () => {
       clearTimeout(timer1);
       clearTimeout(timer2);
     };
-  }, [selectedSite]);
+  }, [selectedSite, showModel]);
+
+  // If showModel changes after initialization
+  useEffect(() => {
+    if (cameraReady && showModel && !isModelLoaded) {
+      const timer = setTimeout(() => {
+        setIsModelLoaded(true);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    } else if (!showModel && isModelLoaded) {
+      setIsModelLoaded(false);
+    }
+  }, [showModel, cameraReady, isModelLoaded]);
 
   // Simulate model rotation
   useEffect(() => {
@@ -172,7 +188,7 @@ const ARView: React.FC<ARViewProps> = ({ selectedSite }) => {
         </div>
       )}
 
-      {/* Controls overlay */}
+      {/* Controls overlay - only show when model is loaded */}
       {isModelLoaded && (
         <div className="absolute bottom-20 left-0 right-0 z-30 p-4">
           <div className="glass-panel rounded-2xl p-4 max-w-lg mx-auto animate-slide-up">
