@@ -3,8 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import ARView from '../components/ARView';
 import { HistoricalSite } from '../components/SiteCard';
-import { ArrowLeft, Image, Settings, Camera, Layers, Compass, Info, Home } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { ArrowLeft, Image, Settings, Camera, Layers, Compass, Info } from 'lucide-react';
 
 // Sample data - in a real app this would come from an API or database
 const sampleSites: HistoricalSite[] = [
@@ -71,9 +70,6 @@ const ARExperience: React.FC = () => {
   const [isInitializing, setIsInitializing] = useState(true);
   const [showTip, setShowTip] = useState(false);
   const [showARModel, setShowARModel] = useState(false);
-  const [cameraScanning, setCameraScanning] = useState(true);
-  const [tooltipVisible, setTooltipVisible] = useState(false);
-  const [activeTooltip, setActiveTooltip] = useState('');
 
   useEffect(() => {
     // Hide footer when AR Experience mounts and restore when unmounting
@@ -87,7 +83,6 @@ const ARExperience: React.FC = () => {
   useEffect(() => {
     // When site changes, reset AR model visibility
     setShowARModel(false);
-    setCameraScanning(true);
   }, [selectedSite]);
 
   useEffect(() => {
@@ -109,31 +104,6 @@ const ARExperience: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleShowModel = () => {
-    if (cameraScanning) {
-      setCameraScanning(false);
-      setTimeout(() => {
-        setShowARModel(true);
-        toast({
-          title: "AR Model loaded",
-          description: `${selectedSite?.name} model is now visible in AR`,
-        });
-      }, 500);
-    } else {
-      setShowARModel(!showARModel);
-    }
-  };
-
-  const showButtonTooltip = (tooltipName: string) => {
-    setActiveTooltip(tooltipName);
-    setTooltipVisible(true);
-    
-    // Auto-hide tooltip after 3 seconds
-    setTimeout(() => {
-      setTooltipVisible(false);
-    }, 3000);
-  };
-
   return (
     <div className="fixed inset-0 bg-black flex flex-col animate-fade-in">
       {/* AR Camera view */}
@@ -151,7 +121,7 @@ const ARExperience: React.FC = () => {
               </div>
             )}
             
-            {showTip && !isInitializing && cameraScanning && (
+            {showTip && !isInitializing && !showARModel && (
               <div className="glass-panel px-4 py-2 rounded-full flex items-center animate-slide-up">
                 <Info className="h-4 w-4 text-white mr-2" />
                 <span className="text-sm text-white">Move your device to scan the environment</span>
@@ -161,114 +131,55 @@ const ARExperience: React.FC = () => {
           
           {/* AR interface elements */}
           <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-4 pointer-events-auto">
-            <div className="relative">
-              <button 
-                className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
-                onClick={() => {
-                  if (showARModel) {
-                    toast({
-                      title: "Changed visualization mode",
-                      description: "Switched to wireframe view",
-                    });
-                  } else {
-                    showButtonTooltip('layers');
-                  }
-                }}
-                onMouseOver={() => showButtonTooltip('layers')}
-              >
-                <Layers className="h-6 w-6 text-white" />
-              </button>
-              {tooltipVisible && activeTooltip === 'layers' && (
-                <div className="absolute bottom-16 left-1/2 -translate-x-1/2 w-max glass-panel px-3 py-1 rounded-md text-xs text-white animate-fade-in">
-                  Toggle wireframe mode
-                </div>
-              )}
-            </div>
+            <button 
+              className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
+              onClick={() => setShowARModel(!showARModel)}
+            >
+              <Layers className="h-6 w-6 text-white" />
+            </button>
             
-            <div className="relative">
-              <button 
-                className="w-16 h-16 rounded-full bg-white/25 backdrop-blur-md border border-white/40 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
-                onClick={handleShowModel}
-                onMouseOver={() => showButtonTooltip('camera')}
-              >
-                <Camera className="h-8 w-8 text-white" />
-              </button>
-              {tooltipVisible && activeTooltip === 'camera' && (
-                <div className="absolute bottom-20 left-1/2 -translate-x-1/2 w-max glass-panel px-3 py-1 rounded-md text-xs text-white animate-fade-in">
-                  {cameraScanning ? "Place AR model" : "Toggle AR model visibility"}
-                </div>
-              )}
-            </div>
+            <button 
+              className="w-16 h-16 rounded-full bg-white/25 backdrop-blur-md border border-white/40 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
+              onClick={() => setShowARModel(!showARModel)}
+            >
+              <Camera className="h-8 w-8 text-white" />
+            </button>
             
-            <div className="relative">
-              <button 
-                className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
-                onClick={() => {
-                  if (showARModel) {
-                    toast({
-                      title: "Compass activated",
-                      description: "AR model orientation locked to north",
-                    });
-                  } else {
-                    showButtonTooltip('compass');
-                  }
-                }}
-                onMouseOver={() => showButtonTooltip('compass')}
-              >
-                <Compass className="h-6 w-6 text-white" />
-              </button>
-              {tooltipVisible && activeTooltip === 'compass' && (
-                <div className="absolute bottom-16 left-1/2 -translate-x-1/2 w-max glass-panel px-3 py-1 rounded-md text-xs text-white animate-fade-in">
-                  Lock model orientation to north
-                </div>
-              )}
-            </div>
+            <button 
+              className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
+            >
+              <Compass className="h-6 w-6 text-white" />
+            </button>
           </div>
         </div>
         
         {/* Top navigation bar */}
         <div className="absolute top-0 left-0 right-0 z-10 p-4 flex justify-between items-center">
           <button 
-            onClick={() => navigate('/')}
+            onClick={() => navigate(-1)}
             className="p-2 rounded-full bg-black/30 backdrop-blur-md text-white hover:bg-black/40 transition-colors pointer-events-auto"
-            aria-label="Go back to home"
+            aria-label="Go back"
           >
-            <Home size={20} />
+            <ArrowLeft size={20} />
           </button>
           
           <div className="flex space-x-2 pointer-events-auto">
-            <div className="relative">
-              <button 
-                onClick={() => setIsSiteMenuOpen(!isSiteMenuOpen)}
-                className={`p-2 rounded-full backdrop-blur-md text-white transition-colors ${
-                  isSiteMenuOpen ? 'bg-accent/70' : 'bg-black/30 hover:bg-black/40'
-                }`}
-                aria-label="Change model"
-                onMouseOver={() => showButtonTooltip('image')}
-              >
-                <Image size={20} />
-              </button>
-              {tooltipVisible && activeTooltip === 'image' && (
-                <div className="absolute top-10 right-0 w-max glass-panel px-3 py-1 rounded-md text-xs text-white animate-fade-in">
-                  Select historical site
-                </div>
-              )}
-            </div>
+            <button 
+              onClick={() => setIsSiteMenuOpen(!isSiteMenuOpen)}
+              className={`p-2 rounded-full backdrop-blur-md text-white transition-colors ${
+                isSiteMenuOpen ? 'bg-accent/70' : 'bg-black/30 hover:bg-black/40'
+              }`}
+              aria-label="Change model"
+            >
+              <Image size={20} />
+            </button>
             
-            <div className="relative">
-              <button 
-                className="p-2 rounded-full bg-black/30 backdrop-blur-md text-white hover:bg-black/40 transition-colors"
-                aria-label="Settings"
-                onMouseOver={() => showButtonTooltip('settings')}
-              >
-                <Settings size={20} />
-              </button>
-              {tooltipVisible && activeTooltip === 'settings' && (
-                <div className="absolute top-10 right-0 w-max glass-panel px-3 py-1 rounded-md text-xs text-white animate-fade-in">
-                  AR settings
-                </div>
-              )}
-            </div>
+            <button 
+              className="p-2 rounded-full bg-black/30 backdrop-blur-md text-white hover:bg-black/40 transition-colors"
+              aria-label="Settings"
+            >
+              <Settings size={20} />
+            </button>
           </div>
         </div>
         
@@ -290,7 +201,6 @@ const ARExperience: React.FC = () => {
                     setIsSiteMenuOpen(false);
                     // Reset AR model visibility when changing sites
                     setShowARModel(false);
-                    setCameraScanning(true);
                   }}
                 >
                   <div className="flex items-center">
