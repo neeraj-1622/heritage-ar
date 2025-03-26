@@ -64,21 +64,21 @@ const LoadingAnimation: React.FC<LoadingAnimationProps> = ({ onComplete }) => {
       exit="exit"
     >
       <div className="max-w-md text-center px-6">
-        <motion.div variants={itemVariants} className="mb-8">
-          <div className="relative w-20 h-20 mx-auto mb-6">
+        <motion.div variants={itemVariants} className="mb-8 flex flex-col items-center">
+          <div className="relative w-24 h-24 mx-auto mb-8">
             <div className="absolute inset-0 bg-gradient-to-tr from-accent to-accent-400 rounded-md animate-pulse-slow"></div>
-            <span className="absolute inset-0 flex items-center justify-center font-bold text-3xl text-white">AR</span>
+            <span className="absolute inset-0 flex items-center justify-center font-bold text-4xl text-white">AR</span>
           </div>
           
           <motion.h1 
-            className="text-4xl font-bold text-white mb-2"
+            className="text-5xl font-bold text-white mb-4"
             variants={itemVariants}
           >
             HeritageAR
           </motion.h1>
           
           <motion.p 
-            className="text-heritage-300 text-lg"
+            className="text-heritage-300 text-xl"
             variants={itemVariants}
           >
             Explore history in augmented reality
@@ -86,7 +86,7 @@ const LoadingAnimation: React.FC<LoadingAnimationProps> = ({ onComplete }) => {
         </motion.div>
         
         <motion.div 
-          className="w-full bg-heritage-800 rounded-full h-2 mb-6 overflow-hidden"
+          className="w-full bg-heritage-800 rounded-full h-3 mb-6 overflow-hidden"
           variants={itemVariants}
         >
           <motion.div 
@@ -97,7 +97,7 @@ const LoadingAnimation: React.FC<LoadingAnimationProps> = ({ onComplete }) => {
           ></motion.div>
         </motion.div>
         
-        <motion.div className="text-heritage-400 text-sm" variants={itemVariants}>
+        <motion.div className="text-heritage-400 text-sm font-medium" variants={itemVariants}>
           {progress < 100 ? "Loading experience..." : "Ready!"}
         </motion.div>
       </div>

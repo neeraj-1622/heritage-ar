@@ -71,6 +71,15 @@ const ARExperience: React.FC = () => {
   const [showTip, setShowTip] = useState(false);
 
   useEffect(() => {
+    // Hide footer when AR Experience mounts and restore when unmounting
+    document.body.classList.add('ar-mode');
+    
+    return () => {
+      document.body.classList.remove('ar-mode');
+    };
+  }, []);
+
+  useEffect(() => {
     // Simulate AR initialization
     const timer = setTimeout(() => {
       setIsInitializing(false);

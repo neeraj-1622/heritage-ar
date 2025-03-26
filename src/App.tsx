@@ -69,6 +69,8 @@ const AnimationLayout = () => {
     }
   }, []);
 
+  const isARPage = location.pathname === '/ar';
+
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -97,7 +99,7 @@ const AnimationLayout = () => {
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
-        <Footer />
+        {!isARPage && <Footer />}
       </motion.div>
     </AnimatePresence>
   );

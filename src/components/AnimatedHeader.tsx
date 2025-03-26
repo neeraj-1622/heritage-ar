@@ -112,7 +112,7 @@ const AnimatedHeader: React.FC<HeaderProps> = ({ title, showBackButton = false }
             <div className="flex items-center space-x-2">
               <Link 
                 to="/login" 
-                className="px-4 py-2 text-white hover:text-accent transition-all duration-200"
+                className="text-white transition-all duration-300 relative rainbow-hover-effect"
               >
                 Sign in
               </Link>

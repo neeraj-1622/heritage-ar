@@ -20,6 +20,9 @@ const AppWrapper: React.FC = () => {
         localStorage.removeItem('hasVisitedBefore');
       }, resetTime);
     }
+
+    // Ensure the AR-specific class is removed when the app starts
+    document.body.classList.remove('ar-mode');
   }, []);
   
   const handleLoadingComplete = () => {
