@@ -66,8 +66,8 @@ const Contact: React.FC = () => {
         <div className="container mx-auto px-4">
           <motion.div className="max-w-3xl mx-auto mb-12 text-center" variants={itemVariants}>
             <div className="flex justify-center mb-6">
-              <div className="p-3 rounded-full bg-accent/20 text-accent inline-flex items-center justify-center">
-                <Mail className="h-8 w-8" />
+              <div className="p-4 rounded-full bg-accent/20 text-accent inline-flex items-center justify-center">
+                <Mail className="h-6 w-6" />
               </div>
             </div>
             
@@ -84,8 +84,8 @@ const Contact: React.FC = () => {
                 <h2 className="text-2xl font-bold text-white mb-6">Contact Information</h2>
                 
                 <div className="space-y-6">
-                  <div className="flex items-start">
-                    <div className="h-10 w-10 rounded-full bg-heritage-800 flex items-center justify-center mr-4">
+                  <div className="flex items-center">
+                    <div className="h-10 w-10 rounded-full bg-heritage-800 flex items-center justify-center mr-4 flex-shrink-0">
                       <Mail className="h-5 w-5 text-accent" />
                     </div>
                     <div>
@@ -94,8 +94,8 @@ const Contact: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className="flex items-start">
-                    <div className="h-10 w-10 rounded-full bg-heritage-800 flex items-center justify-center mr-4">
+                  <div className="flex items-center">
+                    <div className="h-10 w-10 rounded-full bg-heritage-800 flex items-center justify-center mr-4 flex-shrink-0">
                       <Phone className="h-5 w-5 text-accent" />
                     </div>
                     <div>
@@ -104,8 +104,8 @@ const Contact: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className="flex items-start">
-                    <div className="h-10 w-10 rounded-full bg-heritage-800 flex items-center justify-center mr-4">
+                  <div className="flex items-center">
+                    <div className="h-10 w-10 rounded-full bg-heritage-800 flex items-center justify-center mr-4 flex-shrink-0">
                       <MapPin className="h-5 w-5 text-accent" />
                     </div>
                     <div>
