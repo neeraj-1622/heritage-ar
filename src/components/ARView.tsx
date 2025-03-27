@@ -110,7 +110,7 @@ const ARView: React.FC<ARViewProps> = ({
     <div className="relative h-full w-full bg-black overflow-hidden">
       <div className="absolute inset-0 z-0">
         <img 
-          src="https://images.unsplash.com/photo-1470813740244-df37b8c1edcb?q=80&w=1996" 
+          src="https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=2071&auto=format&fit=crop" 
           alt="Camera view" 
           className={`h-full w-full object-cover transition-opacity duration-1000 ${
             cameraReady ? 'opacity-90' : 'opacity-0'
