@@ -1,35 +1,31 @@
-
 import React, { useState, useEffect } from 'react';
 import { HistoricalSite } from './SiteCard';
 
 interface ARViewProps {
   selectedSite?: HistoricalSite;
   showModel: boolean;
+  enableRotation?: boolean;
 }
 
-const ARView: React.FC<ARViewProps> = ({ selectedSite, showModel }) => {
+const ARView: React.FC<ARViewProps> = ({ selectedSite, showModel, enableRotation = false }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isModelLoaded, setIsModelLoaded] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
   const [modelPosition, setModelPosition] = useState({ x: 0, y: 0, z: 0 });
   const [rotation, setRotation] = useState(0);
 
-  // Simulate AR loading process
   useEffect(() => {
     if (!selectedSite) return;
     
-    // Reset state when site changes
     setIsLoading(true);
     setIsModelLoaded(false);
     setCameraReady(false);
     
-    // Camera initialization
     const timer1 = setTimeout(() => {
       setCameraReady(true);
       setIsLoading(false);
     }, 1500);
     
-    // Model loading - only if showModel is true
     const timer2 = setTimeout(() => {
       if (showModel) {
         setIsModelLoaded(true);
@@ -42,7 +38,6 @@ const ARView: React.FC<ARViewProps> = ({ selectedSite, showModel }) => {
     };
   }, [selectedSite, showModel]);
 
-  // If showModel changes after initialization
   useEffect(() => {
     if (cameraReady && showModel && !isModelLoaded) {
       const timer = setTimeout(() => {
@@ -55,18 +50,22 @@ const ARView: React.FC<ARViewProps> = ({ selectedSite, showModel }) => {
     }
   }, [showModel, cameraReady, isModelLoaded]);
 
-  // Simulate model rotation
   useEffect(() => {
     if (!isModelLoaded) return;
     
-    const rotationInterval = setInterval(() => {
-      setRotation(prev => (prev + 0.5) % 360);
-    }, 50);
+    let rotationInterval: NodeJS.Timeout | null = null;
     
-    return () => clearInterval(rotationInterval);
-  }, [isModelLoaded]);
+    if (enableRotation) {
+      rotationInterval = setInterval(() => {
+        setRotation(prev => (prev + 0.5) % 360);
+      }, 50);
+    }
+    
+    return () => {
+      if (rotationInterval) clearInterval(rotationInterval);
+    };
+  }, [isModelLoaded, enableRotation]);
 
-  // Mouse movement affects model position slightly
   useEffect(() => {
     if (!isModelLoaded) return;
     
@@ -100,7 +99,6 @@ const ARView: React.FC<ARViewProps> = ({ selectedSite, showModel }) => {
 
   return (
     <div className="relative h-full w-full bg-black overflow-hidden">
-      {/* Simulated camera view */}
       <div className="absolute inset-0 z-0">
         <img 
           src="https://images.unsplash.com/photo-1581591524425-c7e0978865fc?q=80&w=2070" 
@@ -110,7 +108,6 @@ const ARView: React.FC<ARViewProps> = ({ selectedSite, showModel }) => {
           }`}
         />
         
-        {/* Grid overlay - simulates AR floor detection */}
         {cameraReady && !isModelLoaded && (
           <div className="absolute inset-0 z-5 animate-fade-in">
             <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/20 to-transparent"></div>
@@ -128,10 +125,8 @@ const ARView: React.FC<ARViewProps> = ({ selectedSite, showModel }) => {
         )}
       </div>
 
-      {/* AR scene elements */}
       {isModelLoaded && (
         <div className="absolute inset-0 z-10 flex items-center justify-center perspective preserve-3d animate-fade-in">
-          {/* Ground shadow */}
           <div 
             className="absolute w-60 h-20 rounded-full bg-black/30 blur-sm transform-gpu"
             style={{ 
@@ -139,7 +134,6 @@ const ARView: React.FC<ARViewProps> = ({ selectedSite, showModel }) => {
             }}
           ></div>
           
-          {/* 3D model */}
           <div 
             className="relative transform-gpu"
             style={{ 
@@ -156,7 +150,6 @@ const ARView: React.FC<ARViewProps> = ({ selectedSite, showModel }) => {
               }}
             />
             
-            {/* Interactive hot spots */}
             <div className="absolute top-1/4 left-1/4 w-6 h-6 rounded-full bg-accent/80 animate-pulse-slow flex items-center justify-center" 
                  style={{ transform: `rotateY(${-rotation}deg)` }}>
               <div className="w-3 h-3 rounded-full bg-white"></div>
@@ -170,7 +163,6 @@ const ARView: React.FC<ARViewProps> = ({ selectedSite, showModel }) => {
         </div>
       )}
 
-      {/* Loading indicators */}
       {isLoading && (
         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm">
           <div className="h-16 w-16 rounded-full border-4 border-white/20 border-t-white animate-spin"></div>
@@ -188,7 +180,6 @@ const ARView: React.FC<ARViewProps> = ({ selectedSite, showModel }) => {
         </div>
       )}
 
-      {/* Controls overlay - only show when model is loaded */}
       {isModelLoaded && (
         <div className="absolute bottom-20 left-0 right-0 z-30 p-4">
           <div className="glass-panel rounded-2xl p-4 max-w-lg mx-auto animate-slide-up">

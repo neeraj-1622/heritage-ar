@@ -7,117 +7,102 @@ interface LoadingAnimationProps {
 }
 
 const LoadingAnimation: React.FC<LoadingAnimationProps> = ({ onComplete }) => {
+  // Animation timing in seconds
+  const animationDuration = 3.5;
   const [progress, setProgress] = useState(0);
-  
+
   useEffect(() => {
-    const timer = setTimeout(() => {
-      onComplete();
-    }, 3000);
-    
+    // Simulate loading progress
     const interval = setInterval(() => {
       setProgress(prev => {
-        const newProgress = prev + 2;
-        return newProgress >= 100 ? 100 : newProgress;
+        const newProgress = prev + 1;
+        return newProgress <= 100 ? newProgress : 100;
       });
-    }, 60);
-    
-    return () => {
-      clearTimeout(timer);
+    }, animationDuration * 10);
+
+    // Cleanup and signal completion
+    const timer = setTimeout(() => {
       clearInterval(interval);
+      onComplete();
+    }, animationDuration * 1000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timer);
     };
   }, [onComplete]);
-  
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        when: "beforeChildren",
-        staggerChildren: 0.2
-      }
-    },
-    exit: { 
-      opacity: 0,
-      transition: { duration: 0.5 }
-    }
-  };
-  
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { 
-      y: 0, 
-      opacity: 1,
-      transition: {
-        type: "spring",
-        damping: 12,
-        stiffness: 100
-      }
-    }
-  };
-  
+
   return (
-    <motion.div 
-      className="fixed inset-0 flex flex-col items-center justify-center bg-heritage-950 z-50"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      exit="exit"
-    >
-      <div className="max-w-md text-center px-6">
-        <motion.div variants={itemVariants} className="mb-8 flex flex-col items-center">
-          <div className="relative w-24 h-24 mx-auto mb-8">
-            {/* First ring - clockwise rotation */}
-            <motion.div 
-              className="absolute inset-0 w-full h-full rounded-full border-2 border-accent/70"
-              style={{ width: '120%', height: '120%', top: '-10%', left: '-10%' }}
-              animate={{ rotate: 360 }}
-              transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-            ></motion.div>
-            
-            {/* Second ring - counter-clockwise rotation */}
-            <motion.div 
-              className="absolute inset-0 w-full h-full rounded-full border-2 border-accent-400/70" 
-              style={{ width: '140%', height: '140%', top: '-20%', left: '-20%' }}
-              animate={{ rotate: -360 }}
-              transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
-            ></motion.div>
-            
-            <div className="absolute inset-0 bg-gradient-to-tr from-accent to-accent-400 rounded-md animate-pulse-slow"></div>
-            <span className="absolute inset-0 flex items-center justify-center font-bold text-4xl text-white">AR</span>
-          </div>
-          
-          <motion.h1 
-            className="text-5xl font-bold text-white mb-4"
-            variants={itemVariants}
-          >
-            HeritageAR
-          </motion.h1>
-          
-          <motion.p 
-            className="text-heritage-300 text-xl"
-            variants={itemVariants}
-          >
-            Explore history in augmented reality
-          </motion.p>
-        </motion.div>
-        
+    <div className="fixed inset-0 flex items-center justify-center bg-heritage-900 z-50">
+      <div className="relative flex flex-col items-center">
+        {/* Outer clockwise rotating ring */}
         <motion.div 
-          className="w-full bg-heritage-800 rounded-full h-3 mb-6 overflow-hidden"
-          variants={itemVariants}
+          className="absolute w-32 h-32 rounded-full border-2 border-accent/30"
+          initial={{ rotate: 0, scale: 0.8, opacity: 0 }}
+          animate={{ 
+            rotate: 360, 
+            scale: 1,
+            opacity: 1,
+          }}
+          transition={{ 
+            duration: 3, 
+            ease: "linear", 
+            repeat: Infinity,
+          }}
+        />
+        
+        {/* Inner counter-clockwise rotating ring */}
+        <motion.div 
+          className="absolute w-24 h-24 rounded-full border-2 border-heritage-400/30"
+          initial={{ rotate: 0, scale: 0.8, opacity: 0 }}
+          animate={{ 
+            rotate: -360, 
+            scale: 1,
+            opacity: 1,
+          }}
+          transition={{ 
+            duration: 2.5, 
+            ease: "linear", 
+            repeat: Infinity,
+          }}
+        />
+
+        {/* Logo */}
+        <motion.div
+          className="relative flex items-center justify-center w-20 h-20 rounded-xl bg-gradient-to-br from-accent to-accent-600 shadow-lg"
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+        >
+          <span className="text-white text-3xl font-bold">AR</span>
+        </motion.div>
+
+        {/* Progress bar */}
+        <motion.div 
+          className="w-48 h-1 bg-heritage-800 rounded-full mt-8 overflow-hidden"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.8 }}
         >
           <motion.div 
-            className="bg-accent h-full rounded-full"
+            className="h-full bg-accent"
             initial={{ width: "0%" }}
             animate={{ width: `${progress}%` }}
-            transition={{ duration: 0.2 }}
-          ></motion.div>
+            transition={{ duration: 0.1, ease: "linear" }}
+          />
         </motion.div>
-        
-        <motion.div className="text-heritage-400 text-sm font-medium" variants={itemVariants}>
-          {progress < 100 ? "Loading experience..." : "Ready!"}
-        </motion.div>
+
+        {/* Loading text */}
+        <motion.p 
+          className="mt-4 text-heritage-400 text-sm animate-pulse"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 1 }}
+        >
+          Loading HeritageAR...
+        </motion.p>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

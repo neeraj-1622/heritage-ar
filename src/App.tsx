@@ -8,6 +8,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { AuthProvider } from "@/context/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import ScrollToTop from "@/components/ScrollToTop";
 import Index from "./pages/Index";
 import SiteDetail from "./pages/SiteDetail";
 import ARExperience from "./pages/ARExperience";
@@ -82,6 +83,7 @@ const AnimationLayout = () => {
         transition={pageTransition}
         className="min-h-screen flex flex-col scrollbar-none"
       >
+        <ScrollToTop />
         <Routes location={location} key={location.pathname}>
           <Route path="/" element={<Index />} />
           <Route path="/site/:id" element={<SiteDetail />} />
