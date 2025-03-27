@@ -2,8 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import ARView from '../components/ARView';
+import ARModelViewer from '../components/ARModelViewer';
 import { HistoricalSite } from '../components/SiteCard';
-import { ArrowLeft, Image, Camera, Layers, Compass, Info } from 'lucide-react';
+import { ArrowLeft, Image, Camera, Layers, Compass, Info, Scan } from 'lucide-react';
 import { toast } from "sonner";
 
 const sampleSites: HistoricalSite[] = [
@@ -74,6 +75,7 @@ const ARExperience: React.FC = () => {
   const [showTip, setShowTip] = useState(false);
   const [showARModel, setShowARModel] = useState(false);
   const [enableRotation, setEnableRotation] = useState(false);
+  const [useRealAR, setUseRealAR] = useState(false);
 
   useEffect(() => {
     document.body.classList.add('ar-mode');
@@ -146,16 +148,43 @@ const ARExperience: React.FC = () => {
     toast.success(enableRotation ? 'Rotation disabled' : 'Rotation enabled');
   };
 
+  const toggleRealAR = () => {
+    if (navigator.xr) {
+      navigator.xr.isSessionSupported('immersive-ar')
+        .then(supported => {
+          if (supported) {
+            setUseRealAR(!useRealAR);
+            toast.success(useRealAR ? 'Switched to simulated AR' : 'Switched to real AR');
+          } else {
+            toast.error('WebXR AR not supported on this device');
+          }
+        })
+        .catch(() => {
+          toast.error('Error checking AR support');
+        });
+    } else {
+      toast.error('WebXR not supported in this browser');
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black flex flex-col animate-fade-in">
       <main className="flex-1 relative">
-        <ARView 
-          selectedSite={selectedSite} 
-          showModel={showARModel} 
-          enableRotation={enableRotation}
-          onNextSite={handleNextSite}
-          onInfoClick={handleMoreInfo}
-        />
+        {useRealAR ? (
+          <ARModelViewer 
+            selectedSite={selectedSite} 
+            arMode={true}
+            enableRotation={enableRotation}
+          />
+        ) : (
+          <ARView 
+            selectedSite={selectedSite} 
+            showModel={showARModel} 
+            enableRotation={enableRotation}
+            onNextSite={handleNextSite}
+            onInfoClick={handleMoreInfo}
+          />
+        )}
         
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-20 left-1/2 transform -translate-x-1/2 flex items-center justify-center">
@@ -211,6 +240,19 @@ const ARExperience: React.FC = () => {
               </button>
               <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
                 {enableRotation ? 'Disable' : 'Enable'} rotation
+              </div>
+            </div>
+            
+            <div className="relative group">
+              <button 
+                className="w-14 h-14 rounded-full bg-accent/70 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
+                onClick={() => toggleRealAR()}
+                aria-label="Toggle Real AR"
+              >
+                <Scan className="h-6 w-6 text-white" />
+              </button>
+              <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                {useRealAR ? 'Use Simulated AR' : 'Use Real AR'}
               </div>
             </div>
           </div>

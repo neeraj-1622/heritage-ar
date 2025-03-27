@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -6,7 +5,7 @@ import { fetchSiteById } from '../frontend/api/sitesApi';
 import AnimatedHeader from '../components/AnimatedHeader';
 import InfoPanel from '../components/InfoPanel';
 import { HistoricalSite } from '../components/SiteCard';
-import { Camera, ArrowRight, Globe, Clock, Users } from 'lucide-react';
+import { Camera, ArrowRight, Globe, Clock, Users, Scan3d } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
 
@@ -14,6 +13,7 @@ const SiteDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isImageHovered, setIsImageHovered] = useState(false);
+  const [arSupported, setArSupported] = useState<boolean | null>(null);
   
   const { data: site, isLoading, error } = useQuery({
     queryKey: ['site', id],
@@ -22,7 +22,16 @@ const SiteDetail: React.FC = () => {
     retry: 2
   });
 
-  // Show error toast if there's an error
+  React.useEffect(() => {
+    if (navigator.xr) {
+      navigator.xr.isSessionSupported('immersive-ar')
+        .then(supported => setArSupported(supported))
+        .catch(() => setArSupported(false));
+    } else {
+      setArSupported(false);
+    }
+  }, []);
+
   React.useEffect(() => {
     if (error) {
       toast({
@@ -41,7 +50,6 @@ const SiteDetail: React.FC = () => {
     });
   };
 
-  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -196,7 +204,7 @@ const SiteDetail: React.FC = () => {
               a flat surface and watch as a detailed 3D model appears before your eyes. You can 
               walk around the model and explore it from different angles.
             </p>
-            <div className="mt-6">
+            <div className="mt-6 flex flex-wrap gap-4">
               <motion.button 
                 onClick={handleARExperience}
                 className="px-6 py-3 bg-accent text-white rounded-xl shadow-md transition-all duration-300 
@@ -206,6 +214,20 @@ const SiteDetail: React.FC = () => {
               >
                 Launch AR Experience
               </motion.button>
+              
+              {arSupported && (
+                <div className="flex items-center px-4 py-2 bg-green-500/10 text-green-500 rounded-lg">
+                  <Scan3d className="h-4 w-4 mr-2" />
+                  <span className="text-sm">WebXR AR Supported on this device</span>
+                </div>
+              )}
+              
+              {arSupported === false && (
+                <div className="flex items-center px-4 py-2 bg-yellow-500/10 text-yellow-400 rounded-lg">
+                  <Scan3d className="h-4 w-4 mr-2" />
+                  <span className="text-sm">Real AR not supported. Using simulated AR.</span>
+                </div>
+              )}
             </div>
           </motion.div>
         </div>
