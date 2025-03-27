@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import ARView from '../components/ARView';
 import { HistoricalSite } from '../components/SiteCard';
 import { ArrowLeft, Image, Camera, Layers, Compass, Info } from 'lucide-react';
+import { toast } from "sonner";
 
 const sampleSites: HistoricalSite[] = [
   {
@@ -60,8 +62,11 @@ const ARExperience: React.FC = () => {
   const [searchParams] = useSearchParams();
   const siteId = searchParams.get('siteId');
   
-  const [selectedSite, setSelectedSite] = useState<HistoricalSite | undefined>(
-    siteId ? sampleSites.find(site => site.id === siteId) : sampleSites[0]
+  const [selectedSiteIndex, setSelectedSiteIndex] = useState<number>(
+    siteId ? sampleSites.findIndex(site => site.id === siteId) : 0
+  );
+  const [selectedSite, setSelectedSite] = useState<HistoricalSite>(
+    sampleSites[selectedSiteIndex >= 0 ? selectedSiteIndex : 0]
   );
 
   const [isSiteMenuOpen, setIsSiteMenuOpen] = useState(false);
@@ -102,6 +107,40 @@ const ARExperience: React.FC = () => {
     navigate('/');
   };
 
+  const handleNextSite = () => {
+    const nextIndex = (selectedSiteIndex + 1) % sampleSites.length;
+    setSelectedSiteIndex(nextIndex);
+    setSelectedSite(sampleSites[nextIndex]);
+    toast.success(`Switched to ${sampleSites[nextIndex].name}`);
+  };
+
+  const handleMoreInfo = () => {
+    navigate(`/site/${selectedSite.id}`);
+  };
+
+  const handleSiteSelect = (site: HistoricalSite) => {
+    const siteIndex = sampleSites.findIndex(s => s.id === site.id);
+    if (siteIndex >= 0) {
+      setSelectedSiteIndex(siteIndex);
+      setSelectedSite(site);
+      setIsSiteMenuOpen(false);
+      setShowARModel(false);
+      toast.success(`Selected ${site.name}`);
+    }
+  };
+
+  const toggleARModel = () => {
+    setShowARModel(!showARModel);
+    if (!showARModel) {
+      toast.success(`Showing 3D model of ${selectedSite.name}`);
+    }
+  };
+
+  const toggleRotation = () => {
+    setEnableRotation(!enableRotation);
+    toast.success(enableRotation ? 'Rotation disabled' : 'Rotation enabled');
+  };
+
   return (
     <div className="fixed inset-0 bg-black flex flex-col animate-fade-in">
       <main className="flex-1 relative">
@@ -109,6 +148,8 @@ const ARExperience: React.FC = () => {
           selectedSite={selectedSite} 
           showModel={showARModel} 
           enableRotation={enableRotation}
+          onNextSite={handleNextSite}
+          onInfoClick={handleMoreInfo}
         />
         
         <div className="absolute inset-0 pointer-events-none">
@@ -132,7 +173,7 @@ const ARExperience: React.FC = () => {
             <div className="relative group">
               <button 
                 className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
-                onClick={() => setShowARModel(!showARModel)}
+                onClick={() => toggleARModel()}
                 aria-label="Toggle AR layers"
               >
                 <Layers className="h-6 w-6 text-white" />
@@ -145,7 +186,7 @@ const ARExperience: React.FC = () => {
             <div className="relative group">
               <button 
                 className="w-16 h-16 rounded-full bg-white/25 backdrop-blur-md border border-white/40 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
-                onClick={() => setShowARModel(!showARModel)}
+                onClick={() => toggleARModel()}
                 aria-label="Show 3D model"
               >
                 <Camera className="h-8 w-8 text-white" />
@@ -158,7 +199,7 @@ const ARExperience: React.FC = () => {
             <div className="relative group">
               <button 
                 className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
-                onClick={() => setEnableRotation(!enableRotation)}
+                onClick={() => toggleRotation()}
                 aria-label="Enable rotation"
               >
                 <Compass className="h-6 w-6 text-white" />
@@ -173,7 +214,7 @@ const ARExperience: React.FC = () => {
         <div className="absolute top-0 left-0 right-0 z-10 p-4 flex justify-between items-center">
           <button 
             onClick={handleBackToHome}
-            className="p-2 rounded-full bg-black/30 backdrop-blur-md text-white hover:bg-black/40 transition-colors pointer-events-auto"
+            className="p-2 rounded-full bg-black/30 backdrop-blur-md text-white hover:bg-black/40 transition-colors pointer-events-auto active:scale-95"
             aria-label="Go back to home"
           >
             <ArrowLeft size={20} />
@@ -182,7 +223,7 @@ const ARExperience: React.FC = () => {
           <div className="flex space-x-2 pointer-events-auto">
             <button 
               onClick={() => setIsSiteMenuOpen(!isSiteMenuOpen)}
-              className={`p-2 rounded-full backdrop-blur-md text-white transition-colors ${
+              className={`p-2 rounded-full backdrop-blur-md text-white transition-colors active:scale-95 ${
                 isSiteMenuOpen ? 'bg-accent/70' : 'bg-black/30 hover:bg-black/40'
               }`}
               aria-label="Historical sites"
@@ -204,11 +245,7 @@ const ARExperience: React.FC = () => {
                       ? 'bg-accent/70 text-white' 
                       : 'hover:bg-white/10 text-white/80'
                   }`}
-                  onClick={() => {
-                    setSelectedSite(site);
-                    setIsSiteMenuOpen(false);
-                    setShowARModel(false);
-                  }}
+                  onClick={() => handleSiteSelect(site)}
                 >
                   <div className="flex items-center">
                     <div className="w-8 h-8 rounded-md overflow-hidden mr-2 flex-shrink-0">

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { HistoricalSite } from './SiteCard';
 
@@ -5,9 +6,17 @@ interface ARViewProps {
   selectedSite?: HistoricalSite;
   showModel: boolean;
   enableRotation?: boolean;
+  onNextSite?: () => void;
+  onInfoClick?: () => void;
 }
 
-const ARView: React.FC<ARViewProps> = ({ selectedSite, showModel, enableRotation = false }) => {
+const ARView: React.FC<ARViewProps> = ({ 
+  selectedSite, 
+  showModel, 
+  enableRotation = false,
+  onNextSite,
+  onInfoClick
+}) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isModelLoaded, setIsModelLoaded] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
@@ -101,7 +110,7 @@ const ARView: React.FC<ARViewProps> = ({ selectedSite, showModel, enableRotation
     <div className="relative h-full w-full bg-black overflow-hidden">
       <div className="absolute inset-0 z-0">
         <img 
-          src="https://images.unsplash.com/photo-1581591524425-c7e0978865fc?q=80&w=2070" 
+          src="https://images.unsplash.com/photo-1470813740244-df37b8c1edcb?q=80&w=1996" 
           alt="Camera view" 
           className={`h-full w-full object-cover transition-opacity duration-1000 ${
             cameraReady ? 'opacity-90' : 'opacity-0'
@@ -187,10 +196,16 @@ const ARView: React.FC<ARViewProps> = ({ selectedSite, showModel, enableRotation
             <p className="text-sm text-white/80 mt-1">{selectedSite.shortDescription}</p>
             
             <div className="mt-3 flex space-x-2">
-              <button className="px-3 py-1.5 text-xs font-medium rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors">
+              <button 
+                className="px-3 py-1.5 text-xs font-medium rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors active:scale-95"
+                onClick={onInfoClick}
+              >
                 More Info
               </button>
-              <button className="px-3 py-1.5 text-xs font-medium rounded-full bg-accent/80 text-white hover:bg-accent transition-colors">
+              <button 
+                className="px-3 py-1.5 text-xs font-medium rounded-full bg-accent/80 text-white hover:bg-accent transition-colors active:scale-95"
+                onClick={onNextSite}
+              >
                 Next Site
               </button>
             </div>
