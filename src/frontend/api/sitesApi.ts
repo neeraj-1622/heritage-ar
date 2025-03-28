@@ -1,6 +1,5 @@
-
 import { toast } from '@/hooks/use-toast';
-import { supabase, HistoricalSite } from '@/lib/supabase';
+import { supabase, HistoricalSite, HistoricalSiteInput } from '@/lib/supabase';
 
 // Sample data to use if API fails or during development
 const fallbackSites = [
@@ -69,66 +68,140 @@ const transformSiteData = (site: any): any => ({
   updatedAt: site.updated_at,
 });
 
-export const fetchAllSites = async () => {
+export async function getAllSites(): Promise<HistoricalSite[]> {
   try {
     const { data, error } = await supabase
       .from('historical_sites')
-      .select('*')
-      .order('name');
-    
-    if (error) {
-      console.error('Error fetching sites from Supabase:', error);
-      console.warn('API request failed, using fallback data');
-      return fallbackSites;
-    }
-    
-    return data.map(transformSiteData);
-  } catch (error) {
-    console.error('Error fetching sites:', error);
-    console.warn('API request failed, using fallback data');
-    return fallbackSites;
-  }
-};
+      .select('*');
 
-export const fetchSiteById = async (id: string) => {
-  try {
-    // Check if id is invalid or has placeholder value
-    if (!id || id === ':id') {
-      throw new Error('Invalid site ID');
+    if (error) {
+      console.error('Error fetching sites:', error);
+      throw error;
     }
-    
+
+    return data || [];
+  } catch (error) {
+    console.error('Error in getAllSites:', error);
+    toast({
+      title: 'Error',
+      description: 'Failed to fetch historical sites',
+      variant: 'destructive',
+    });
+    return [];
+  }
+}
+
+export async function getSiteById(id: string): Promise<HistoricalSite | null> {
+  try {
     const { data, error } = await supabase
       .from('historical_sites')
       .select('*')
       .eq('id', id)
       .single();
-    
+
     if (error) {
-      // For specific site, fallback to the matching site from our hardcoded data
-      const fallbackSite = fallbackSites.find(site => site.id === id);
-      if (fallbackSite) {
-        console.warn(`API request failed for site ID ${id}, using fallback data`);
-        return fallbackSite;
-      }
-      throw new Error(`Error fetching site ${id}: ${error.message}`);
+      console.error('Error fetching site:', error);
+      throw error;
     }
-    
-    return transformSiteData(data);
+
+    return data;
   } catch (error) {
-    console.error(`Error fetching site ${id}:`, error);
-    
-    // Try to find the site in our fallback data
-    const fallbackSite = fallbackSites.find(site => site.id === id);
-    if (fallbackSite) {
-      console.warn(`Using fallback data for site ID ${id}`);
-      return fallbackSite;
-    }
-    
+    console.error(`Error in getSiteById for ID ${id}:`, error);
     toast({
-      title: "Error loading site",
-      description: "Could not load site details. Please try again later.",
-      variant: "destructive",
+      title: 'Error',
+      description: 'Failed to fetch site details',
+      variant: 'destructive',
     });
-    throw error;
+    return null;
   }
-};
+}
+
+export async function createSite(site: HistoricalSiteInput): Promise<HistoricalSite | null> {
+  try {
+    const { data, error } = await supabase
+      .from('historical_sites')
+      .insert([site])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating site:', error);
+      throw error;
+    }
+
+    toast({
+      title: 'Success',
+      description: 'Historical site created successfully',
+    });
+
+    return data;
+  } catch (error) {
+    console.error('Error in createSite:', error);
+    toast({
+      title: 'Error',
+      description: 'Failed to create historical site',
+      variant: 'destructive',
+    });
+    return null;
+  }
+}
+
+export async function updateSite(id: string, site: Partial<HistoricalSiteInput>): Promise<HistoricalSite | null> {
+  try {
+    const { data, error } = await supabase
+      .from('historical_sites')
+      .update(site)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating site:', error);
+      throw error;
+    }
+
+    toast({
+      title: 'Success',
+      description: 'Historical site updated successfully',
+    });
+
+    return data;
+  } catch (error) {
+    console.error(`Error in updateSite for ID ${id}:`, error);
+    toast({
+      title: 'Error',
+      description: 'Failed to update historical site',
+      variant: 'destructive',
+    });
+    return null;
+  }
+}
+
+export async function deleteSite(id: string): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('historical_sites')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting site:', error);
+      throw error;
+    }
+
+    toast({
+      title: 'Success',
+      description: 'Historical site deleted successfully',
+    });
+
+    return true;
+  } catch (error) {
+    console.error(`Error in deleteSite for ID ${id}:`, error);
+    toast({
+      title: 'Error',
+      description: 'Failed to delete historical site',
+      variant: 'destructive',
+    });
+    return false;
+  }
+}

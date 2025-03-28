@@ -104,11 +104,11 @@ app.get('/api/sites/:id', async (req: Request, res: Response): Promise<void> => 
 });
 
 // Protected routes (require authentication)
-app.post('/api/sites', async (req: Request, res: Response): Promise<void> => {
+app.post('/api/sites', authMiddleware, async (req: Request, res: Response): Promise<void> => {
   try {
     const { data: site, error } = await supabase
       .from('sites')
-      .insert([req.body])
+      .insert([{ ...req.body, created_by: (req as any).user.id }])
       .select()
       .single();
 
@@ -123,17 +123,18 @@ app.post('/api/sites', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
-app.put('/api/sites/:id', async (req: Request, res: Response): Promise<void> => {
+app.put('/api/sites/:id', authMiddleware, async (req: Request, res: Response): Promise<void> => {
   try {
     const { data: site, error } = await supabase
       .from('sites')
       .update(req.body)
       .eq('id', req.params.id)
+      .eq('created_by', (req as any).user.id)
       .select()
       .single();
 
     if (error) {
-      res.status(404).json({ message: 'Site not found' });
+      res.status(404).json({ message: 'Site not found or unauthorized' });
       return;
     }
 
@@ -144,15 +145,16 @@ app.put('/api/sites/:id', async (req: Request, res: Response): Promise<void> => 
   }
 });
 
-app.delete('/api/sites/:id', async (req: Request, res: Response): Promise<void> => {
+app.delete('/api/sites/:id', authMiddleware, async (req: Request, res: Response): Promise<void> => {
   try {
     const { error } = await supabase
       .from('sites')
       .delete()
-      .eq('id', req.params.id);
+      .eq('id', req.params.id)
+      .eq('created_by', (req as any).user.id);
 
     if (error) {
-      res.status(404).json({ message: 'Site not found' });
+      res.status(404).json({ message: 'Site not found or unauthorized' });
       return;
     }
 

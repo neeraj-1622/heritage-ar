@@ -18,7 +18,10 @@ export type HistoricalSite = {
   coordinates?: { lat: number; lng: number };
   created_at?: string;
   updated_at?: string;
+  created_by?: string;
 }
+
+export type HistoricalSiteInput = Omit<HistoricalSite, 'id' | 'created_at' | 'updated_at' | 'created_by'>;
 
 export type User = {
   id: string;

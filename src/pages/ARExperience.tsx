@@ -3,73 +3,19 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import ARView from '../components/ARView';
 import ARModelViewer from '../components/ARModelViewer';
 import WebcamObjectDetector from '../components/WebcamObjectDetector';
-import { HistoricalSite } from '../components/SiteCard';
+import { HistoricalSite } from '@/lib/supabase';
+import { getAllSites } from '@/frontend/api/sitesApi';
 import { ArrowLeft, Image, Camera, Layers, Compass, Info, Scan, Webcam } from 'lucide-react';
 import { toast } from "sonner";
-
-const sampleSites: HistoricalSite[] = [
-  {
-    id: '1',
-    name: 'The Colosseum',
-    period: 'Ancient Rome',
-    location: 'Rome, Italy',
-    shortDescription: 'An oval amphitheatre in the centre of Rome, built of travertine limestone, tuff, and brick-faced concrete.',
-    imageUrl: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?q=80&w=1996&auto=format&fit=crop',
-  },
-  {
-    id: '2',
-    name: 'Machu Picchu',
-    period: 'Inca Civilization',
-    location: 'Cusco Region, Peru',
-    shortDescription: 'A 15th-century Inca citadel situated on a mountain ridge above the Sacred Valley.',
-    imageUrl: 'https://images.unsplash.com/photo-1526392060635-9d6019884377?q=80&w=2070&auto=format&fit=crop',
-  },
-  {
-    id: '3',
-    name: 'Parthenon',
-    period: 'Ancient Greece',
-    location: 'Athens, Greece',
-    shortDescription: 'A former temple dedicated to the goddess Athena, completed in 438 BC.',
-    imageUrl: 'https://images.unsplash.com/photo-1603565816030-6b389eeb23cb?q=80&w=2070&auto=format&fit=crop',
-  },
-  {
-    id: '4',
-    name: 'Taj Mahal',
-    period: 'Mughal Empire',
-    location: 'Agra, India',
-    shortDescription: 'An ivory-white marble mausoleum commissioned in 1632 by the Mughal emperor Shah Jahan.',
-    imageUrl: 'https://images.unsplash.com/photo-1548013146-72479768bada?q=80&w=2076&auto=format&fit=crop',
-  },
-  {
-    id: '5',
-    name: 'Angkor Wat',
-    period: 'Khmer Empire',
-    location: 'Siem Reap, Cambodia',
-    shortDescription: 'A temple complex and the largest religious monument in the world, built in the early 12th century.',
-    imageUrl: 'https://images.unsplash.com/photo-1508159452718-d22f6734a00d?q=80&w=2070&auto=format&fit=crop',
-  },
-  {
-    id: '6',
-    name: 'Chichen Itza',
-    period: 'Maya Civilization',
-    location: 'Yucatán, Mexico',
-    shortDescription: 'A pre-Columbian city built by the Maya people, known for its step pyramid El Castillo.',
-    imageUrl: 'https://images.unsplash.com/photo-1518638150340-f706e86654de?q=80&w=2067&auto=format&fit=crop',
-  },
-];
 
 const ARExperience: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const siteId = searchParams.get('siteId');
   
-  const [selectedSiteIndex, setSelectedSiteIndex] = useState<number>(
-    siteId ? sampleSites.findIndex(site => site.id === siteId) : 0
-  );
-  const [selectedSite, setSelectedSite] = useState<HistoricalSite>(
-    sampleSites[selectedSiteIndex >= 0 ? selectedSiteIndex : 0]
-  );
-
+  const [sites, setSites] = useState<HistoricalSite[]>([]);
+  const [selectedSiteIndex, setSelectedSiteIndex] = useState<number>(0);
+  const [selectedSite, setSelectedSite] = useState<HistoricalSite | null>(null);
   const [isSiteMenuOpen, setIsSiteMenuOpen] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const [showTip, setShowTip] = useState(false);
@@ -81,285 +27,191 @@ const ARExperience: React.FC = () => {
 
   useEffect(() => {
     document.body.classList.add('ar-mode');
+    loadSites();
     
     return () => {
       document.body.classList.remove('ar-mode');
     };
   }, []);
 
+  const loadSites = async () => {
+    const loadedSites = await getAllSites();
+    setSites(loadedSites);
+    
+    if (siteId) {
+      const index = loadedSites.findIndex(site => site.id === siteId);
+      if (index !== -1) {
+        setSelectedSiteIndex(index);
+        setSelectedSite(loadedSites[index]);
+      } else {
+        setSelectedSite(loadedSites[0]);
+      }
+    } else {
+      setSelectedSite(loadedSites[0]);
+    }
+    
+    setIsInitializing(false);
+  };
+
   useEffect(() => {
     setShowARModel(false);
   }, [selectedSite]);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsInitializing(false);
-      
-      setTimeout(() => {
-        setShowTip(true);
-        
-        setTimeout(() => {
-          setShowTip(false);
-        }, 5000);
-      }, 1000);
-    }, 2000);
-    
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleBackToHome = () => {
-    console.log("Back to home clicked");
-    navigate('/');
-  };
-
   const handleNextSite = () => {
-    const nextIndex = (selectedSiteIndex + 1) % sampleSites.length;
+    const nextIndex = (selectedSiteIndex + 1) % sites.length;
     setSelectedSiteIndex(nextIndex);
-    setSelectedSite(sampleSites[nextIndex]);
-    toast.success(`Switched to ${sampleSites[nextIndex].name}`);
+    setSelectedSite(sites[nextIndex]);
   };
 
-  const handleMoreInfo = () => {
-    navigate(`/site/${selectedSite.id}`);
+  const handlePreviousSite = () => {
+    const prevIndex = selectedSiteIndex === 0 ? sites.length - 1 : selectedSiteIndex - 1;
+    setSelectedSiteIndex(prevIndex);
+    setSelectedSite(sites[prevIndex]);
   };
 
-  const handleSiteSelect = (site: HistoricalSite) => {
-    const siteIndex = sampleSites.findIndex(s => s.id === site.id);
-    if (siteIndex >= 0) {
-      setSelectedSiteIndex(siteIndex);
-      setSelectedSite(site);
-      setIsSiteMenuOpen(false);
-      setShowARModel(false);
-      toast.success(`Selected ${site.name}`);
-    }
-  };
-
-  const toggleARModel = () => {
-    console.log("Toggle AR model called");
-    setShowARModel(!showARModel);
-    if (!showARModel) {
-      toast.success(`Showing 3D model of ${selectedSite.name}`);
-    } else {
-      toast.info(`Hiding 3D model of ${selectedSite.name}`);
-    }
-  };
-
-  const toggleRotation = () => {
-    console.log("Toggle rotation called");
-    setEnableRotation(!enableRotation);
-    toast.success(enableRotation ? 'Rotation disabled' : 'Rotation enabled');
-  };
-
-  const toggleRealAR = () => {
-    if (navigator.xr) {
-      navigator.xr.isSessionSupported('immersive-ar')
-        .then(supported => {
-          if (supported) {
-            setUseRealAR(!useRealAR);
-            toast.success(useRealAR ? 'Switched to simulated AR' : 'Switched to real AR');
-          } else {
-            toast.error('WebXR AR not supported on this device');
-          }
-        })
-        .catch(() => {
-          toast.error('Error checking AR support');
-        });
-    } else {
-      toast.error('WebXR not supported in this browser');
-    }
-  };
-
-  const handleObjectDetection = (detection: any | null) => {
-    if (detection) {
-      if (!detectedObject || detection.class !== detectedObject.class || detection.score > detectedObject.score) {
-        setDetectedObject(detection);
-        console.log("Detected:", detection.class, "Confidence:", detection.score);
-        
-        if (!detectedObject || detection.class !== detectedObject.class) {
-          toast.success(`Detected: ${detection.class}`);
-        }
-      }
-    } else {
-      setDetectedObject(null);
-    }
-  };
-
-  const toggleObjectDetection = () => {
-    setObjectDetectionMode(!objectDetectionMode);
-    setShowARModel(true);
-    toast.success(objectDetectionMode ? 'Switched to site AR view' : 'Switched to object detection');
-  };
+  if (isInitializing || !selectedSite) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-black">
+        <div className="text-center text-white">
+          <div className="mb-4 text-2xl font-bold">Loading AR Experience...</div>
+          <div className="text-sm text-gray-400">Please wait while we prepare your experience</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="fixed inset-0 bg-black flex flex-col animate-fade-in">
-      <main className="flex-1 relative">
-        {objectDetectionMode ? (
-          <div className="absolute inset-0 flex flex-col">
-            <div className="flex-1 p-4">
-              <WebcamObjectDetector 
-                onDetection={handleObjectDetection} 
-                className="max-w-2xl mx-auto mt-4"
-              />
-            </div>
-            <div className="flex-1 relative">
-              <ARModelViewer 
-                detectedObject={detectedObject}
-                arMode={false} 
-                enableRotation={enableRotation}
-              />
-            </div>
-          </div>
-        ) : useRealAR ? (
-          <ARModelViewer 
-            selectedSite={selectedSite}
-            arMode={true}
-            enableRotation={enableRotation}
+    <div className="relative h-screen w-screen">
+      {/* AR View */}
+      <div className="absolute inset-0">
+        {useRealAR ? (
+          <WebcamObjectDetector
+            onDetection={setDetectedObject}
+            enabled={objectDetectionMode}
           />
         ) : (
-          <ARView 
-            selectedSite={selectedSite} 
-            showModel={showARModel} 
+          <ARView
+            selectedSite={selectedSite}
+            showModel={showARModel}
             enableRotation={enableRotation}
             onNextSite={handleNextSite}
-            onInfoClick={handleMoreInfo}
+            onInfoClick={() => setIsSiteMenuOpen(true)}
           />
         )}
-        
-        <div className="absolute inset-0 pointer-events-none">
-          {isInitializing && (
-            <div className="glass-panel px-4 py-2 rounded-full flex items-center animate-pulse">
-              <div className="h-2 w-2 rounded-full bg-accent mr-2"></div>
-              <span className="text-sm text-white font-medium">Initializing AR environment...</span>
-            </div>
-          )}
-          
-          {showTip && !isInitializing && !showARModel && (
-            <div className="glass-panel px-4 py-2 rounded-full flex items-center animate-slide-up">
-              <Info className="h-4 w-4 text-white mr-2" />
-              <span className="text-sm text-white">Move your device to scan the environment</span>
-            </div>
-          )}
-        </div>
-        
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-4 pointer-events-auto">
-          <div className="relative group">
-            <button 
-              className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
-              onClick={() => toggleARModel()}
-              aria-label="Toggle AR layers"
-            >
-              <Layers className="h-6 w-6 text-white" />
-            </button>
-            <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-              Toggle AR layers
-            </div>
-          </div>
-          
-          <div className="relative group">
-            <button 
-              className="w-16 h-16 rounded-full bg-white/25 backdrop-blur-md border border-white/40 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
-              onClick={() => toggleARModel()}
-              aria-label="Show 3D model"
-            >
-              <Camera className="h-8 w-8 text-white" />
-            </button>
-            <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-              {showARModel ? 'Hide' : 'Show'} 3D model
-            </div>
-          </div>
-          
-          <div className="relative group">
-            <button 
-              className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
-              onClick={() => toggleRotation()}
-              aria-label="Enable rotation"
-            >
-              <Compass className="h-6 w-6 text-white" />
-            </button>
-            <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-              {enableRotation ? 'Disable' : 'Enable'} rotation
-            </div>
-          </div>
-          
-          <div className="relative group">
-            <button 
-              className="w-14 h-14 rounded-full bg-accent/70 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
-              onClick={() => toggleRealAR()}
-              aria-label="Toggle Real AR"
-            >
-              <Scan className="h-6 w-6 text-white" />
-            </button>
-            <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-              {useRealAR ? 'Use Simulated AR' : 'Use Real AR'}
-            </div>
-          </div>
-          
-          <div className="relative group">
-            <button 
-              className="w-14 h-14 rounded-full bg-purple-500/70 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
-              onClick={() => toggleObjectDetection()}
-              aria-label="Object Detection"
-            >
-              <Webcam className="h-6 w-6 text-white" />
-            </button>
-            <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-              {objectDetectionMode ? 'Historical Sites Mode' : 'Object Detection Mode'}
-            </div>
-          </div>
-        </div>
-        
-        <div className="absolute top-0 left-0 right-0 z-10 p-4 flex justify-between items-center">
-          <button 
-            onClick={handleBackToHome}
-            className="p-2 rounded-full bg-black/30 backdrop-blur-md text-white hover:bg-black/40 transition-colors pointer-events-auto active:scale-95"
-            aria-label="Go back to home"
+      </div>
+
+      {/* Controls Overlay */}
+      <div className="absolute inset-x-0 top-0 z-10 p-4">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => navigate(-1)}
+            className="rounded-full bg-black/50 p-2 text-white backdrop-blur-md"
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft className="h-6 w-6" />
           </button>
-          
-          <div className="flex space-x-2 pointer-events-auto">
-            <button 
-              onClick={() => setIsSiteMenuOpen(!isSiteMenuOpen)}
-              className={`p-2 rounded-full backdrop-blur-md text-white transition-colors active:scale-95 ${
-                isSiteMenuOpen ? 'bg-accent/70' : 'bg-black/30 hover:bg-black/40'
+
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setShowARModel(!showARModel)}
+              className={`rounded-full p-2 backdrop-blur-md ${
+                showARModel ? 'bg-accent text-white' : 'bg-black/50 text-white'
               }`}
-              aria-label="Historical sites"
             >
-              <Image size={20} />
+              <Layers className="h-6 w-6" />
+            </button>
+            
+            <button
+              onClick={() => setEnableRotation(!enableRotation)}
+              className={`rounded-full p-2 backdrop-blur-md ${
+                enableRotation ? 'bg-accent text-white' : 'bg-black/50 text-white'
+              }`}
+            >
+              <Compass className="h-6 w-6" />
+            </button>
+
+            <button
+              onClick={() => setIsSiteMenuOpen(true)}
+              className="rounded-full bg-black/50 p-2 text-white backdrop-blur-md"
+            >
+              <Info className="h-6 w-6" />
             </button>
           </div>
         </div>
-        
-        {isSiteMenuOpen && (
-          <div className="absolute top-16 right-4 z-20 glass-panel rounded-2xl p-4 w-64 animate-scale-in pointer-events-auto">
-            <h3 className="text-lg font-medium text-white mb-3">Select Historical Site</h3>
-            <div className="space-y-2 max-h-80 overflow-y-auto pr-2">
-              {sampleSites.map(site => (
+      </div>
+
+      {/* Site Info Panel */}
+      {isSiteMenuOpen && (
+        <div className="absolute inset-0 z-20 bg-black/80 backdrop-blur-sm">
+          <div className="mx-auto max-w-2xl p-6">
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-white">{selectedSite.name}</h2>
+              <button
+                onClick={() => setIsSiteMenuOpen(false)}
+                className="rounded-full bg-white/10 p-2 text-white"
+              >
+                <ArrowLeft className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="mb-6 overflow-hidden rounded-xl">
+              <img
+                src={selectedSite.image_url}
+                alt={selectedSite.name}
+                className="h-64 w-full object-cover"
+              />
+            </div>
+
+            <div className="space-y-4 text-white">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="rounded-lg bg-white/10 p-3">
+                  <div className="text-sm text-gray-400">Location</div>
+                  <div>{selectedSite.location}</div>
+                </div>
+                <div className="rounded-lg bg-white/10 p-3">
+                  <div className="text-sm text-gray-400">Period</div>
+                  <div>{selectedSite.period}</div>
+                </div>
+              </div>
+
+              <p className="text-gray-300">
+                {selectedSite.long_description || selectedSite.short_description}
+              </p>
+
+              <div className="grid grid-cols-2 gap-4">
                 <button
-                  key={site.id}
-                  className={`w-full px-3 py-2 text-left rounded-lg transition-all ${
-                    selectedSite?.id === site.id 
-                      ? 'bg-accent/70 text-white' 
-                      : 'hover:bg-white/10 text-white/80'
-                  }`}
-                  onClick={() => handleSiteSelect(site)}
+                  onClick={handlePreviousSite}
+                  className="rounded-lg bg-white/10 p-3 text-left hover:bg-white/20"
                 >
-                  <div className="flex items-center">
-                    <div className="w-8 h-8 rounded-md overflow-hidden mr-2 flex-shrink-0">
-                      <img 
-                        src={site.imageUrl} 
-                        alt={site.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <span>{site.name}</span>
-                  </div>
+                  <div className="text-sm text-gray-400">Previous</div>
+                  <div>{sites[(selectedSiteIndex - 1 + sites.length) % sites.length].name}</div>
                 </button>
-              ))}
+                <button
+                  onClick={handleNextSite}
+                  className="rounded-lg bg-white/10 p-3 text-left hover:bg-white/20"
+                >
+                  <div className="text-sm text-gray-400">Next</div>
+                  <div>{sites[(selectedSiteIndex + 1) % sites.length].name}</div>
+                </button>
+              </div>
             </div>
           </div>
-        )}
-      </main>
+        </div>
+      )}
+
+      {/* Tips */}
+      {showTip && (
+        <div className="absolute inset-x-0 bottom-20 z-10 px-4">
+          <div className="mx-auto max-w-md rounded-lg bg-black/50 p-4 text-center text-white backdrop-blur-md">
+            <p>Tap and hold to place the 3D model in your environment</p>
+            <button
+              onClick={() => setShowTip(false)}
+              className="mt-2 text-sm text-gray-400"
+            >
+              Got it
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
