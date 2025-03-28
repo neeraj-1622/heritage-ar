@@ -5,7 +5,7 @@ import { fetchSiteById } from '../frontend/api/sitesApi';
 import AnimatedHeader from '../components/AnimatedHeader';
 import InfoPanel from '../components/InfoPanel';
 import { HistoricalSite } from '../components/SiteCard';
-import { Camera, ArrowRight, Globe, Clock, Users, Scan3d } from 'lucide-react';
+import { Camera, ArrowRight, Globe, Clock, Users, Scan } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
 
@@ -217,14 +217,14 @@ const SiteDetail: React.FC = () => {
               
               {arSupported && (
                 <div className="flex items-center px-4 py-2 bg-green-500/10 text-green-500 rounded-lg">
-                  <Scan3d className="h-4 w-4 mr-2" />
+                  <Scan className="h-4 w-4 mr-2" />
                   <span className="text-sm">WebXR AR Supported on this device</span>
                 </div>
               )}
               
               {arSupported === false && (
                 <div className="flex items-center px-4 py-2 bg-yellow-500/10 text-yellow-400 rounded-lg">
-                  <Scan3d className="h-4 w-4 mr-2" />
+                  <Scan className="h-4 w-4 mr-2" />
                   <span className="text-sm">Real AR not supported. Using simulated AR.</span>
                 </div>
               )}
