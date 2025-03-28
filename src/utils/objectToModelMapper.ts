@@ -40,8 +40,31 @@ export const OBJECT_MODEL_MAPPINGS: DetectedObjectMapping = {
     scale: 0.25,
     description: "A drinking cup"
   },
-  // Add more objects as needed
-  
+  "keyboard": {
+    modelUrl: "/models/machu_picchu.glb",
+    scale: 0.4,
+    description: "A computer keyboard"
+  },
+  "mouse": {
+    modelUrl: "/models/colosseum.glb", 
+    scale: 0.3,
+    description: "A computer mouse"
+  },
+  "remote": {
+    modelUrl: "/models/parthenon.glb",
+    scale: 0.35,
+    description: "A remote control"
+  },
+  "chair": {
+    modelUrl: "/models/taj_mahal.glb",
+    scale: 0.5,
+    description: "A chair or seat"
+  },
+  "tv": {
+    modelUrl: "/models/angkor_wat.glb",
+    scale: 0.45,
+    description: "A television or monitor"
+  },
   // Default fallback
   "default": {
     modelUrl: "/models/monument.glb",

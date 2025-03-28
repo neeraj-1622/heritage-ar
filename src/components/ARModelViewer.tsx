@@ -183,7 +183,7 @@ const ARModelViewer: React.FC<ARModelViewerProps> = ({
 
   return (
     <div className="h-full w-full relative">
-      <Canvas className="touch-none">
+      <Canvas className="touch-none" shadows>
         <PerspectiveCamera makeDefault position={[0, 1, 5]} />
         
         {arMode ? (
@@ -194,7 +194,7 @@ const ARModelViewer: React.FC<ARModelViewerProps> = ({
         ) : (
           <>
             <ambientLight intensity={1} />
-            <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={1.5} />
+            <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={1.5} castShadow />
             <Model url={modelUrl} scale={modelScale} />
             {enableRotation ? null : <OrbitControls enableZoom={true} enablePan={true} />}
             <Environment preset="sunset" />

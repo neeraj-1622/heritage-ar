@@ -4,17 +4,19 @@ import * as tf from '@tensorflow/tfjs';
 import * as cocoSsd from '@tensorflow-models/coco-ssd';
 import { toast } from "@/hooks/use-toast";
 import { Button } from "./ui/button";
-import { Camera, RefreshCw } from "lucide-react";
+import { Camera, RefreshCw, Plus, Scan } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface WebcamObjectDetectorProps {
   onDetection: (detection: cocoSsd.DetectedObject | null) => void;
   className?: string;
+  autoStart?: boolean;
 }
 
 const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({ 
   onDetection,
-  className = ''
+  className = '',
+  autoStart = true
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -23,6 +25,7 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
   const [isStreamActive, setIsStreamActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isCameraOn, setIsCameraOn] = useState(false);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
   
   // Load the COCO-SSD model
   useEffect(() => {
@@ -40,8 +43,10 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
           description: "Point your camera at an object to detect it",
         });
         
-        // Auto-enable camera after model loads
-        enableCam();
+        // Auto-enable camera if autoStart is true
+        if (autoStart) {
+          enableCam();
+        }
       } catch (err) {
         console.error('Failed to load TensorFlow model:', err);
         setError('Failed to load object detection model. Please check your connection and try again.');
@@ -58,7 +63,7 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
       }
       stopCamera();
     };
-  }, []);
+  }, [autoStart]);
   
   // Initialize webcam on button click
   const enableCam = async () => {
@@ -120,6 +125,46 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
       enableCam();
     }
   };
+
+  const captureImage = () => {
+    if (!canvasRef.current || !videoRef.current || !isStreamActive) return;
+    
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
+    const context = canvas.getContext('2d');
+    
+    if (!context) return;
+    
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    const imageDataUrl = canvas.toDataURL('image/png');
+    setCapturedImage(imageDataUrl);
+    
+    // Detect objects in the captured image
+    if (model) {
+      model.detect(canvas).then(predictions => {
+        if (predictions.length > 0) {
+          // Find prediction with highest confidence
+          const topPrediction = predictions.reduce((prev, current) => 
+            (prev.score > current.score) ? prev : current
+          );
+          
+          onDetection(topPrediction);
+          toast({
+            title: `Detected: ${topPrediction.class}`,
+            description: `Confidence: ${Math.round(topPrediction.score * 100)}%`
+          });
+        } else {
+          toast({
+            title: "No objects detected",
+            description: "Try again with a different angle or object"
+          });
+        }
+      });
+    }
+  };
   
   // Perform object detection on video frames
   useEffect(() => {
@@ -151,7 +196,6 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
       try {
         // Perform the detection
         const predictions = await model.detect(video);
-        console.log("Detection predictions:", predictions);
         
         // Draw detections
         const ctx = canvas.getContext('2d');
@@ -282,7 +326,25 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
         />
 
         {isStreamActive && (
-          <div className="absolute bottom-4 right-4 z-20">
+          <div className="absolute bottom-4 right-4 z-20 flex space-x-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className="bg-black/50 hover:bg-black/70 text-white rounded-full shadow-lg"
+                    onClick={captureImage}
+                  >
+                    <Scan className="h-5 w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Capture and analyze object</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
