@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import ARView from '../components/ARView';
 import ARModelViewer from '../components/ARModelViewer';
+import WebcamObjectDetector from '../components/WebcamObjectDetector';
 import { HistoricalSite } from '../components/SiteCard';
-import { ArrowLeft, Image, Camera, Layers, Compass, Info, Scan } from 'lucide-react';
+import { ArrowLeft, Image, Camera, Layers, Compass, Info, Scan, Webcam } from 'lucide-react';
 import { toast } from "sonner";
 
 const sampleSites: HistoricalSite[] = [
@@ -76,6 +76,8 @@ const ARExperience: React.FC = () => {
   const [showARModel, setShowARModel] = useState(false);
   const [enableRotation, setEnableRotation] = useState(false);
   const [useRealAR, setUseRealAR] = useState(false);
+  const [detectedObject, setDetectedObject] = useState<{ class: string; score: number } | null>(null);
+  const [objectDetectionMode, setObjectDetectionMode] = useState(false);
 
   useEffect(() => {
     document.body.classList.add('ar-mode');
@@ -167,12 +169,49 @@ const ARExperience: React.FC = () => {
     }
   };
 
+  const handleObjectDetection = (detection: any | null) => {
+    if (detection) {
+      if (!detectedObject || detection.class !== detectedObject.class || detection.score > detectedObject.score) {
+        setDetectedObject(detection);
+        console.log("Detected:", detection.class, "Confidence:", detection.score);
+        
+        if (!detectedObject || detection.class !== detectedObject.class) {
+          toast.success(`Detected: ${detection.class}`);
+        }
+      }
+    } else {
+      setDetectedObject(null);
+    }
+  };
+
+  const toggleObjectDetection = () => {
+    setObjectDetectionMode(!objectDetectionMode);
+    setShowARModel(true);
+    toast.success(objectDetectionMode ? 'Switched to site AR view' : 'Switched to object detection');
+  };
+
   return (
     <div className="fixed inset-0 bg-black flex flex-col animate-fade-in">
       <main className="flex-1 relative">
-        {useRealAR ? (
+        {objectDetectionMode ? (
+          <div className="absolute inset-0 flex flex-col">
+            <div className="flex-1 p-4">
+              <WebcamObjectDetector 
+                onDetection={handleObjectDetection} 
+                className="max-w-2xl mx-auto mt-4"
+              />
+            </div>
+            <div className="flex-1 relative">
+              <ARModelViewer 
+                detectedObject={detectedObject}
+                arMode={false} 
+                enableRotation={enableRotation}
+              />
+            </div>
+          </div>
+        ) : useRealAR ? (
           <ARModelViewer 
-            selectedSite={selectedSite} 
+            selectedSite={selectedSite}
             arMode={true}
             enableRotation={enableRotation}
           />
@@ -187,73 +226,84 @@ const ARExperience: React.FC = () => {
         )}
         
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-20 left-1/2 transform -translate-x-1/2 flex items-center justify-center">
-            {isInitializing && (
-              <div className="glass-panel px-4 py-2 rounded-full flex items-center animate-pulse">
-                <div className="h-2 w-2 rounded-full bg-accent mr-2"></div>
-                <span className="text-sm text-white font-medium">Initializing AR environment...</span>
-              </div>
-            )}
-            
-            {showTip && !isInitializing && !showARModel && (
-              <div className="glass-panel px-4 py-2 rounded-full flex items-center animate-slide-up">
-                <Info className="h-4 w-4 text-white mr-2" />
-                <span className="text-sm text-white">Move your device to scan the environment</span>
-              </div>
-            )}
+          {isInitializing && (
+            <div className="glass-panel px-4 py-2 rounded-full flex items-center animate-pulse">
+              <div className="h-2 w-2 rounded-full bg-accent mr-2"></div>
+              <span className="text-sm text-white font-medium">Initializing AR environment...</span>
+            </div>
+          )}
+          
+          {showTip && !isInitializing && !showARModel && (
+            <div className="glass-panel px-4 py-2 rounded-full flex items-center animate-slide-up">
+              <Info className="h-4 w-4 text-white mr-2" />
+              <span className="text-sm text-white">Move your device to scan the environment</span>
+            </div>
+          )}
+        </div>
+        
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-4 pointer-events-auto">
+          <div className="relative group">
+            <button 
+              className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
+              onClick={() => toggleARModel()}
+              aria-label="Toggle AR layers"
+            >
+              <Layers className="h-6 w-6 text-white" />
+            </button>
+            <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+              Toggle AR layers
+            </div>
           </div>
           
-          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-4 pointer-events-auto">
-            <div className="relative group">
-              <button 
-                className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
-                onClick={() => toggleARModel()}
-                aria-label="Toggle AR layers"
-              >
-                <Layers className="h-6 w-6 text-white" />
-              </button>
-              <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                Toggle AR layers
-              </div>
+          <div className="relative group">
+            <button 
+              className="w-16 h-16 rounded-full bg-white/25 backdrop-blur-md border border-white/40 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
+              onClick={() => toggleARModel()}
+              aria-label="Show 3D model"
+            >
+              <Camera className="h-8 w-8 text-white" />
+            </button>
+            <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+              {showARModel ? 'Hide' : 'Show'} 3D model
             </div>
-            
-            <div className="relative group">
-              <button 
-                className="w-16 h-16 rounded-full bg-white/25 backdrop-blur-md border border-white/40 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
-                onClick={() => toggleARModel()}
-                aria-label="Show 3D model"
-              >
-                <Camera className="h-8 w-8 text-white" />
-              </button>
-              <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                {showARModel ? 'Hide' : 'Show'} 3D model
-              </div>
+          </div>
+          
+          <div className="relative group">
+            <button 
+              className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
+              onClick={() => toggleRotation()}
+              aria-label="Enable rotation"
+            >
+              <Compass className="h-6 w-6 text-white" />
+            </button>
+            <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+              {enableRotation ? 'Disable' : 'Enable'} rotation
             </div>
-            
-            <div className="relative group">
-              <button 
-                className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
-                onClick={() => toggleRotation()}
-                aria-label="Enable rotation"
-              >
-                <Compass className="h-6 w-6 text-white" />
-              </button>
-              <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                {enableRotation ? 'Disable' : 'Enable'} rotation
-              </div>
+          </div>
+          
+          <div className="relative group">
+            <button 
+              className="w-14 h-14 rounded-full bg-accent/70 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
+              onClick={() => toggleRealAR()}
+              aria-label="Toggle Real AR"
+            >
+              <Scan className="h-6 w-6 text-white" />
+            </button>
+            <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+              {useRealAR ? 'Use Simulated AR' : 'Use Real AR'}
             </div>
-            
-            <div className="relative group">
-              <button 
-                className="w-14 h-14 rounded-full bg-accent/70 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
-                onClick={() => toggleRealAR()}
-                aria-label="Toggle Real AR"
-              >
-                <Scan className="h-6 w-6 text-white" />
-              </button>
-              <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                {useRealAR ? 'Use Simulated AR' : 'Use Real AR'}
-              </div>
+          </div>
+          
+          <div className="relative group">
+            <button 
+              className="w-14 h-14 rounded-full bg-purple-500/70 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95"
+              onClick={() => toggleObjectDetection()}
+              aria-label="Object Detection"
+            >
+              <Webcam className="h-6 w-6 text-white" />
+            </button>
+            <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-black/80 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+              {objectDetectionMode ? 'Historical Sites Mode' : 'Object Detection Mode'}
             </div>
           </div>
         </div>

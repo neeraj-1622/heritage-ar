@@ -5,6 +5,7 @@ import { useGLTF, OrbitControls, Environment, PerspectiveCamera } from '@react-t
 import { Interactive, useXR, useHitTest } from '@react-three/xr';
 import * as THREE from 'three';
 import { HistoricalSite } from './SiteCard';
+import { getModelForObject } from '../utils/objectToModelMapper';
 
 // Default 3D models for historical sites
 const MODEL_MAPPINGS: Record<string, string> = {
@@ -92,16 +93,19 @@ function ARCamera() {
 
 interface ARModelViewerProps {
   selectedSite?: HistoricalSite;
+  detectedObject?: { class: string; score: number } | null;
   arMode: boolean;
   enableRotation?: boolean;
 }
 
 const ARModelViewer: React.FC<ARModelViewerProps> = ({ 
   selectedSite, 
+  detectedObject,
   arMode, 
   enableRotation = false 
 }) => {
   const [modelUrl, setModelUrl] = useState<string>(MODEL_MAPPINGS.default);
+  const [modelScale, setModelScale] = useState<number>(0.5);
   const [hasXRSupport, setHasXRSupport] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -116,16 +120,22 @@ const ARModelViewer: React.FC<ARModelViewerProps> = ({
   }, []);
 
   useEffect(() => {
-    if (selectedSite) {
+    // Choose between site model or detected object model
+    if (detectedObject && detectedObject.class) {
+      const objectModel = getModelForObject(detectedObject.class);
+      setModelUrl(objectModel.modelUrl);
+      setModelScale(objectModel.scale);
+    } else if (selectedSite) {
       // Use the site-specific model if available, otherwise use the default
       setModelUrl(MODEL_MAPPINGS[selectedSite.name] || MODEL_MAPPINGS.default);
+      setModelScale(0.5);
     }
-  }, [selectedSite]);
+  }, [selectedSite, detectedObject]);
 
-  if (!selectedSite) {
+  if (!selectedSite && !detectedObject) {
     return (
       <div className="flex items-center justify-center h-full w-full">
-        <p className="text-white">No site selected</p>
+        <p className="text-white">No site or object selected</p>
       </div>
     );
   }
@@ -159,7 +169,7 @@ const ARModelViewer: React.FC<ARModelViewerProps> = ({
           <>
             <ambientLight intensity={0.5} />
             <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={1} />
-            <Model url={modelUrl} scale={0.5} />
+            <Model url={modelUrl} scale={modelScale} />
             {enableRotation ? null : <OrbitControls />}
             <Environment preset="sunset" />
           </>
