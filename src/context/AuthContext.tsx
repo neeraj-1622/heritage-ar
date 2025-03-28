@@ -1,12 +1,12 @@
 
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase';
 
 interface User {
   id: string;
   username: string;
   email: string;
-  token: string;
 }
 
 interface AuthContextType {
@@ -37,33 +37,69 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is stored in localStorage
-    const storedUser = localStorage.getItem('heritageAR_user');
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-      } catch (error) {
-        console.error('Failed to parse stored user', error);
-        localStorage.removeItem('heritageAR_user');
+    // Check if user is logged in with Supabase
+    const session = supabase.auth.getSession();
+    
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (session && session.user) {
+          // Get user profile from users table
+          const { data: profile } = await supabase
+            .from('users')
+            .select('username')
+            .eq('id', session.user.id)
+            .single();
+            
+          setUser({
+            id: session.user.id,
+            email: session.user.email || '',
+            username: profile?.username || 'User',
+          });
+        } else {
+          setUser(null);
+        }
+        setLoading(false);
       }
-    }
-    setLoading(false);
+    );
+
+    // Initial session check
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session && session.user) {
+        // Get user profile from users table
+        const { data: profile } = await supabase
+          .from('users')
+          .select('username')
+          .eq('id', session.user.id)
+          .single();
+          
+        setUser({
+          id: session.user.id,
+          email: session.user.email || '',
+          username: profile?.username || 'User',
+        });
+      }
+      setLoading(false);
+    };
+
+    checkUser();
+    
+    // Cleanup subscription when component unmounts
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
       
-      if (!response.ok) {
-        const error = await response.json();
+      if (error) {
         toast({
           title: 'Login failed',
           description: error.message || 'Invalid credentials',
@@ -72,14 +108,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return false;
       }
       
-      const userData = await response.json();
-      setUser(userData);
-      localStorage.setItem('heritageAR_user', JSON.stringify(userData));
-      toast({
-        title: 'Login successful',
-        description: `Welcome back, ${userData.username}!`,
-      });
-      return true;
+      if (data.user) {
+        // Get user profile from users table
+        const { data: profile } = await supabase
+          .from('users')
+          .select('username')
+          .eq('id', data.user.id)
+          .single();
+        
+        toast({
+          title: 'Login successful',
+          description: `Welcome back, ${profile?.username || 'User'}!`,
+        });
+        return true;
+      }
+      return false;
     } catch (error) {
       console.error('Login error:', error);
       toast({
@@ -96,16 +139,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const register = async (username: string, email: string, password: string): Promise<boolean> => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5000/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, email, password }),
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
       });
       
-      if (!response.ok) {
-        const error = await response.json();
+      if (error) {
         toast({
           title: 'Registration failed',
           description: error.message || 'Could not create account',
@@ -114,14 +153,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return false;
       }
       
-      const userData = await response.json();
-      setUser(userData);
-      localStorage.setItem('heritageAR_user', JSON.stringify(userData));
-      toast({
-        title: 'Registration successful',
-        description: `Welcome, ${userData.username}!`,
-      });
-      return true;
+      if (data.user) {
+        // Add user profile to users table
+        const { error: profileError } = await supabase
+          .from('users')
+          .insert([{ id: data.user.id, username, email }]);
+          
+        if (profileError) {
+          console.error('Error creating user profile:', profileError);
+          toast({
+            title: 'Registration incomplete',
+            description: 'User created but profile setup failed',
+            variant: 'destructive',
+          });
+        }
+        
+        toast({
+          title: 'Registration successful',
+          description: `Welcome, ${username}!`,
+        });
+        return true;
+      }
+      return false;
     } catch (error) {
       console.error('Registration error:', error);
       toast({
@@ -135,9 +188,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem('heritageAR_user');
     toast({
       title: 'Logged out',
       description: 'You have been successfully logged out',

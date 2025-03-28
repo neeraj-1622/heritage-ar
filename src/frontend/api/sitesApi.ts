@@ -1,5 +1,6 @@
 
 import { toast } from '@/hooks/use-toast';
+import { supabase, HistoricalSite } from '@/lib/supabase';
 
 // Sample data to use if API fails or during development
 const fallbackSites = [
@@ -53,27 +54,38 @@ const fallbackSites = [
   },
 ];
 
+// Transform Supabase response to match expected format
+const transformSiteData = (site: any): any => ({
+  id: site.id,
+  name: site.name,
+  period: site.period,
+  location: site.location,
+  shortDescription: site.short_description,
+  longDescription: site.long_description,
+  imageUrl: site.image_url,
+  arModelUrl: site.ar_model_url,
+  coordinates: site.coordinates,
+  createdAt: site.created_at,
+  updatedAt: site.updated_at,
+});
+
 export const fetchAllSites = async () => {
   try {
-    const response = await fetch('http://localhost:5000/api/sites');
+    const { data, error } = await supabase
+      .from('historical_sites')
+      .select('*')
+      .order('name');
     
-    if (!response.ok) {
+    if (error) {
+      console.error('Error fetching sites from Supabase:', error);
       console.warn('API request failed, using fallback data');
       return fallbackSites;
     }
     
-    return await response.json();
+    return data.map(transformSiteData);
   } catch (error) {
     console.error('Error fetching sites:', error);
     console.warn('API request failed, using fallback data');
-    
-    // Don't show error toast if we're using fallback data
-    // toast({
-    //   title: "Error loading sites",
-    //   description: "Could not load sites. Please try again later.",
-    //   variant: "destructive",
-    // });
-    
     return fallbackSites;
   }
 };
@@ -85,20 +97,23 @@ export const fetchSiteById = async (id: string) => {
       throw new Error('Invalid site ID');
     }
     
-    const response = await fetch(`http://localhost:5000/api/sites/${id}`);
+    const { data, error } = await supabase
+      .from('historical_sites')
+      .select('*')
+      .eq('id', id)
+      .single();
     
-    if (!response.ok) {
+    if (error) {
       // For specific site, fallback to the matching site from our hardcoded data
       const fallbackSite = fallbackSites.find(site => site.id === id);
       if (fallbackSite) {
         console.warn(`API request failed for site ID ${id}, using fallback data`);
         return fallbackSite;
       }
-      const errorData = await response.json();
-      throw new Error(`Error fetching site ${id}: ${errorData.message || response.statusText}`);
+      throw new Error(`Error fetching site ${id}: ${error.message}`);
     }
     
-    return await response.json();
+    return transformSiteData(data);
   } catch (error) {
     console.error(`Error fetching site ${id}:`, error);
     

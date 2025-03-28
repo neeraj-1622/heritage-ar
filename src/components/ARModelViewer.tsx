@@ -116,13 +116,19 @@ interface ARModelViewerProps {
   detectedObject?: { class: string; score: number } | null;
   arMode: boolean;
   enableRotation?: boolean;
+  onCameraToggle?: () => void;
+  onModelToggle?: () => void;
+  cameraActive?: boolean;
 }
 
 const ARModelViewer: React.FC<ARModelViewerProps> = ({ 
   selectedSite, 
   detectedObject,
   arMode, 
-  enableRotation = false 
+  enableRotation = false,
+  onCameraToggle,
+  onModelToggle,
+  cameraActive
 }) => {
   const [modelUrl, setModelUrl] = useState<string>(MODEL_MAPPINGS.default);
   const [modelScale, setModelScale] = useState<number>(0.5);
@@ -201,6 +207,48 @@ const ARModelViewer: React.FC<ARModelViewerProps> = ({
           </>
         )}
       </Canvas>
+
+      {/* Control buttons */}
+      <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4 z-10">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button 
+                onClick={onCameraToggle}
+                className={`p-3 rounded-full ${cameraActive ? 'bg-accent' : 'bg-heritage-800'} text-white`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                  <circle cx="12" cy="13" r="4"></circle>
+                </svg>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top">
+              <p>Toggle camera for object detection</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button 
+                onClick={onModelToggle}
+                className="p-3 rounded-full bg-heritage-800 text-white"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                  <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                  <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                </svg>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top">
+              <p>View 3D model in 360 degrees</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
 
       {/* Loading overlay */}
       <div className="absolute top-0 left-0 right-0 bg-black/30 text-white p-2 text-sm text-center">
