@@ -6,6 +6,7 @@ import { Interactive, useXR, useHitTest } from '@react-three/xr';
 import * as THREE from 'three';
 import { HistoricalSite } from './SiteCard';
 import { getModelForObject } from '../utils/objectToModelMapper';
+import { toast } from "@/hooks/use-toast";
 
 // Default 3D models for historical sites
 const MODEL_MAPPINGS: Record<string, string> = {
@@ -33,13 +34,26 @@ function PlaceholderModel({ position = [0, 0, 0], scale = 1 }: { position?: [num
 function Model({ url, position = [0, 0, 0], scale = 1 }: { url: string, position?: [number, number, number], scale?: number }) {
   const { scene } = useGLTF(url, true);
   const modelRef = useRef<THREE.Group>(null);
+  const [modelLoaded, setModelLoaded] = useState(false);
   
+  useEffect(() => {
+    if (scene) {
+      setModelLoaded(true);
+      console.log("Model loaded successfully:", url);
+    }
+  }, [scene, url]);
+
   useFrame((state) => {
     if (modelRef.current) {
       // Optional: Add some subtle animation
-      modelRef.current.rotation.y += 0.001;
+      modelRef.current.rotation.y += 0.005;
     }
   });
+
+  // If there's an error loading the model, show a placeholder
+  if (!modelLoaded) {
+    return <PlaceholderModel position={position} scale={scale} />;
+  }
 
   return (
     <primitive 
@@ -107,6 +121,7 @@ const ARModelViewer: React.FC<ARModelViewerProps> = ({
   const [modelUrl, setModelUrl] = useState<string>(MODEL_MAPPINGS.default);
   const [modelScale, setModelScale] = useState<number>(0.5);
   const [hasXRSupport, setHasXRSupport] = useState<boolean | null>(null);
+  const [modelLoaded, setModelLoaded] = useState(false);
 
   useEffect(() => {
     // Check if WebXR is supported
@@ -125,22 +140,25 @@ const ARModelViewer: React.FC<ARModelViewerProps> = ({
       const objectModel = getModelForObject(detectedObject.class);
       setModelUrl(objectModel.modelUrl);
       setModelScale(objectModel.scale);
+      console.log("Setting model for detected object:", detectedObject.class, objectModel.modelUrl);
     } else if (selectedSite) {
       // Use the site-specific model if available, otherwise use the default
-      setModelUrl(MODEL_MAPPINGS[selectedSite.name] || MODEL_MAPPINGS.default);
+      const siteModelUrl = MODEL_MAPPINGS[selectedSite.name] || MODEL_MAPPINGS.default;
+      setModelUrl(siteModelUrl);
       setModelScale(0.5);
+      console.log("Setting model for selected site:", selectedSite.name, siteModelUrl);
     }
   }, [selectedSite, detectedObject]);
 
   if (!selectedSite && !detectedObject) {
     return (
-      <div className="flex items-center justify-center h-full w-full">
-        <p className="text-white">No site or object selected</p>
+      <div className="flex items-center justify-center h-full w-full bg-black/30">
+        <p className="text-white">Select a site or detect an object to view 3D model</p>
       </div>
     );
   }
 
-  if (hasXRSupport === false) {
+  if (hasXRSupport === false && arMode) {
     return (
       <div className="flex flex-col items-center justify-center h-full w-full p-4 text-center">
         <div className="bg-black/50 p-4 rounded-lg backdrop-blur-sm">
@@ -156,8 +174,8 @@ const ARModelViewer: React.FC<ARModelViewerProps> = ({
   }
 
   return (
-    <div className="h-full w-full">
-      <Canvas>
+    <div className="h-full w-full relative">
+      <Canvas className="touch-none">
         <PerspectiveCamera makeDefault position={[0, 1, 5]} />
         
         {arMode ? (
@@ -167,14 +185,21 @@ const ARModelViewer: React.FC<ARModelViewerProps> = ({
           </>
         ) : (
           <>
-            <ambientLight intensity={0.5} />
-            <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={1} />
+            <ambientLight intensity={1} />
+            <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={1.5} />
             <Model url={modelUrl} scale={modelScale} />
-            {enableRotation ? null : <OrbitControls />}
+            {enableRotation ? null : <OrbitControls enableZoom={true} enablePan={true} />}
             <Environment preset="sunset" />
           </>
         )}
       </Canvas>
+
+      {/* Loading overlay */}
+      <div className="absolute top-0 left-0 right-0 bg-black/30 text-white p-2 text-sm text-center">
+        {detectedObject ? 
+          `Detected: ${detectedObject.class} (${Math.round(detectedObject.score * 100)}%)` : 
+          selectedSite ? `Viewing: ${selectedSite.name}` : 'No object detected'}
+      </div>
     </div>
   );
 };

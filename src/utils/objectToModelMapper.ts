@@ -11,32 +11,32 @@ type DetectedObjectMapping = {
 export const OBJECT_MODEL_MAPPINGS: DetectedObjectMapping = {
   // Common objects that can be detected by COCO-SSD
   "person": {
-    modelUrl: "/models/monument.glb", // Placeholder model
+    modelUrl: "/models/monument.glb",
     scale: 0.5,
     description: "A human figure detected in the scene"
   },
   "laptop": {
-    modelUrl: "/models/monument.glb", // Placeholder model
+    modelUrl: "/models/colosseum.glb",
     scale: 0.4,
     description: "A laptop computer"
   },
   "cell phone": {
-    modelUrl: "/models/monument.glb", // Placeholder model
+    modelUrl: "/models/taj_mahal.glb",
     scale: 0.3,
     description: "A mobile phone device"
   },
   "book": {
-    modelUrl: "/models/monument.glb", // Placeholder model
+    modelUrl: "/models/parthenon.glb",
     scale: 0.4,
     description: "A printed book"
   },
   "bottle": {
-    modelUrl: "/models/monument.glb", // Placeholder model
+    modelUrl: "/models/angkor_wat.glb",
     scale: 0.3,
     description: "A bottle"
   },
   "cup": {
-    modelUrl: "/models/monument.glb", // Placeholder model
+    modelUrl: "/models/chichen_itza.glb",
     scale: 0.25,
     description: "A drinking cup"
   },

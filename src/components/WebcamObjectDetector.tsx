@@ -2,7 +2,9 @@
 import React, { useRef, useState, useEffect } from 'react';
 import * as tf from '@tensorflow/tfjs';
 import * as cocoSsd from '@tensorflow-models/coco-ssd';
-import { toast } from '@/hooks/use-toast';
+import { toast } from "@/hooks/use-toast";
+import { Button } from "./ui/button";
+import { Camera, RefreshCw } from "lucide-react";
 
 interface WebcamObjectDetectorProps {
   onDetection: (detection: cocoSsd.DetectedObject | null) => void;
@@ -19,6 +21,7 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
   const [isModelLoading, setIsModelLoading] = useState(true);
   const [isStreamActive, setIsStreamActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isCameraOn, setIsCameraOn] = useState(false);
   
   // Load the COCO-SSD model
   useEffect(() => {
@@ -26,9 +29,11 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
       try {
         setIsModelLoading(true);
         await tf.ready();
+        console.log("TensorFlow.js is ready");
         const loadedModel = await cocoSsd.load();
         setModel(loadedModel);
         setIsModelLoading(false);
+        console.log("COCO-SSD model loaded successfully");
         toast({
           title: "Ready to detect objects",
           description: "Point your camera at an object to detect it",
@@ -50,47 +55,60 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
     };
   }, []);
   
-  // Initialize webcam
-  useEffect(() => {
-    const enableCam = async () => {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        setError('Your browser does not support webcam access');
-        return;
-      }
-      
-      try {
-        const constraints = {
-          video: {
-            width: 640,
-            height: 480,
-            facingMode: 'environment'
-          }
-        };
-        
-        const stream = await navigator.mediaDevices.getUserMedia(constraints);
-        
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          setIsStreamActive(true);
+  // Initialize webcam on button click
+  const enableCam = async () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setError('Your browser does not support webcam access');
+      return;
+    }
+    
+    try {
+      const constraints = {
+        video: {
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          facingMode: 'environment'
         }
-      } catch (err) {
-        console.error('Error accessing webcam:', err);
-        setError('Could not access webcam. Please check permissions and try again.');
+      };
+      
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current?.play();
+          setIsStreamActive(true);
+          setIsCameraOn(true);
+          toast({
+            title: "Camera activated",
+            description: "Point your camera at an object to detect it",
+          });
+        };
       }
-    };
-    
-    enableCam();
-    
-    return () => {
-      // Stop the video stream when component unmounts
-      if (videoRef.current && videoRef.current.srcObject) {
-        const stream = videoRef.current.srcObject as MediaStream;
-        const tracks = stream.getTracks();
-        tracks.forEach(track => track.stop());
-        setIsStreamActive(false);
-      }
-    };
-  }, []);
+    } catch (err) {
+      console.error('Error accessing webcam:', err);
+      setError('Could not access webcam. Please check permissions and try again.');
+    }
+  };
+
+  const stopCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      const tracks = stream.getTracks();
+      tracks.forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+      setIsStreamActive(false);
+      setIsCameraOn(false);
+    }
+  };
+
+  const toggleCamera = () => {
+    if (isCameraOn) {
+      stopCamera();
+    } else {
+      enableCam();
+    }
+  };
   
   // Perform object detection on video frames
   useEffect(() => {
@@ -122,6 +140,7 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
       try {
         // Perform the detection
         const predictions = await model.detect(video);
+        console.log("Detection predictions:", predictions);
         
         // Draw detections
         const ctx = canvas.getContext('2d');
@@ -185,6 +204,12 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
       }
     };
   }, [model, isModelLoading, isStreamActive, onDetection]);
+
+  useEffect(() => {
+    return () => {
+      stopCamera();
+    };
+  }, []);
   
   return (
     <div className={`relative ${className}`}>
@@ -201,11 +226,29 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
         <div className="absolute inset-0 flex items-center justify-center bg-red-500/20 z-10 rounded-lg">
           <div className="bg-red-900/80 text-white p-4 rounded-lg max-w-xs text-center">
             <p>{error}</p>
+            <Button 
+              className="mt-3 bg-white text-red-900" 
+              onClick={() => setError(null)}
+            >
+              Dismiss
+            </Button>
           </div>
         </div>
       )}
       
-      <div className="relative aspect-video rounded-lg overflow-hidden shadow-lg">
+      <div className="relative aspect-video rounded-lg overflow-hidden shadow-lg bg-black">
+        {!isStreamActive && !isModelLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/70 z-5">
+            <Button 
+              className="bg-accent hover:bg-accent/80" 
+              onClick={enableCam}
+              size="lg"
+            >
+              <Camera className="mr-2" /> Activate Camera
+            </Button>
+          </div>
+        )}
+        
         <video 
           ref={videoRef}
           className="w-full h-full object-cover"
@@ -217,6 +260,23 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
           ref={canvasRef}
           className="absolute top-0 left-0 w-full h-full"
         />
+
+        {isStreamActive && (
+          <div className="absolute bottom-4 right-4 z-20">
+            <Button
+              variant="secondary"
+              size="icon"
+              className="bg-black/50 hover:bg-black/70 text-white rounded-full shadow-lg"
+              onClick={toggleCamera}
+            >
+              {isCameraOn ? (
+                <RefreshCw className="h-5 w-5" />
+              ) : (
+                <Camera className="h-5 w-5" />
+              )}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
