@@ -1,4 +1,3 @@
-
 -- Create tables for the HeritageAR application
 
 -- Historical Sites Table
@@ -84,3 +83,69 @@ INSERT INTO historical_sites (name, period, location, short_description, image_u
 ('Taj Mahal', 'Mughal Empire', 'Agra, India', 'An ivory-white marble mausoleum commissioned in 1632 by the Mughal emperor Shah Jahan.', 'https://images.unsplash.com/photo-1548013146-72479768bada?q=80&w=2076&auto=format&fit=crop'),
 ('Angkor Wat', 'Khmer Empire', 'Siem Reap, Cambodia', 'A temple complex and the largest religious monument in the world, built in the early 12th century.', 'https://images.unsplash.com/photo-1508159452718-d22f6734a00d?q=80&w=2070&auto=format&fit=crop'),
 ('Chichen Itza', 'Maya Civilization', 'Yucatán, Mexico', 'A pre-Columbian city built by the Maya people, known for its step pyramid El Castillo.', 'https://images.unsplash.com/photo-1518638150340-f706e86654de?q=80&w=2067&auto=format&fit=crop');
+
+-- Create users table
+create table public.users (
+  id uuid references auth.users on delete cascade,
+  email text unique not null,
+  name text,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  primary key (id)
+);
+
+-- Enable Row Level Security (RLS) for users table
+alter table public.users enable row level security;
+
+-- Create policy to allow users to read their own data
+create policy "Users can read their own data" on public.users
+  for select using (auth.uid() = id);
+
+-- Create policy to allow users to update their own data
+create policy "Users can update their own data" on public.users
+  for update using (auth.uid() = id);
+
+-- Create sites table
+create table public.sites (
+  id uuid default uuid_generate_v4() primary key,
+  name text not null,
+  description text,
+  location text,
+  image_url text,
+  created_by uuid references public.users(id),
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Enable Row Level Security (RLS) for sites table
+alter table public.sites enable row level security;
+
+-- Create policy to allow public read access to sites
+create policy "Allow public read access" on public.sites
+  for select using (true);
+
+-- Create policy to allow authenticated users to create sites
+create policy "Allow authenticated create access" on public.sites
+  for insert with check (auth.role() = 'authenticated');
+
+-- Create policy to allow site owners to update their sites
+create policy "Allow owners to update sites" on public.sites
+  for update using (auth.uid() = created_by);
+
+-- Create policy to allow site owners to delete their sites
+create policy "Allow owners to delete sites" on public.sites
+  for delete using (auth.uid() = created_by);
+
+-- Create function to automatically set updated_at
+create or replace function public.handle_updated_at()
+returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language plpgsql;
+
+-- Create trigger to automatically update updated_at
+create trigger set_updated_at
+  before update on public.sites
+  for each row
+  execute function public.handle_updated_at();
