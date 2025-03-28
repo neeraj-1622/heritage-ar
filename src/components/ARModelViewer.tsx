@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { HistoricalSite } from './SiteCard';
 import { getModelForObject } from '../utils/objectToModelMapper';
 import { toast } from "@/hooks/use-toast";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 // Default 3D models for historical sites
 const MODEL_MAPPINGS: Record<string, string> = {
@@ -83,6 +84,11 @@ function ARPlacement({ modelUrl }: { modelUrl: string }) {
       const pos = new THREE.Vector3().setFromMatrixPosition(hitMatrix);
       setPosition([pos.x, pos.y, pos.z]);
       setPlaced(true);
+      
+      toast({
+        title: "Model Placed",
+        description: "3D model has been placed in AR space"
+      });
     }
   });
 
@@ -141,12 +147,14 @@ const ARModelViewer: React.FC<ARModelViewerProps> = ({
       setModelUrl(objectModel.modelUrl);
       setModelScale(objectModel.scale);
       console.log("Setting model for detected object:", detectedObject.class, objectModel.modelUrl);
+      setModelLoaded(true);
     } else if (selectedSite) {
       // Use the site-specific model if available, otherwise use the default
       const siteModelUrl = MODEL_MAPPINGS[selectedSite.name] || MODEL_MAPPINGS.default;
       setModelUrl(siteModelUrl);
       setModelScale(0.5);
       console.log("Setting model for selected site:", selectedSite.name, siteModelUrl);
+      setModelLoaded(true);
     }
   }, [selectedSite, detectedObject]);
 

@@ -5,6 +5,7 @@ import * as cocoSsd from '@tensorflow-models/coco-ssd';
 import { toast } from "@/hooks/use-toast";
 import { Button } from "./ui/button";
 import { Camera, RefreshCw } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface WebcamObjectDetectorProps {
   onDetection: (detection: cocoSsd.DetectedObject | null) => void;
@@ -38,6 +39,9 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
           title: "Ready to detect objects",
           description: "Point your camera at an object to detect it",
         });
+        
+        // Auto-enable camera after model loads
+        enableCam();
       } catch (err) {
         console.error('Failed to load TensorFlow model:', err);
         setError('Failed to load object detection model. Please check your connection and try again.');
@@ -52,6 +56,7 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
       if (tf.getBackend()) {
         tf.disposeVariables();
       }
+      stopCamera();
     };
   }, []);
   
@@ -76,7 +81,10 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.onloadedmetadata = () => {
-          videoRef.current?.play();
+          videoRef.current?.play().catch(err => {
+            console.error("Error playing video:", err);
+            setError("Could not start video stream. Please check permissions.");
+          });
           setIsStreamActive(true);
           setIsCameraOn(true);
           toast({
@@ -105,6 +113,9 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
   const toggleCamera = () => {
     if (isCameraOn) {
       stopCamera();
+      toast({
+        title: "Camera deactivated",
+      });
     } else {
       enableCam();
     }
@@ -239,13 +250,22 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
       <div className="relative aspect-video rounded-lg overflow-hidden shadow-lg bg-black">
         {!isStreamActive && !isModelLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/70 z-5">
-            <Button 
-              className="bg-accent hover:bg-accent/80" 
-              onClick={enableCam}
-              size="lg"
-            >
-              <Camera className="mr-2" /> Activate Camera
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    className="bg-accent hover:bg-accent/80" 
+                    onClick={enableCam}
+                    size="lg"
+                  >
+                    <Camera className="mr-2" /> Activate Camera
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Turn on your camera to detect objects</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         )}
         
@@ -263,18 +283,27 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
 
         {isStreamActive && (
           <div className="absolute bottom-4 right-4 z-20">
-            <Button
-              variant="secondary"
-              size="icon"
-              className="bg-black/50 hover:bg-black/70 text-white rounded-full shadow-lg"
-              onClick={toggleCamera}
-            >
-              {isCameraOn ? (
-                <RefreshCw className="h-5 w-5" />
-              ) : (
-                <Camera className="h-5 w-5" />
-              )}
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className="bg-black/50 hover:bg-black/70 text-white rounded-full shadow-lg"
+                    onClick={toggleCamera}
+                  >
+                    {isCameraOn ? (
+                      <RefreshCw className="h-5 w-5" />
+                    ) : (
+                      <Camera className="h-5 w-5" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {isCameraOn ? "Restart camera" : "Turn on camera"}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         )}
       </div>
