@@ -37,16 +37,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in with Supabase
-    const session = supabase.auth.getSession();
-    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth event:', event);
+        
         if (session && session.user) {
-          // Get user profile from users table
+          // Get user profile from user_profiles table
           const { data: profile } = await supabase
-            .from('users')
+            .from('user_profiles')
             .select('username')
             .eq('id', session.user.id)
             .single();
@@ -54,7 +53,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setUser({
             id: session.user.id,
             email: session.user.email || '',
-            username: profile?.username || 'User',
+            username: profile?.username || session.user.email?.split('@')[0] || 'User',
           });
         } else {
           setUser(null);
@@ -67,9 +66,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session && session.user) {
-        // Get user profile from users table
+        // Get user profile from user_profiles table
         const { data: profile } = await supabase
-          .from('users')
+          .from('user_profiles')
           .select('username')
           .eq('id', session.user.id)
           .single();
@@ -77,7 +76,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser({
           id: session.user.id,
           email: session.user.email || '',
-          username: profile?.username || 'User',
+          username: profile?.username || session.user.email?.split('@')[0] || 'User',
         });
       }
       setLoading(false);
@@ -109,12 +108,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       
       if (data.user) {
-        // Get user profile from users table
+        // Get user profile from user_profiles table
         const { data: profile } = await supabase
-          .from('users')
+          .from('user_profiles')
           .select('username')
           .eq('id', data.user.id)
           .single();
+        
+        // If profile doesn't exist, create one
+        if (!profile) {
+          await supabase
+            .from('user_profiles')
+            .insert([{ 
+              id: data.user.id, 
+              username: data.user.email?.split('@')[0] || 'User', 
+              email: data.user.email || '',
+              avatar_url: null
+            }]);
+        }
         
         toast({
           title: 'Login successful',
@@ -142,6 +153,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/login`,
+          data: {
+            name: username,
+          }
+        }
       });
       
       if (error) {
@@ -154,10 +171,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       
       if (data.user) {
-        // Add user profile to users table
+        // Add user profile to user_profiles table
         const { error: profileError } = await supabase
-          .from('users')
-          .insert([{ id: data.user.id, username, email }]);
+          .from('user_profiles')
+          .insert([{ 
+            id: data.user.id, 
+            username, 
+            email,
+            avatar_url: null
+          }]);
           
         if (profileError) {
           console.error('Error creating user profile:', profileError);
@@ -170,7 +192,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         toast({
           title: 'Registration successful',
-          description: `Welcome, ${username}!`,
+          description: 'Please check your email to verify your account.',
         });
         return true;
       }

@@ -1,3 +1,4 @@
+
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { supabase } from '../lib/supabase';
@@ -16,9 +17,16 @@ app.post('/api/auth/register', async (req: Request, res: Response): Promise<void
   try {
     const { email, password, name } = req.body;
     
+    // Register with Supabase Auth (auto-generates confirmation email)
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        emailRedirectTo: `${process.env.VITE_APP_URL || 'http://localhost:5173'}/login`,
+        data: {
+          name: name,
+        }
+      }
     });
 
     if (authError) {
@@ -26,17 +34,23 @@ app.post('/api/auth/register', async (req: Request, res: Response): Promise<void
       return;
     }
 
-    // Create user profile in users table
+    // Create user profile in user_profiles table
     const { error: profileError } = await supabase
-      .from('users')
-      .insert([{ id: authData.user?.id, email, name }]);
+      .from('user_profiles')
+      .insert([{ 
+        id: authData.user?.id, 
+        username: name, 
+        email: email,
+        avatar_url: null
+      }]);
 
     if (profileError) {
+      console.error('Error creating user profile:', profileError);
       res.status(500).json({ message: profileError.message });
       return;
     }
 
-    res.status(201).json({ user: authData.user });
+    res.status(201).json({ user: authData.user, message: 'Verification email sent. Please check your inbox.' });
   } catch (error) {
     console.error('Error registering user:', error);
     res.status(500).json({ message: 'Failed to register user' });
@@ -55,6 +69,25 @@ app.post('/api/auth/login', async (req: Request, res: Response): Promise<void> =
     if (error) {
       res.status(401).json({ message: error.message });
       return;
+    }
+
+    // Check if user profile exists, if not create one
+    const { data: profileData, error: profileError } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('id', data.user.id)
+      .single();
+
+    if (profileError || !profileData) {
+      // Create user profile if it doesn't exist
+      await supabase
+        .from('user_profiles')
+        .insert([{ 
+          id: data.user.id, 
+          username: data.user.email?.split('@')[0] || 'User', 
+          email: data.user.email || '',
+          avatar_url: null
+        }]);
     }
 
     res.json({ user: data.user, session: data.session });
