@@ -4,7 +4,7 @@ import { useParams, Link } from 'react-router-dom';
 import { HistoricalSite, isSiteFavorited } from '@/lib/supabase';
 import { getSiteById } from '@/frontend/api/sitesApi';
 import { useAuth } from '@/context/AuthContext';
-import { Heart, HeartFilled, GaugeIcon } from 'lucide-react';
+import { Heart, GaugeIcon } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -140,7 +140,7 @@ const SiteDetail: React.FC = () => {
                   >
                     {isFavorited ? (
                       <>
-                        <HeartFilled className="w-4 h-4 text-red-500" />
+                        <Heart className="w-4 h-4 text-red-500 fill-red-500" />
                         <span>Saved</span>
                       </>
                     ) : (
