@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { HistoricalSite } from '@/lib/supabase';
-import { getSiteById, isSiteFavorited } from '@/frontend/api/sitesApi';
+import { HistoricalSite, isSiteFavorited } from '@/lib/supabase';
+import { getSiteById } from '@/frontend/api/sitesApi';
 import { useAuth } from '@/context/AuthContext';
-import { HeartIcon, HeartFilledIcon, GaugeIcon } from '@radix-ui/react-icons';
+import { Heart, HeartFilled, GaugeIcon } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -139,12 +140,12 @@ const SiteDetail: React.FC = () => {
                   >
                     {isFavorited ? (
                       <>
-                        <HeartFilledIcon className="w-4 h-4 text-red-500" />
+                        <HeartFilled className="w-4 h-4 text-red-500" />
                         <span>Saved</span>
                       </>
                     ) : (
                       <>
-                        <HeartIcon className="w-4 h-4" />
+                        <Heart className="w-4 h-4" />
                         <span>Save</span>
                       </>
                     )}
