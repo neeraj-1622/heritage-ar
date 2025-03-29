@@ -60,17 +60,18 @@ const transformSiteData = (site: any): any => ({
   name: site.name,
   period: site.period,
   location: site.location,
-  shortDescription: site.short_description,
-  longDescription: site.long_description,
-  imageUrl: site.image_url,
-  arModelUrl: site.ar_model_url,
+  short_description: site.short_description,
+  long_description: site.long_description,
+  image_url: site.image_url,
+  ar_model_url: site.ar_model_url,
   coordinates: site.coordinates,
-  createdAt: site.created_at,
-  updatedAt: site.updated_at,
+  created_at: site.created_at,
+  updated_at: site.updated_at,
 });
 
 // Export function for compatibility
 export const fetchSiteById = getSiteById;
+export const fetchAllSites = getAllSites;
 
 export async function getAllSites(): Promise<HistoricalSite[]> {
   try {

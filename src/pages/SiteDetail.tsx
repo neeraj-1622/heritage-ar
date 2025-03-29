@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -111,7 +112,7 @@ const SiteDetail: React.FC = () => {
               }`}></div>
               
               <img 
-                src={site.imageUrl} 
+                src={site.image_url} 
                 alt={site.name} 
                 className={`h-full w-full object-cover transition-all duration-700 ${
                   isImageHovered ? 'scale-110' : 'scale-100'
@@ -181,7 +182,7 @@ const SiteDetail: React.FC = () => {
                 </div>
                 
                 <p className="text-heritage-300">
-                  {site.longDescription || `This historical site is a significant cultural landmark that showcases the architectural 
+                  {site.long_description || `This historical site is a significant cultural landmark that showcases the architectural 
                   brilliance and cultural values of its time. The structure has been preserved through 
                   centuries and continues to be an important destination for researchers and tourists alike.`}
                 </p>

@@ -35,7 +35,7 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ site, className = '' }) => {
         </div>
         
         <p className="text-heritage-300">
-          {site.shortDescription}
+          {site.short_description}
         </p>
 
         <div className="pt-2">

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { HistoricalSite } from '@/lib/supabase';
 
@@ -151,7 +150,7 @@ const ARView: React.FC<ARViewProps> = ({
             }}
           >
             <img 
-              src={selectedSite.imageUrl} 
+              src={selectedSite.image_url} 
               alt={`AR model of ${selectedSite.name}`} 
               className="h-96 object-contain"
               style={{
@@ -193,7 +192,7 @@ const ARView: React.FC<ARViewProps> = ({
         <div className="absolute bottom-20 left-0 right-0 z-30 p-4">
           <div className="glass-panel rounded-2xl p-4 max-w-lg mx-auto animate-slide-up">
             <h3 className="text-lg font-medium text-white">{selectedSite.name}</h3>
-            <p className="text-sm text-white/80 mt-1">{selectedSite.shortDescription}</p>
+            <p className="text-sm text-white/80 mt-1">{selectedSite.short_description}</p>
             
             <div className="mt-3 flex space-x-2">
               <button 
