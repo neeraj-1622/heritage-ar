@@ -1,4 +1,3 @@
-
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { supabase } from '@/integrations/supabase/client';
@@ -145,7 +144,7 @@ app.post('/api/auth/resend-verification', async (req: Request, res: Response): P
 app.get('/api/sites', async (_req: Request, res: Response): Promise<void> => {
   try {
     const { data: sites, error } = await supabase
-      .from('sites')
+      .from('historical_sites')
       .select('*');
 
     if (error) {
@@ -163,7 +162,7 @@ app.get('/api/sites', async (_req: Request, res: Response): Promise<void> => {
 app.get('/api/sites/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const { data: site, error } = await supabase
-      .from('sites')
+      .from('historical_sites')
       .select('*')
       .eq('id', req.params.id)
       .single();
@@ -184,7 +183,7 @@ app.get('/api/sites/:id', async (req: Request, res: Response): Promise<void> => 
 app.post('/api/sites', authMiddleware, async (req: Request, res: Response): Promise<void> => {
   try {
     const { data: site, error } = await supabase
-      .from('sites')
+      .from('historical_sites')
       .insert([{ ...req.body, created_by: (req as any).user.id }])
       .select()
       .single();
@@ -203,7 +202,7 @@ app.post('/api/sites', authMiddleware, async (req: Request, res: Response): Prom
 app.put('/api/sites/:id', authMiddleware, async (req: Request, res: Response): Promise<void> => {
   try {
     const { data: site, error } = await supabase
-      .from('sites')
+      .from('historical_sites')
       .update(req.body)
       .eq('id', req.params.id)
       .eq('created_by', (req as any).user.id)
@@ -225,7 +224,7 @@ app.put('/api/sites/:id', authMiddleware, async (req: Request, res: Response): P
 app.delete('/api/sites/:id', authMiddleware, async (req: Request, res: Response): Promise<void> => {
   try {
     const { error } = await supabase
-      .from('sites')
+      .from('historical_sites')
       .delete()
       .eq('id', req.params.id)
       .eq('created_by', (req as any).user.id);
@@ -246,12 +245,12 @@ app.delete('/api/sites/:id', authMiddleware, async (req: Request, res: Response)
 async function initializeDefaultData() {
   try {
     const { data: existingSites } = await supabase
-      .from('sites')
+      .from('historical_sites')
       .select('*');
 
     if (!existingSites || existingSites.length === 0) {
       const { error } = await supabase
-        .from('sites')
+        .from('historical_sites')
         .insert(defaultSites);
 
       if (error) {

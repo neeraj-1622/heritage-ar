@@ -3,13 +3,13 @@ import { createClient } from '@supabase/supabase-js';
 import { supabase as supabaseInstance } from '@/integrations/supabase/client';
 
 // Export the supabase instance from the integrations directory
-export const supabase = supabaseInstance;
+export { supabaseInstance as supabase };
 
 // Test database connection and verify tables
 export async function verifyDatabaseSetup() {
   try {
     // Test historical_sites table
-    const { data: sites, error: sitesError } = await supabase
+    const { data: sites, error: sitesError } = await supabaseInstance
       .from('historical_sites')
       .select('*')
       .limit(1);
@@ -20,7 +20,7 @@ export async function verifyDatabaseSetup() {
     }
 
     // Test user_profiles table
-    const { data: profiles, error: profilesError } = await supabase
+    const { data: profiles, error: profilesError } = await supabaseInstance
       .from('user_profiles')
       .select('*')
       .limit(1);
@@ -31,7 +31,7 @@ export async function verifyDatabaseSetup() {
     }
 
     // Test user_favorites table
-    const { data: favorites, error: favoritesError } = await supabase
+    const { data: favorites, error: favoritesError } = await supabaseInstance
       .from('user_favorites')
       .select('*')
       .limit(1);
@@ -52,7 +52,7 @@ export async function verifyDatabaseSetup() {
 // Create or update user profile
 export async function createOrUpdateUserProfile(userId: string, username: string, email: string, avatarUrl: string | null = null) {
   try {
-    const { data: existingProfile, error: queryError } = await supabase
+    const { data: existingProfile, error: queryError } = await supabaseInstance
       .from('user_profiles')
       .select('*')
       .eq('id', userId)
@@ -65,7 +65,7 @@ export async function createOrUpdateUserProfile(userId: string, username: string
 
     // If profile exists, update it
     if (existingProfile) {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseInstance
         .from('user_profiles')
         .update({
           username,
@@ -83,7 +83,7 @@ export async function createOrUpdateUserProfile(userId: string, username: string
     }
     // If profile doesn't exist, create it
     else {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseInstance
         .from('user_profiles')
         .insert([
           {
@@ -112,7 +112,7 @@ export async function createOrUpdateUserProfile(userId: string, username: string
 export async function addToFavorites(userId: string, siteId: string) {
   try {
     // First check if it already exists
-    const { data: existing } = await supabase
+    const { data: existing } = await supabaseInstance
       .from('user_favorites')
       .select('*')
       .eq('user_id', userId)
@@ -123,7 +123,7 @@ export async function addToFavorites(userId: string, siteId: string) {
       return { data: existing, error: null }; // Already favorited
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseInstance
       .from('user_favorites')
       .insert([
         {
@@ -144,7 +144,7 @@ export async function addToFavorites(userId: string, siteId: string) {
 // Remove from favorites
 export async function removeFromFavorites(userId: string, siteId: string) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseInstance
       .from('user_favorites')
       .delete()
       .eq('user_id', userId)
@@ -161,7 +161,7 @@ export async function removeFromFavorites(userId: string, siteId: string) {
 // Check if a site is favorited by the user
 export async function isSiteFavorited(userId: string, siteId: string): Promise<boolean> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseInstance
       .from('user_favorites')
       .select('id')
       .eq('user_id', userId)
@@ -183,7 +183,7 @@ export async function isSiteFavorited(userId: string, siteId: string): Promise<b
 // Get user's favorite sites
 export async function getUserFavorites(userId: string) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseInstance
       .from('user_favorites')
       .select(`
         id,
