@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getAllSites } from '../frontend/api/sitesApi';
 
 const SiteGallery: React.FC = () => {
-  const { data: sites, isLoading, error } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ['sites'],
     queryFn: getAllSites,
   });
@@ -42,7 +42,7 @@ const SiteGallery: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {sites && sites.map((site: HistoricalSite) => (
+        {data?.sites && data.sites.map((site: HistoricalSite) => (
           <div key={site.id} className="animate-scale-in">
             <SiteCard site={site} />
           </div>

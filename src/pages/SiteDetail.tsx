@@ -1,239 +1,250 @@
-
-import React, { useState } from 'react';
-import { useParams, Navigate, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { getSiteById } from '../frontend/api/sitesApi';
-import AnimatedHeader from '../components/AnimatedHeader';
-import InfoPanel from '../components/InfoPanel';
+import React, { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { HistoricalSite } from '@/lib/supabase';
-import { Camera, ArrowRight, Globe, Clock, Users, Scan } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { toast } from '@/hooks/use-toast';
+import { getSiteById, isSiteFavorited } from '@/frontend/api/sitesApi';
+import { useAuth } from '@/context/AuthContext';
+import { HeartIcon, HeartFilledIcon, GaugeIcon } from '@radix-ui/react-icons';
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 const SiteDetail: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const [isImageHovered, setIsImageHovered] = useState(false);
-  const [arSupported, setArSupported] = useState<boolean | null>(null);
-  
-  const { data: site, isLoading, error } = useQuery({
-    queryKey: ['site', id],
-    queryFn: () => getSiteById(id || ''),
-    enabled: !!id,
-    retry: 2
-  });
+  const { id } = useParams();
+  const [siteData, setSiteData] = useState<HistoricalSite | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isFavorited, setIsFavorited] = useState(false);
+  const { user } = useAuth();
 
-  React.useEffect(() => {
-    if (navigator.xr) {
-      navigator.xr.isSessionSupported('immersive-ar')
-        .then(supported => setArSupported(supported))
-        .catch(() => setArSupported(false));
-    } else {
-      setArSupported(false);
-    }
-  }, []);
-
-  React.useEffect(() => {
-    if (error) {
-      toast({
-        title: "Error loading site",
-        description: "Could not load site details. Please try again later.",
-        variant: "destructive",
-      });
-    }
-  }, [error]);
-
-  const handleARExperience = () => {
-    navigate(`/ar?siteId=${id}`);
-    toast({
-      title: "AR Experience",
-      description: "Launching AR experience for this historical site.",
-    });
-  };
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        when: "beforeChildren",
-        staggerChildren: 0.1
+  useEffect(() => {
+    const fetchSiteData = async () => {
+      try {
+        setLoading(true);
+        
+        // Get site details from API
+        const { site, error } = await getSiteById(id as string);
+        
+        if (error || !site) {
+          setError('Could not load site details.');
+          console.error('Error loading site:', error);
+          return;
+        }
+        
+        setSiteData(site);
+        
+        // If user is authenticated, check if this site is favorited
+        if (user) {
+          const isFavorite = await isSiteFavorited(user.id, id as string);
+          setIsFavorited(isFavorite);
+        }
+      } catch (err) {
+        console.error('Error in fetchSiteData:', err);
+        setError('An unexpected error occurred.');
+      } finally {
+        setLoading(false);
       }
+    };
+
+    if (id) {
+      fetchSiteData();
+    } else {
+      setError('Invalid site ID.');
     }
+  }, [id, user]);
+
+  const handleFavorite = () => {
+    // Placeholder for favorite action
+    alert('Favorite action not implemented yet.');
   };
 
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: { type: "spring", stiffness: 100 }
-    }
-  };
-
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-br from-heritage-950 to-heritage-900">
-        <AnimatedHeader title="Loading..." showBackButton />
-        <div className="flex-1 pt-24 flex items-center justify-center">
-          <div className="h-20 w-20 relative">
-            <div className="absolute inset-0 rounded-full border-4 border-heritage-800 border-t-accent animate-spin"></div>
-            <div className="absolute inset-2 rounded-full border-4 border-heritage-800 border-b-accent animate-spin animation-delay-500"></div>
+      <div className="container mx-auto px-4 py-12">
+        <div className="w-full max-w-4xl mx-auto">
+          <div className="animate-pulse space-y-8">
+            <div className="h-8 w-3/4 bg-heritage-100 rounded"></div>
+            <div className="h-64 bg-heritage-100 rounded-lg"></div>
+            <div className="space-y-4">
+              <div className="h-4 bg-heritage-100 rounded w-1/2"></div>
+              <div className="h-4 bg-heritage-100 rounded w-full"></div>
+              <div className="h-4 bg-heritage-100 rounded w-full"></div>
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
-  if (error || !site) {
-    return <Navigate to="/" replace />;
+  if (error || !siteData) {
+    return (
+      <div className="container mx-auto px-4 py-12">
+        <div className="w-full max-w-4xl mx-auto">
+          <div className="p-6 bg-red-50 rounded-lg border border-red-100 text-center">
+            <h2 className="text-2xl font-medium text-red-800">Site Not Found</h2>
+            <p className="mt-2 text-red-600">
+              {error || 'The requested site could not be found.'}
+            </p>
+            <Link to="/" className="mt-4 inline-flex button-secondary">
+              Return Home
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <motion.div 
-      className="min-h-screen flex flex-col"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
-      <AnimatedHeader title={site.name} showBackButton />
-      
-      <main className="flex-1 pt-24 pb-12">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <motion.div 
-              className="relative h-80 lg:h-full rounded-3xl overflow-hidden shadow-lg perspective"
-              onMouseEnter={() => setIsImageHovered(true)}
-              onMouseLeave={() => setIsImageHovered(false)}
-              variants={itemVariants}
-            >
-              <div className={`absolute inset-0 bg-gradient-to-t from-black/70 to-transparent z-10 transition-opacity duration-300 ${
-                isImageHovered ? 'opacity-40' : 'opacity-70'
-              }`}></div>
-              
-              <img 
-                src={site.image_url} 
-                alt={site.name} 
-                className={`h-full w-full object-cover transition-all duration-700 ${
-                  isImageHovered ? 'scale-110' : 'scale-100'
-                }`}
-              />
-              
-              <div className="absolute bottom-0 left-0 right-0 p-6 z-20">
-                <motion.button 
-                  onClick={handleARExperience}
-                  className="flex items-center space-x-2 bg-accent hover:bg-accent/80 text-white px-6 py-3 rounded-xl shadow-lg hover:shadow-accent/20 transition-all duration-300 transform hover:-translate-y-1"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Camera className="h-5 w-5" />
-                  <span>View in AR</span>
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </motion.button>
-              </div>
-            </motion.div>
-            
-            <div>
-              <motion.div className="mb-8" variants={itemVariants}>
-                <span className="inline-block px-3 py-1 text-sm font-medium bg-heritage-800 rounded-full text-heritage-200 mb-3">
-                  {site.period}
+    <div className="min-h-screen pb-12">
+      {/* Hero Section */}
+      <div 
+        className="relative h-96 bg-cover bg-center"
+        style={{ backgroundImage: `url(${siteData.image_url})` }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-transparent">
+          <div className="container mx-auto px-4 h-full flex items-end pb-8">
+            <div className="text-white">
+              <h1 className="text-4xl md:text-5xl font-bold">{siteData.name}</h1>
+              <div className="flex items-center mt-3 space-x-4">
+                <Badge className="bg-heritage-500 text-white px-3 py-1 text-sm">
+                  {siteData.period}
+                </Badge>
+                <span className="text-sm md:text-base opacity-90">
+                  {siteData.name} | {siteData.location}
                 </span>
-                <h1 className="text-4xl font-bold text-heritage-100">{site.name}</h1>
-                <div className="flex items-center mt-2 text-heritage-400">
-                  <Globe className="h-4 w-4 mr-1" />
-                  <span>{site.location}</span>
-                </div>
-              </motion.div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Content */}
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex flex-col md:flex-row gap-8">
+          {/* Main Content */}
+          <div className="flex-1 space-y-8">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <h2 className="text-2xl font-semibold text-heritage-100">About {siteData.period}</h2>
               
-              <motion.div variants={itemVariants}>
-                <InfoPanel site={site} className="animate-scale-in" />
-              </motion.div>
-              
-              <motion.div 
-                className="mt-8 glass-panel rounded-2xl p-6"
-                variants={itemVariants}
-              >
-                <h3 className="text-xl font-medium text-heritage-100 mb-4">Historical Context</h3>
+              <div className="flex items-center gap-3">
+                <Link to="/ar" className="button-accent flex items-center gap-2">
+                  <GaugeIcon className="w-4 h-4" />
+                  <span>View in AR</span>
+                </Link>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                  <div className="flex items-center p-3 bg-heritage-800/50 rounded-xl border border-heritage-700/50">
-                    <Clock className="h-5 w-5 text-accent mr-3" />
-                    <div>
-                      <div className="text-sm font-medium text-heritage-300">Period</div>
-                      <div className="text-heritage-100">{site.period}</div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center p-3 bg-heritage-800/50 rounded-xl border border-heritage-700/50">
-                    <Globe className="h-5 w-5 text-accent mr-3" />
-                    <div>
-                      <div className="text-sm font-medium text-heritage-300">Location</div>
-                      <div className="text-heritage-100">{site.location}</div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center p-3 bg-heritage-800/50 rounded-xl border border-heritage-700/50">
-                    <Users className="h-5 w-5 text-accent mr-3" />
-                    <div>
-                      <div className="text-sm font-medium text-heritage-300">Civilization</div>
-                      <div className="text-heritage-100">{site.period.split(' ')[0]}</div>
-                    </div>
-                  </div>
-                </div>
-                
-                <p className="text-heritage-300">
-                  {site.long_description || `This historical site is a significant cultural landmark that showcases the architectural 
-                  brilliance and cultural values of its time. The structure has been preserved through 
-                  centuries and continues to be an important destination for researchers and tourists alike.`}
-                </p>
-                <p className="mt-4 text-heritage-300">
-                  Archaeologists have uncovered numerous artifacts that provide insights into 
-                  the daily lives of people who inhabited this region. These findings have contributed 
-                  to our understanding of ancient civilizations and their technological advancements.
-                </p>
-              </motion.div>
+                {user && (
+                  <Button
+                    onClick={handleFavorite}
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    {isFavorited ? (
+                      <>
+                        <HeartFilledIcon className="w-4 h-4 text-red-500" />
+                        <span>Saved</span>
+                      </>
+                    ) : (
+                      <>
+                        <HeartIcon className="w-4 h-4" />
+                        <span>Save</span>
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+            </div>
+            
+            <div className="prose prose-invert max-w-none">
+              {siteData.long_description ? (
+                <p>{siteData.long_description}</p>
+              ) : (
+                <p>{siteData.short_description}</p>
+              )}
+            </div>
+            
+            <div className="mt-8">
+              <h3 className="text-xl font-semibold text-heritage-100 mb-4">
+                Additional Media
+              </h3>
+              <p className="text-heritage-300">
+                Explore more about {siteData.name} through these resources:
+              </p>
+              <ul className="list-disc list-inside mt-2 space-y-2">
+                <li>
+                  <a
+                    href="#"
+                    className="text-accent hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Learn more on Wikipedia
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    className="text-accent hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Watch a documentary on YouTube
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    className="text-accent hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    View 3D models on Sketchfab
+                  </a>
+                </li>
+              </ul>
             </div>
           </div>
           
-          <motion.div 
-            className="mt-12 glass-panel rounded-2xl p-6"
-            variants={itemVariants}
-          >
-            <h3 className="text-xl font-medium text-heritage-100 mb-4">Interactive Experience</h3>
-            <p className="text-heritage-300">
-              Use our AR feature to see this historical site come to life. Point your camera at 
-              a flat surface and watch as a detailed 3D model appears before your eyes. You can 
-              walk around the model and explore it from different angles.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-4">
-              <motion.button 
-                onClick={handleARExperience}
-                className="px-6 py-3 bg-accent text-white rounded-xl shadow-md transition-all duration-300 
-                hover:bg-accent/80 hover:shadow-lg active:scale-95 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-opacity-50"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Launch AR Experience
-              </motion.button>
-              
-              {arSupported && (
-                <div className="flex items-center px-4 py-2 bg-green-500/10 text-green-500 rounded-lg">
-                  <Scan className="h-4 w-4 mr-2" />
-                  <span className="text-sm">WebXR AR Supported on this device</span>
-                </div>
-              )}
-              
-              {arSupported === false && (
-                <div className="flex items-center px-4 py-2 bg-yellow-500/10 text-yellow-400 rounded-lg">
-                  <Scan className="h-4 w-4 mr-2" />
-                  <span className="text-sm">Real AR not supported. Using simulated AR.</span>
-                </div>
-              )}
+          {/* Sidebar */}
+          <div className="md:w-96">
+            <div className="p-4 bg-heritage-900 rounded-lg">
+              <h4 className="text-lg font-semibold text-heritage-100 mb-3">
+                Plan Your Visit
+              </h4>
+              <p className="text-heritage-300">
+                {siteData.name} is located at:
+              </p>
+              <address className="text-heritage-400 not-italic mt-2">
+                {siteData.location}
+              </address>
+              <p className="text-heritage-300 mt-3">
+                Consider visiting these nearby attractions:
+              </p>
+              <ul className="list-disc list-inside mt-2 space-y-2">
+                <li>
+                  <a
+                    href="#"
+                    className="text-accent hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Local Museum
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    className="text-accent hover:underline"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Historical Park
+                  </a>
+                </li>
+              </ul>
             </div>
-          </motion.div>
+          </div>
         </div>
-      </main>
-    </motion.div>
+      </div>
+    </div>
   );
 };
 

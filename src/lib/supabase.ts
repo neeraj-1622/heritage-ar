@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { supabase as supabaseInstance } from '@/integrations/supabase/client';
 
 // Export the supabase instance from the integrations directory
-export { supabaseInstance as supabase };
+export const supabase = supabaseInstance;
 
 // Test database connection and verify tables
 export async function verifyDatabaseSetup() {

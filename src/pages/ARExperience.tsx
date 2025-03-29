@@ -24,34 +24,42 @@ const ARExperience: React.FC = () => {
   const [useRealAR, setUseRealAR] = useState(false);
   const [detectedObject, setDetectedObject] = useState<{ class: string; score: number } | null>(null);
   const [objectDetectionMode, setObjectDetectionMode] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    document.body.classList.add('ar-mode');
+    const loadSites = async () => {
+      setLoading(true);
+      try {
+        const result = await getAllSites();
+        if (result.sites && result.sites.length > 0) {
+          setSites(result.sites);
+          
+          // Find site with AR model if any
+          const arSiteIndex = result.sites.findIndex(site => site.ar_model_url);
+          if (arSiteIndex >= 0) {
+            setSelectedSiteIndex(arSiteIndex);
+            setSelectedSite(result.sites[arSiteIndex]);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading sites:', error);
+        setError('Failed to load sites data.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadSites();
     
+    // Add AR mode class to body
+    document.body.classList.add('ar-mode');
+    
+    // Remove AR mode class when component unmounts
     return () => {
       document.body.classList.remove('ar-mode');
     };
   }, []);
-
-  const loadSites = async () => {
-    const loadedSites = await getAllSites();
-    setSites(loadedSites);
-    
-    if (siteId) {
-      const index = loadedSites.findIndex(site => site.id === siteId);
-      if (index !== -1) {
-        setSelectedSiteIndex(index);
-        setSelectedSite(loadedSites[index]);
-      } else {
-        setSelectedSite(loadedSites[0]);
-      }
-    } else {
-      setSelectedSite(loadedSites[0]);
-    }
-    
-    setIsInitializing(false);
-  };
 
   useEffect(() => {
     setShowARModel(false);
