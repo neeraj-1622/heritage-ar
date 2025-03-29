@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, User, LogOut, Settings, UserCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
@@ -69,9 +69,9 @@ const Header: React.FC<HeaderProps> = ({
             </Link>
           )}
           
-          <h1 className="text-xl font-medium tracking-tight text-white">
+          <Link to="/" className="text-xl font-medium tracking-tight text-white">
             {title}
-          </h1>
+          </Link>
         </div>
         
         <div className="flex items-center space-x-2">

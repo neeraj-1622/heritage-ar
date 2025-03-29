@@ -2,7 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { Menu, X, ChevronLeft, User, LogOut } from 'lucide-react';
+import { Menu, X, ChevronLeft, LogOut, Settings, User } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 interface HeaderProps {
   title?: string;
@@ -11,9 +12,10 @@ interface HeaderProps {
 
 const AnimatedHeader: React.FC<HeaderProps> = ({ title, showBackButton = false }) => {
   const navigate = useNavigate();
-  const { isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -32,10 +34,37 @@ const AnimatedHeader: React.FC<HeaderProps> = ({ title, showBackButton = false }
     setIsMenuOpen(!isMenuOpen);
   };
 
+  const toggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen);
+  };
+
   const handleLogout = () => {
     logout();
     navigate('/login');
     setIsMenuOpen(false);
+    setIsDropdownOpen(false);
+  };
+
+  const getInitials = (name: string = 'User') => {
+    return name.substring(0, 2).toUpperCase();
+  };
+
+  // Generate a consistent color based on the username
+  const getAvatarColor = (username: string = 'User') => {
+    const colors = [
+      'bg-purple-800', 'bg-indigo-800', 'bg-blue-800', 
+      'bg-teal-800', 'bg-green-800', 'bg-amber-800', 
+      'bg-red-800', 'bg-pink-800'
+    ];
+    
+    let hash = 0;
+    for (let i = 0; i < username.length; i++) {
+      hash = ((hash << 5) - hash) + username.charCodeAt(i);
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    
+    const index = Math.abs(hash) % colors.length;
+    return colors[index];
   };
 
   return (
@@ -50,9 +79,9 @@ const AnimatedHeader: React.FC<HeaderProps> = ({ title, showBackButton = false }
         <div className="flex items-center">
           {showBackButton && (
             <button
-              onClick={() => navigate(-1)}
+              onClick={() => navigate('/')}
               className="mr-3 p-2 rounded-full text-white hover:text-accent hover:bg-heritage-800/50 transition-colors"
-              aria-label="Go back"
+              aria-label="Go back to home"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
@@ -71,12 +100,6 @@ const AnimatedHeader: React.FC<HeaderProps> = ({ title, showBackButton = false }
         
         <div className="hidden md:flex items-center space-x-6">
           <Link 
-            to="/" 
-            className="text-white transition-all duration-300 relative rainbow-hover-effect"
-          >
-            Home
-          </Link>
-          <Link 
             to="/ar" 
             className="text-white transition-all duration-300 relative rainbow-hover-effect"
           >
@@ -90,23 +113,57 @@ const AnimatedHeader: React.FC<HeaderProps> = ({ title, showBackButton = false }
           </Link>
           
           {isAuthenticated ? (
-            <div className="relative group">
-              <button className="flex items-center space-x-1 text-white hover:text-accent">
-                <User className="h-4 w-4" />
-                <span>Account</span>
+            <div className="relative">
+              <button 
+                onClick={toggleDropdown} 
+                className="flex items-center space-x-1 text-white hover:text-accent"
+              >
+                <Avatar className="h-9 w-9 border-2 border-accent/30">
+                  <AvatarFallback className={`${getAvatarColor(user?.username)} text-white font-medium`}>
+                    {user?.username ? getInitials(user.username) : 'U'}
+                  </AvatarFallback>
+                </Avatar>
               </button>
               
-              <div className="absolute right-0 mt-2 w-48 bg-heritage-800 rounded-md shadow-lg overflow-hidden z-20 opacity-0 translate-y-2 invisible group-hover:opacity-100 group-hover:translate-y-0 group-hover:visible transition-all duration-200">
-                <div className="py-1">
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center w-full px-4 py-2 text-sm text-heritage-300 hover:text-white hover:bg-heritage-700"
-                  >
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Sign out
-                  </button>
+              {isDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-heritage-800 rounded-md shadow-lg overflow-hidden z-20">
+                  <div className="py-1 border-b border-heritage-700">
+                    <div className="px-4 py-2">
+                      <p className="text-sm font-medium text-white leading-none">{user?.username || 'User'}</p>
+                      <p className="text-xs text-heritage-400">{user?.email}</p>
+                    </div>
+                  </div>
+                  <div className="py-1">
+                    <button
+                      onClick={() => {
+                        setIsDropdownOpen(false);
+                        navigate('/profile');
+                      }}
+                      className="flex items-center w-full px-4 py-2 text-sm text-heritage-300 hover:text-white hover:bg-heritage-700"
+                    >
+                      <User className="h-4 w-4 mr-2" />
+                      Profile
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsDropdownOpen(false);
+                        navigate('/settings');
+                      }}
+                      className="flex items-center w-full px-4 py-2 text-sm text-heritage-300 hover:text-white hover:bg-heritage-700"
+                    >
+                      <Settings className="h-4 w-4 mr-2" />
+                      Settings
+                    </button>
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center w-full px-4 py-2 text-sm text-heritage-300 hover:text-white hover:bg-heritage-700"
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sign out
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           ) : (
             <div className="flex items-center space-x-2">
@@ -141,13 +198,6 @@ const AnimatedHeader: React.FC<HeaderProps> = ({ title, showBackButton = false }
       } overflow-hidden`}>
         <div className="container mx-auto px-4 py-4 space-y-3">
           <Link 
-            to="/" 
-            className="block py-2 text-white hover:text-accent hover:pl-2 transition-all"
-            onClick={() => setIsMenuOpen(false)}
-          >
-            Home
-          </Link>
-          <Link 
             to="/ar" 
             className="block py-2 text-white hover:text-accent hover:pl-2 transition-all"
             onClick={() => setIsMenuOpen(false)}
@@ -163,15 +213,48 @@ const AnimatedHeader: React.FC<HeaderProps> = ({ title, showBackButton = false }
           </Link>
           
           {isAuthenticated ? (
-            <button
-              onClick={handleLogout}
-              className="flex items-center w-full py-2 text-white hover:text-accent hover:pl-2 transition-all"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign out
-            </button>
+            <div className="border-t border-heritage-700 pt-2 mt-2">
+              <div className="py-2 flex items-center">
+                <Avatar className="h-8 w-8 mr-2">
+                  <AvatarFallback className={`${getAvatarColor(user?.username)} text-white font-medium`}>
+                    {user?.username ? getInitials(user.username) : 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-sm font-medium text-white">{user?.username || 'User'}</p>
+                  <p className="text-xs text-heritage-400">{user?.email}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  navigate('/profile');
+                }}
+                className="flex items-center w-full py-2 text-white hover:text-accent hover:pl-2 transition-all"
+              >
+                <User className="h-4 w-4 mr-2" />
+                Profile
+              </button>
+              <button
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  navigate('/settings');
+                }}
+                className="flex items-center w-full py-2 text-white hover:text-accent hover:pl-2 transition-all"
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                Settings
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex items-center w-full py-2 text-white hover:text-accent hover:pl-2 transition-all"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign out
+              </button>
+            </div>
           ) : (
-            <div className="flex flex-col space-y-2">
+            <div className="flex flex-col space-y-2 border-t border-heritage-700 pt-2 mt-2">
               <Link 
                 to="/login" 
                 className="block py-2 text-white hover:text-accent hover:pl-2 transition-all"

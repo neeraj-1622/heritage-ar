@@ -1,5 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { HistoricalSite } from '@/lib/supabase';
+import { useNavigate } from 'react-router-dom';
 
 interface ARViewProps {
   selectedSite?: HistoricalSite;
@@ -16,6 +18,7 @@ const ARView: React.FC<ARViewProps> = ({
   onNextSite,
   onInfoClick
 }) => {
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [isModelLoaded, setIsModelLoaded] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
@@ -92,9 +95,22 @@ const ARView: React.FC<ARViewProps> = ({
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, [isModelLoaded]);
 
+  // Handle go back to home
+  const handleGoBack = () => {
+    navigate('/');
+  };
+
   if (!selectedSite) {
     return (
       <div className="relative h-full w-full flex items-center justify-center bg-heritage-100">
+        <button 
+          onClick={handleGoBack}
+          className="absolute top-4 left-4 p-2 rounded-full bg-heritage-800/50 text-white hover:bg-heritage-800 transition-colors"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+        </button>
         <div className="text-center p-6 animate-fade-in">
           <h3 className="text-xl font-medium text-heritage-800">No Site Selected</h3>
           <p className="mt-2 text-heritage-600">
@@ -107,6 +123,15 @@ const ARView: React.FC<ARViewProps> = ({
 
   return (
     <div className="relative h-full w-full bg-black overflow-hidden">
+      <button 
+        onClick={handleGoBack}
+        className="absolute top-4 left-4 z-50 p-2 rounded-full bg-heritage-800/50 text-white hover:bg-heritage-800 transition-colors"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+      </button>
+      
       <div className="absolute inset-0 z-0">
         <img 
           src="https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=2071&auto=format&fit=crop" 
