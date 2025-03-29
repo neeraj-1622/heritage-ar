@@ -1,3 +1,4 @@
+
 import { HistoricalSite } from '../../lib/supabase';
 
 export const defaultSites: Omit<HistoricalSite, 'created_at' | 'updated_at'>[] = [

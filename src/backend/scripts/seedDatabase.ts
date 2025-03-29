@@ -1,3 +1,4 @@
+
 import { supabase } from '../../lib/supabase';
 import { defaultSites } from '../data/defaultSites';
 
@@ -23,9 +24,9 @@ async function seedDatabase() {
         name: site.name,
         period: site.period,
         location: site.location,
-        short_description: site.shortDescription,
-        long_description: site.longDescription,
-        image_url: site.imageUrl,
+        short_description: site.short_description,
+        long_description: site.long_description,
+        image_url: site.image_url,
         coordinates: site.coordinates
       })));
     

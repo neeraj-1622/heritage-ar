@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { HistoricalSite } from './SiteCard';
+import { HistoricalSite } from '@/lib/supabase';
 
 interface ARViewProps {
   selectedSite?: HistoricalSite;
