@@ -4,7 +4,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useGLTF, OrbitControls, Environment, PerspectiveCamera } from '@react-three/drei';
 import { Interactive, useXR, useHitTest } from '@react-three/xr';
 import * as THREE from 'three';
-import { HistoricalSite } from './SiteCard';
+import { HistoricalSite } from '@/lib/supabase';
 import { getModelForObject } from '../utils/objectToModelMapper';
 import { toast } from "@/hooks/use-toast";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";

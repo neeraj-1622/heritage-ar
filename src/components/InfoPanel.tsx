@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { HistoricalSite } from './SiteCard';
+import { HistoricalSite } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';

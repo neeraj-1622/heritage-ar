@@ -69,8 +69,8 @@ const transformSiteData = (site: any): any => ({
   updatedAt: site.updated_at,
 });
 
-// Export both function names for backward compatibility
-export const fetchAllSites = getAllSites;
+// Export function for compatibility
+export const fetchSiteById = getSiteById;
 
 export async function getAllSites(): Promise<HistoricalSite[]> {
   try {
@@ -88,8 +88,8 @@ export async function getAllSites(): Promise<HistoricalSite[]> {
         name: site.name,
         period: site.period,
         location: site.location,
-        short_description: site.shortDescription || "",
-        image_url: site.imageUrl || "",
+        short_description: site.short_description,
+        image_url: site.image_url,
       }));
     }
 
@@ -109,8 +109,8 @@ export async function getAllSites(): Promise<HistoricalSite[]> {
       name: site.name,
       period: site.period,
       location: site.location,
-      short_description: site.shortDescription || "",
-      image_url: site.imageUrl || "",
+      short_description: site.short_description,
+      image_url: site.image_url,
     }));
   }
 }
@@ -133,8 +133,8 @@ export async function getSiteById(id: string): Promise<HistoricalSite | null> {
           name: fallbackSite.name,
           period: fallbackSite.period,
           location: fallbackSite.location,
-          short_description: fallbackSite.shortDescription || "",
-          image_url: fallbackSite.imageUrl || "",
+          short_description: fallbackSite.short_description,
+          image_url: fallbackSite.image_url,
         };
       }
       throw error;

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { fetchSiteById } from '../frontend/api/sitesApi';
+import { getSiteById } from '../frontend/api/sitesApi';
 import AnimatedHeader from '../components/AnimatedHeader';
 import InfoPanel from '../components/InfoPanel';
-import { HistoricalSite } from '../components/SiteCard';
+import { HistoricalSite } from '@/lib/supabase';
 import { Camera, ArrowRight, Globe, Clock, Users, Scan } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from '@/hooks/use-toast';
@@ -17,7 +17,7 @@ const SiteDetail: React.FC = () => {
   
   const { data: site, isLoading, error } = useQuery({
     queryKey: ['site', id],
-    queryFn: () => fetchSiteById(id || ''),
+    queryFn: () => getSiteById(id || ''),
     enabled: !!id,
     retry: 2
   });

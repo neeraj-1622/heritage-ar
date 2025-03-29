@@ -1,5 +1,15 @@
 
-import { UserLoginInput, UserResponse } from '../../backend/models/User';
+interface UserLoginInput {
+  email: string;
+  password: string;
+}
+
+interface UserResponse {
+  id: string;
+  username: string;
+  email: string;
+  token?: string;
+}
 
 const API_URL = 'http://localhost:5000/api';
 
