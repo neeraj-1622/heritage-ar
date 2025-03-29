@@ -1,7 +1,6 @@
-
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 
 interface User {
   id: string;
@@ -40,13 +39,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth event:', event);
         
         if (session && session.user) {
-          // Get user profile from user_profiles table
           const { data: profile } = await supabase
             .from('user_profiles')
             .select('username')
@@ -66,11 +63,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     );
 
-    // Initial session check
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session && session.user) {
-        // Get user profile from user_profiles table
         const { data: profile } = await supabase
           .from('user_profiles')
           .select('username')
@@ -89,7 +84,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     checkUser();
     
-    // Cleanup subscription when component unmounts
     return () => {
       subscription.unsubscribe();
     };
@@ -113,7 +107,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       
       if (data.user) {
-        // Check if email is verified
         if (!data.user.email_confirmed_at) {
           toast({
             title: 'Email not verified',
@@ -121,19 +114,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             variant: 'destructive',
           });
           
-          // Sign out the user as they shouldn't be logged in
           await supabase.auth.signOut();
           return false;
         }
         
-        // Get user profile from user_profiles table
         const { data: profile } = await supabase
           .from('user_profiles')
           .select('username')
           .eq('id', data.user.id)
           .single();
         
-        // If profile doesn't exist, create one
         if (!profile) {
           await supabase
             .from('user_profiles')
@@ -169,7 +159,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setLoading(true);
       
-      // Get app URL for redirect
       const appUrl = window.location.origin;
       const redirectTo = `${appUrl}/login?verified=true`;
       
@@ -194,7 +183,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       
       if (data.user) {
-        // Add user profile to user_profiles table
         const { error: profileError } = await supabase
           .from('user_profiles')
           .insert([{ 

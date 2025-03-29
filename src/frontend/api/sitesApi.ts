@@ -1,6 +1,6 @@
-
 import { toast } from '@/hooks/use-toast';
-import { supabase, HistoricalSite, HistoricalSiteInput } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
+import { HistoricalSite, HistoricalSiteInput } from '@/lib/supabase';
 
 // Sample data to use if API fails or during development
 const fallbackSites = [

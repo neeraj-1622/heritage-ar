@@ -1,5 +1,5 @@
 
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { defaultSites } from '../data/defaultSites';
 
 async function seedDatabase() {

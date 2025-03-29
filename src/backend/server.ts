@@ -1,7 +1,7 @@
 
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import { supabase } from '../lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { defaultSites } from './data/defaultSites';
 import { authMiddleware } from './middleware/authMiddleware';
 
