@@ -1,5 +1,13 @@
+
 import { Request, Response, NextFunction } from 'express';
-import { supabase } from '../../lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+// Use environment variables for Supabase credentials
+const supabaseUrl = process.env.SUPABASE_URL || '';
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || '';
+
+// Initialize Supabase client for the backend
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Extend the Request interface to include user property
 interface AuthRequest extends Request {

@@ -1,13 +1,14 @@
 
-import React, { useState, useEffect } from 'react';
-import SiteCard, { HistoricalSite } from './SiteCard';
+import React from 'react';
+import SiteCard from './SiteCard';
+import { HistoricalSite } from '@/lib/supabase';
 import { useQuery } from '@tanstack/react-query';
-import { fetchAllSites } from '../frontend/api/sitesApi';
+import { getAllSites } from '../frontend/api/sitesApi';
 
 const SiteGallery: React.FC = () => {
   const { data: sites, isLoading, error } = useQuery({
     queryKey: ['sites'],
-    queryFn: fetchAllSites,
+    queryFn: getAllSites,
   });
 
   if (isLoading) {
