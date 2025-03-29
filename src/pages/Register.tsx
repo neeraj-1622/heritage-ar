@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate, Link } from 'react-router-dom';
 import { z } from 'zod';
@@ -15,7 +15,9 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Header from '@/components/Header';
+import { Mail } from 'lucide-react';
 
 const registerSchema = z.object({
   username: z.string().min(3, 'Username must be at least 3 characters'),
@@ -32,6 +34,8 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 const Register = () => {
   const { register, loading } = useAuth();
   const navigate = useNavigate();
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState('');
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -46,7 +50,9 @@ const Register = () => {
   const onSubmit = async (data: RegisterFormValues) => {
     const success = await register(data.username, data.email, data.password);
     if (success) {
-      navigate('/');
+      setRegistrationSuccess(true);
+      setRegisteredEmail(data.email);
+      form.reset();
     }
   };
 
@@ -58,73 +64,86 @@ const Register = () => {
         <div className="max-w-md mx-auto mt-10 p-6 shadow-lg rounded-lg glass-panel">
           <h1 className="text-2xl font-bold text-white mb-6">Create an Account</h1>
           
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-white">Username</FormLabel>
-                    <FormControl>
-                      <Input placeholder="username" {...field} className="bg-heritage-800/70 text-white border-heritage-700 placeholder:text-heritage-400" />
-                    </FormControl>
-                    <FormMessage className="text-red-300" />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-white">Email</FormLabel>
-                    <FormControl>
-                      <Input placeholder="your.email@example.com" {...field} className="bg-heritage-800/70 text-white border-heritage-700 placeholder:text-heritage-400" />
-                    </FormControl>
-                    <FormMessage className="text-red-300" />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-white">Password</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} className="bg-heritage-800/70 text-white border-heritage-700 placeholder:text-heritage-400" />
-                    </FormControl>
-                    <FormMessage className="text-red-300" />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="confirmPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-white">Confirm Password</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} className="bg-heritage-800/70 text-white border-heritage-700 placeholder:text-heritage-400" />
-                    </FormControl>
-                    <FormMessage className="text-red-300" />
-                  </FormItem>
-                )}
-              />
-              
-              <Button 
-                type="submit" 
-                className="w-full bg-accent hover:bg-accent-600 text-white" 
-                disabled={loading}
-              >
-                {loading ? 'Creating account...' : 'Register'}
-              </Button>
-            </form>
-          </Form>
+          {registrationSuccess && (
+            <Alert className="mb-6 bg-green-900/50 text-green-100 border-green-700">
+              <Mail className="h-4 w-4" />
+              <AlertTitle>Registration Successful!</AlertTitle>
+              <AlertDescription>
+                A verification link has been sent to {registeredEmail}.
+                Please check your email and click the link to verify your account before logging in.
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {!registrationSuccess && (
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="username"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-white">Username</FormLabel>
+                      <FormControl>
+                        <Input placeholder="username" {...field} className="bg-heritage-800/70 text-white border-heritage-700 placeholder:text-heritage-400" />
+                      </FormControl>
+                      <FormMessage className="text-red-300" />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-white">Email</FormLabel>
+                      <FormControl>
+                        <Input placeholder="your.email@example.com" {...field} className="bg-heritage-800/70 text-white border-heritage-700 placeholder:text-heritage-400" />
+                      </FormControl>
+                      <FormMessage className="text-red-300" />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-white">Password</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder="••••••••" {...field} className="bg-heritage-800/70 text-white border-heritage-700 placeholder:text-heritage-400" />
+                      </FormControl>
+                      <FormMessage className="text-red-300" />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-white">Confirm Password</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder="••••••••" {...field} className="bg-heritage-800/70 text-white border-heritage-700 placeholder:text-heritage-400" />
+                      </FormControl>
+                      <FormMessage className="text-red-300" />
+                    </FormItem>
+                  )}
+                />
+                
+                <Button 
+                  type="submit" 
+                  className="w-full bg-accent hover:bg-accent-600 text-white" 
+                  disabled={loading}
+                >
+                  {loading ? 'Creating account...' : 'Register'}
+                </Button>
+              </form>
+            </Form>
+          )}
           
           <div className="mt-6 text-center text-sm text-white">
             Already have an account?{' '}

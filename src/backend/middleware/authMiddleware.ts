@@ -14,6 +14,7 @@ interface AuthRequest extends Request {
   user?: {
     id: string;
     email: string;
+    email_confirmed_at?: string | null;
   };
 }
 
@@ -34,8 +35,19 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
       return res.status(401).json({ message: 'Invalid or expired token' });
     }
     
+    // Check if email is verified
+    if (!user.email_confirmed_at) {
+      return res.status(403).json({ 
+        message: 'Email not verified. Please check your inbox and verify your email before accessing this resource.' 
+      });
+    }
+    
     // Add user info to request
-    (req as AuthRequest).user = { id: user.id, email: user.email! };
+    (req as AuthRequest).user = { 
+      id: user.id, 
+      email: user.email!, 
+      email_confirmed_at: user.email_confirmed_at 
+    };
     
     // Check if user profile exists in user_profiles table, create if not exists
     const { data: profileData, error: profileError } = await supabase

@@ -17,12 +17,16 @@ app.post('/api/auth/register', async (req: Request, res: Response): Promise<void
   try {
     const { email, password, name } = req.body;
     
+    // Build the redirect URL from origin or default to localhost
+    const origin = req.headers.origin || 'http://localhost:5173';
+    const redirectUrl = `${origin}/login?verified=true`;
+    
     // Register with Supabase Auth (auto-generates confirmation email)
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${process.env.VITE_APP_URL || 'http://localhost:5173'}/login`,
+        emailRedirectTo: redirectUrl,
         data: {
           name: name,
         }
@@ -50,7 +54,10 @@ app.post('/api/auth/register', async (req: Request, res: Response): Promise<void
       return;
     }
 
-    res.status(201).json({ user: authData.user, message: 'Verification email sent. Please check your inbox.' });
+    res.status(201).json({ 
+      user: authData.user, 
+      message: 'Verification email sent. Please check your inbox to verify your email address before logging in.'
+    });
   } catch (error) {
     console.error('Error registering user:', error);
     res.status(500).json({ message: 'Failed to register user' });
@@ -68,6 +75,15 @@ app.post('/api/auth/login', async (req: Request, res: Response): Promise<void> =
 
     if (error) {
       res.status(401).json({ message: error.message });
+      return;
+    }
+
+    // Check if email is verified
+    if (!data.user.email_confirmed_at) {
+      res.status(403).json({ 
+        message: 'Email not verified. Please check your inbox and verify your email before logging in.',
+        emailVerification: false
+      });
       return;
     }
 
@@ -94,6 +110,34 @@ app.post('/api/auth/login', async (req: Request, res: Response): Promise<void> =
   } catch (error) {
     console.error('Error logging in:', error);
     res.status(500).json({ message: 'Failed to login' });
+  }
+});
+
+app.post('/api/auth/resend-verification', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email } = req.body;
+    
+    // Build the redirect URL from origin or default to localhost
+    const origin = req.headers.origin || 'http://localhost:5173';
+    const redirectUrl = `${origin}/login?verified=true`;
+    
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: {
+        emailRedirectTo: redirectUrl,
+      }
+    });
+
+    if (error) {
+      res.status(400).json({ message: error.message });
+      return;
+    }
+
+    res.status(200).json({ message: 'Verification email resent. Please check your inbox.' });
+  } catch (error) {
+    console.error('Error resending verification email:', error);
+    res.status(500).json({ message: 'Failed to resend verification email' });
   }
 });
 
