@@ -105,12 +105,6 @@ const AnimatedHeader: React.FC<HeaderProps> = ({ title, showBackButton = false }
           >
             AR Experience
           </Link>
-          <Link 
-            to="/contact" 
-            className="text-white transition-all duration-300 relative rainbow-hover-effect"
-          >
-            Contact
-          </Link>
           
           {isAuthenticated ? (
             <div className="relative">
@@ -203,13 +197,6 @@ const AnimatedHeader: React.FC<HeaderProps> = ({ title, showBackButton = false }
             onClick={() => setIsMenuOpen(false)}
           >
             AR Experience
-          </Link>
-          <Link 
-            to="/contact" 
-            className="block py-2 text-white hover:text-accent hover:pl-2 transition-all"
-            onClick={() => setIsMenuOpen(false)}
-          >
-            Contact
           </Link>
           
           {isAuthenticated ? (

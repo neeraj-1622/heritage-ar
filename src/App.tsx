@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -20,6 +19,8 @@ import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Contact from "./pages/Contact";
 import Footer from "./components/Footer";
+import Profile from './pages/Profile';
+import UpdatePassword from './pages/UpdatePassword';
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient({
@@ -98,7 +99,15 @@ const AnimationLayout = () => {
               <ARExperience />
             </ProtectedRoute>
           } />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route 
+            path="/profile" 
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            } 
+          />
+          <Route path="/update-password" element={<UpdatePassword />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         {!isARPage && <Footer />}
@@ -107,7 +116,7 @@ const AnimationLayout = () => {
   );
 };
 
-const App = () => {
+function App() {
   return (
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
@@ -123,6 +132,6 @@ const App = () => {
       </QueryClientProvider>
     </React.StrictMode>
   );
-};
+}
 
 export default App;
