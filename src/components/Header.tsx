@@ -1,8 +1,8 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, User, LogOut, Settings, UserCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabase';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,7 +26,30 @@ const Header: React.FC<HeaderProps> = ({
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout, isAuthenticated } = useAuth();
+  const [displayName, setDisplayName] = useState<string>('');
   const isHomePage = location.pathname === '/';
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!user?.id) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('display_name, username')
+          .eq('id', user.id)
+          .single();
+
+        if (error) throw error;
+
+        setDisplayName(data.display_name || data.username);
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      }
+    };
+
+    fetchUserProfile();
+  }, [user?.id]);
 
   const handleLogout = () => {
     logout();
@@ -92,16 +115,16 @@ const Header: React.FC<HeaderProps> = ({
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="rounded-full p-0 h-10 w-10 overflow-hidden ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                     <Avatar className="h-10 w-10 border-2 border-accent/30">
-                      <AvatarFallback className={`${getAvatarColor(user?.username || 'User')} text-white font-medium`}>
-                        {user?.username ? getInitials(user.username) : 'U'}
+                      <AvatarFallback className={`${getAvatarColor(displayName)} text-white font-medium`}>
+                        {getInitials(displayName || 'User')}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-heritage-800 border-heritage-700 text-white">
+                <DropdownMenuContent className="w-56 bg-heritage-800 border-heritage-700 text-white">
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{user?.username || 'User'}</p>
+                      <p className="text-sm font-medium leading-none">{displayName || 'User'}</p>
                       <p className="text-xs leading-none text-heritage-400">{user?.email}</p>
                     </div>
                   </DropdownMenuLabel>

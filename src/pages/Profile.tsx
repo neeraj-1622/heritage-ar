@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -36,6 +35,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { UserProfile, createOrUpdateUserProfile } from '@/lib/supabase';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 // Form schemas
 const profileFormSchema = z.object({
@@ -67,6 +67,9 @@ const Profile: React.FC = () => {
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [resetPasswordSent, setResetPasswordSent] = useState(false);
   const [resetEmailSent, setResetEmailSent] = useState(false);
+  const [displayName, setDisplayName] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -92,6 +95,33 @@ const Profile: React.FC = () => {
       password: '',
     },
   });
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!user?.id) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('display_name, username')
+          .eq('id', user.id)
+          .single();
+
+        if (error) throw error;
+
+        setDisplayName(data.display_name || data.username);
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+        toast({
+          title: 'Failed to load profile',
+          description: 'An unexpected error occurred',
+          variant: 'destructive',
+        });
+      }
+    };
+
+    fetchUserProfile();
+  }, [user?.id]);
 
   const onProfileSubmit = async (data: ProfileFormValues) => {
     if (!user) return;
@@ -232,6 +262,53 @@ const Profile: React.FC = () => {
     }
   };
 
+  const handleSave = async () => {
+    if (!user?.id || !displayName.trim()) return;
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({ 
+          display_name: displayName.trim(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      toast.success('Profile updated successfully');
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error('Failed to update profile');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getInitials = (name: string) => {
+    return name.substring(0, 2).toUpperCase();
+  };
+
+  // Generate a consistent color based on the username
+  const getAvatarColor = (username: string) => {
+    const colors = [
+      'bg-purple-800', 'bg-indigo-800', 'bg-blue-800', 
+      'bg-teal-800', 'bg-green-800', 'bg-amber-800', 
+      'bg-red-800', 'bg-pink-800'
+    ];
+    
+    let hash = 0;
+    for (let i = 0; i < username.length; i++) {
+      hash = ((hash << 5) - hash) + username.charCodeAt(i);
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    
+    const index = Math.abs(hash) % colors.length;
+    return colors[index];
+  };
+
   if (!user) {
     navigate('/login');
     return null;
@@ -245,7 +322,7 @@ const Profile: React.FC = () => {
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center mb-8">
             <div className="flex-shrink-0 h-16 w-16 rounded-full bg-gradient-to-r from-accent to-accent-400 flex items-center justify-center">
-              <UserCircle className="h-8 w-8 text-white" />
+              <Avatar className="h-8 w-8 text-white" fallback={<AvatarFallback className={`${getAvatarColor(displayName)} text-white text-xl font-medium`}>{getInitials(displayName)}</AvatarFallback>} />
             </div>
             <div className="ml-4">
               <h1 className="text-3xl font-bold text-white">My Profile</h1>

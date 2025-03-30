@@ -23,10 +23,12 @@ CREATE TABLE IF NOT EXISTS historical_sites (
 CREATE TABLE IF NOT EXISTS user_profiles (
   id UUID PRIMARY KEY REFERENCES auth.users ON DELETE CASCADE,
   username TEXT NOT NULL,
+  display_name TEXT,
   email TEXT NOT NULL,
   avatar_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  CONSTRAINT display_name_length CHECK (char_length(display_name) >= 2 AND char_length(display_name) <= 50)
 );
 
 -- User Favorites Table
@@ -43,50 +45,55 @@ CREATE TABLE IF NOT EXISTS user_favorites (
 -- Historical Sites (public read, authenticated write)
 ALTER TABLE historical_sites ENABLE ROW LEVEL SECURITY;
 
--- Create policies for historical_sites
-BEGIN;
-  -- Drop existing policies if they exist
-  DELETE FROM pg_policies WHERE tablename = 'historical_sites';
-  
-  -- Create new policies
-  INSERT INTO pg_policies (schemaname, tablename, policyname, permissive, roles, cmd, qual, with_check)
-  VALUES 
-    ('public', 'historical_sites', 'Historical sites are viewable by everyone', true, ARRAY[0], 'SELECT', 'true', NULL),
-    ('public', 'historical_sites', 'Historical sites are editable by authenticated users', true, ARRAY[0], 'INSERT', NULL, 'auth.role() = ''authenticated'''),
-    ('public', 'historical_sites', 'Historical sites are updatable by owners', true, ARRAY[0], 'UPDATE', 'auth.uid() = created_by', NULL),
-    ('public', 'historical_sites', 'Historical sites are deletable by owners', true, ARRAY[0], 'DELETE', 'auth.uid() = created_by', NULL);
-COMMIT;
+DROP POLICY IF EXISTS "Historical sites are viewable by everyone" ON historical_sites;
+CREATE POLICY "Historical sites are viewable by everyone" 
+  ON historical_sites FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Historical sites are editable by authenticated users" ON historical_sites;
+CREATE POLICY "Historical sites are editable by authenticated users" 
+  ON historical_sites FOR INSERT 
+  WITH CHECK (auth.role() = 'authenticated');
+
+DROP POLICY IF EXISTS "Historical sites are updatable by owners" ON historical_sites;
+CREATE POLICY "Historical sites are updatable by owners" 
+  ON historical_sites FOR UPDATE 
+  USING (auth.uid() = created_by);
+
+DROP POLICY IF EXISTS "Historical sites are deletable by owners" ON historical_sites;
+CREATE POLICY "Historical sites are deletable by owners" 
+  ON historical_sites FOR DELETE 
+  USING (auth.uid() = created_by);
 
 -- User Profiles (users can only read/edit their own data)
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 
--- Create policies for user_profiles
-BEGIN;
-  -- Drop existing policies if they exist
-  DELETE FROM pg_policies WHERE tablename = 'user_profiles';
-  
-  -- Create new policies
-  INSERT INTO pg_policies (schemaname, tablename, policyname, permissive, roles, cmd, qual, with_check)
-  VALUES 
-    ('public', 'user_profiles', 'Users can view their own profile', true, ARRAY[0], 'SELECT', 'auth.uid() = id', NULL),
-    ('public', 'user_profiles', 'Users can update their own profile', true, ARRAY[0], 'UPDATE', 'auth.uid() = id', NULL);
-COMMIT;
+DROP POLICY IF EXISTS "Users can view their own profile" ON user_profiles;
+CREATE POLICY "Users can view their own profile" 
+  ON user_profiles FOR SELECT 
+  USING (auth.uid() = id);
+
+DROP POLICY IF EXISTS "Users can update their own profile" ON user_profiles;
+CREATE POLICY "Users can update their own profile" 
+  ON user_profiles FOR UPDATE 
+  USING (auth.uid() = id);
 
 -- Favorites (users can only access their own favorites)
 ALTER TABLE user_favorites ENABLE ROW LEVEL SECURITY;
 
--- Create policies for user_favorites
-BEGIN;
-  -- Drop existing policies if they exist
-  DELETE FROM pg_policies WHERE tablename = 'user_favorites';
-  
-  -- Create new policies
-  INSERT INTO pg_policies (schemaname, tablename, policyname, permissive, roles, cmd, qual, with_check)
-  VALUES 
-    ('public', 'user_favorites', 'Users can view their own favorites', true, ARRAY[0], 'SELECT', 'auth.uid() = user_id', NULL),
-    ('public', 'user_favorites', 'Users can add their own favorites', true, ARRAY[0], 'INSERT', NULL, 'auth.uid() = user_id'),
-    ('public', 'user_favorites', 'Users can delete their own favorites', true, ARRAY[0], 'DELETE', 'auth.uid() = user_id', NULL);
-COMMIT;
+DROP POLICY IF EXISTS "Users can view their own favorites" ON user_favorites;
+CREATE POLICY "Users can view their own favorites" 
+  ON user_favorites FOR SELECT 
+  USING (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can add their own favorites" ON user_favorites;
+CREATE POLICY "Users can add their own favorites" 
+  ON user_profiles FOR INSERT 
+  WITH CHECK (auth.uid() = user_id);
+
+DROP POLICY IF EXISTS "Users can delete their own favorites" ON user_favorites;
+CREATE POLICY "Users can delete their own favorites" 
+  ON user_favorites FOR DELETE 
+  USING (auth.uid() = user_id);
 
 -- Function to automatically set updated_at
 CREATE OR REPLACE FUNCTION handle_updated_at()

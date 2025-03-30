@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -8,8 +7,6 @@ const Footer: React.FC = () => {
   const footerLinks = [
     { name: 'Home', path: '/' },
     { name: 'About', path: '/about' },
-    { name: 'Privacy', path: '/privacy' },
-    { name: 'Terms', path: '/terms' },
     { name: 'Contact', path: '/contact' },
   ];
 
@@ -94,7 +91,7 @@ const Footer: React.FC = () => {
           <motion.div variants={childVariants}>
             <h3 className="text-white font-medium mb-4">Contact Us</h3>
             <ul className="space-y-2 text-heritage-300">
-              <li>contact@heritagear.example.com</li>
+              <li>support@heritagear.com</li>
               <li>+1 (555) 123-4567</li>
               <li>123 Heritage Street, Tech City</li>
             </ul>
@@ -110,22 +107,13 @@ const Footer: React.FC = () => {
           </motion.div>
         </div>
         
-        <motion.div 
+        <motion.div
           variants={childVariants}
           className="mt-12 pt-6 border-t border-heritage-800/30 flex flex-col md:flex-row justify-between items-center"
         >
           <p className="text-heritage-300 text-sm">
             © {new Date().getFullYear()} HeritageAR. All rights reserved.
           </p>
-          
-          <div className="mt-4 md:mt-0 flex space-x-6">
-            <Link to="/privacy" className="text-heritage-300 hover:text-white text-sm">
-              Privacy Policy
-            </Link>
-            <Link to="/terms" className="text-heritage-300 hover:text-white text-sm">
-              Terms of Service
-            </Link>
-          </div>
         </motion.div>
       </motion.div>
     </footer>
