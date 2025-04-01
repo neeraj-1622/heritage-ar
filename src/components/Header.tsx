@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, User, LogOut, Settings, UserCircle } from 'lucide-react';
@@ -27,6 +28,7 @@ const Header: React.FC<HeaderProps> = ({
   const navigate = useNavigate();
   const { user, logout, isAuthenticated } = useAuth();
   const [displayName, setDisplayName] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
   const isHomePage = location.pathname === '/';
 
   useEffect(() => {
@@ -36,26 +38,29 @@ const Header: React.FC<HeaderProps> = ({
       try {
         const { data, error } = await supabase
           .from('user_profiles')
-          .select('display_name, username')
+          .select('display_name, username, email')
           .eq('id', user.id)
           .single();
 
         if (error) throw error;
 
         // Use display_name if available, otherwise fall back to username
-        if (data && (data.display_name || data.username)) {
-          setDisplayName(data.display_name || data.username);
+        if (data) {
+          setDisplayName(data.display_name || data.username || 'User');
+          setEmail(data.email || user.email || '');
         } else {
           setDisplayName(user.display_name || user.username || 'User');
+          setEmail(user.email || '');
         }
       } catch (error) {
         console.error('Error fetching user profile:', error);
         setDisplayName(user.display_name || user.username || 'User');
+        setEmail(user.email || '');
       }
     };
 
     fetchUserProfile();
-  }, [user?.id, user?.display_name, user?.username]);
+  }, [user?.id, user?.display_name, user?.username, user?.email]);
 
   const handleLogout = () => {
     logout();
@@ -130,7 +135,7 @@ const Header: React.FC<HeaderProps> = ({
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium leading-none">{displayName}</p>
-                      <p className="text-xs leading-none text-blue-300/90">{user?.email}</p>
+                      <p className="text-xs leading-none text-blue-300/90">{email}</p>
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator className="bg-blue-700/50" />

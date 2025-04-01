@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -45,7 +44,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
-// Form schemas
 const profileFormSchema = z.object({
   displayName: z.string().min(3, 'Display name must be at least 3 characters'),
 });
@@ -79,7 +77,6 @@ const Profile: React.FC = () => {
   const [displayName, setDisplayName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // Define the form
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
@@ -110,22 +107,46 @@ const Profile: React.FC = () => {
 
       try {
         setIsLoading(true);
+        console.log("Fetching profile for user ID:", user.id);
+        
         const { data, error } = await supabase
           .from('user_profiles')
           .select('display_name, username, email')
           .eq('id', user.id)
           .single();
 
-        if (error) throw error;
-
-        setUsername(data?.username || '');
-        setEmail(data?.email || user.email || '');
-        setDisplayName(data?.display_name || data?.username || '');
-        
-        profileForm.setValue('displayName', data?.display_name || data?.username || '');
-        emailForm.setValue('email', data?.email || user.email || '');
+        if (error) {
+          console.error('Error fetching user profile:', error);
+          // Fallback to user object from auth context
+          setUsername(user.username || '');
+          setEmail(user.email || '');
+          setDisplayName(user.display_name || user.username || '');
+          
+          profileForm.setValue('displayName', user.display_name || user.username || '');
+          emailForm.setValue('email', user.email || '');
+          
+          // Create profile if it doesn't exist
+          await supabase
+            .from('user_profiles')
+            .insert([{ 
+              id: user.id, 
+              username: user.username || user.email?.split('@')[0] || 'User', 
+              display_name: user.display_name || user.username || user.email?.split('@')[0] || 'User',
+              email: user.email || '',
+              avatar_url: null
+            }]);
+          
+        } else if (data) {
+          console.log("Profile data retrieved:", data);
+          setUsername(data.username || '');
+          setEmail(data.email || user.email || '');
+          setDisplayName(data.display_name || data.username || '');
+          
+          profileForm.setValue('displayName', data.display_name || data.username || '');
+          emailForm.setValue('email', data.email || user.email || '');
+        }
       } catch (error) {
-        console.error('Error fetching user profile:', error);
+        console.error('Error in profile fetch:', error);
         toast({
           title: 'Failed to load profile',
           description: 'An unexpected error occurred',
@@ -137,7 +158,7 @@ const Profile: React.FC = () => {
     };
 
     fetchUserProfile();
-  }, [user?.id, user?.email, profileForm, emailForm]);
+  }, [user?.id, user?.email, user?.username, user?.display_name, profileForm, emailForm]);
 
   const onProfileSubmit = async (data: ProfileFormValues) => {
     if (!user) return;
@@ -287,7 +308,6 @@ const Profile: React.FC = () => {
     return name.substring(0, 2).toUpperCase();
   };
 
-  // Generate a consistent color based on the username
   const getAvatarColor = (username: string) => {
     const colors = [
       'bg-purple-800', 'bg-indigo-800', 'bg-blue-800', 
@@ -484,7 +504,6 @@ const Profile: React.FC = () => {
             
             <TabsContent value="security">
               <div className="space-y-6">
-                {/* Password Reset Card */}
                 <Card className="bg-slate-800/80 border-slate-700">
                   <CardHeader>
                     <CardTitle className="text-white">Password Reset</CardTitle>
@@ -515,7 +534,6 @@ const Profile: React.FC = () => {
                   </CardContent>
                 </Card>
                 
-                {/* Email Change Card */}
                 <Card className="bg-slate-800/80 border-slate-700">
                   <CardHeader>
                     <CardTitle className="text-white">Change Email</CardTitle>

@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -47,16 +48,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (session && session.user) {
           const { data: profile, error } = await supabase
             .from('user_profiles')
-            .select('username, display_name')
+            .select('username, display_name, email')
             .eq('id', session.user.id)
             .single();
             
           if (!error && profile) {
             setUser({
               id: session.user.id,
-              email: session.user.email || '',
-              username: profile?.username || session.user.email?.split('@')[0] || 'User',
-              display_name: profile?.display_name || profile?.username || session.user.email?.split('@')[0] || 'User',
+              email: profile.email || session.user.email || '',
+              username: profile.username || session.user.email?.split('@')[0] || 'User',
+              display_name: profile.display_name || profile.username || session.user.email?.split('@')[0] || 'User',
               email_confirmed_at: session.user.email_confirmed_at
             });
           } else {
@@ -80,16 +81,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (session && session.user) {
         const { data: profile, error } = await supabase
           .from('user_profiles')
-          .select('username, display_name')
+          .select('username, display_name, email')
           .eq('id', session.user.id)
           .single();
           
         if (!error && profile) {
           setUser({
             id: session.user.id,
-            email: session.user.email || '',
-            username: profile?.username || session.user.email?.split('@')[0] || 'User',
-            display_name: profile?.display_name || profile?.username || session.user.email?.split('@')[0] || 'User',
+            email: profile.email || session.user.email || '',
+            username: profile.username || session.user.email?.split('@')[0] || 'User',
+            display_name: profile.display_name || profile.username || session.user.email?.split('@')[0] || 'User',
             email_confirmed_at: session.user.email_confirmed_at
           });
         } else {
@@ -149,19 +150,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         if (!profile) {
           const username = data.user.email?.split('@')[0] || 'User';
+          const displayName = data.user.user_metadata?.display_name || username;
+
+          // Create profile if it doesn't exist
           await supabase
             .from('user_profiles')
             .insert([{ 
               id: data.user.id, 
               username: username, 
-              display_name: username,
+              display_name: displayName,
               email: data.user.email || '',
               avatar_url: null
             }]);
             
           toast({
             title: 'Login successful',
-            description: `Welcome, ${username}!`,
+            description: `Welcome, ${displayName}!`,
           });
         } else {
           const displayName = profile.display_name || profile.username;
@@ -193,6 +197,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const appUrl = window.location.origin;
       const redirectTo = `${appUrl}/login?verified=true`;
       
+      const finalDisplayName = displayName || username;
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -200,7 +206,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           emailRedirectTo: redirectTo,
           data: {
             name: username,
-            display_name: displayName || username,
+            display_name: finalDisplayName,
           }
         }
       });
@@ -215,12 +221,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       
       if (data.user) {
+        // Create user profile immediately upon registration
         const { error: profileError } = await supabase
           .from('user_profiles')
           .insert([{ 
             id: data.user.id, 
             username: username,
-            display_name: displayName || username,
+            display_name: finalDisplayName,
             email,
             avatar_url: null
           }]);
@@ -232,6 +239,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             description: 'User created but profile setup failed',
             variant: 'destructive',
           });
+        } else {
+          console.log('User profile created successfully');
         }
         
         toast({
