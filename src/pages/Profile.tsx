@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
@@ -30,7 +30,15 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs';
-import { UserCircle, Mail, ChevronLeft, Loader2 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { UserCircle, Mail, ChevronLeft, Loader2, LogOut, Settings, CheckCircle } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -110,12 +118,12 @@ const Profile: React.FC = () => {
 
         if (error) throw error;
 
-        setUsername(data.username || '');
-        setEmail(data.email || user.email || '');
-        setDisplayName(data.display_name || data.username || '');
+        setUsername(data?.username || '');
+        setEmail(data?.email || user.email || '');
+        setDisplayName(data?.display_name || data?.username || '');
         
-        profileForm.setValue('displayName', data.display_name || data.username || '');
-        emailForm.setValue('email', data.email || user.email || '');
+        profileForm.setValue('displayName', data?.display_name || data?.username || '');
+        emailForm.setValue('email', data?.email || user.email || '');
       } catch (error) {
         console.error('Error fetching user profile:', error);
         toast({
