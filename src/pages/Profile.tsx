@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -29,18 +30,16 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs';
-import { UserCircle, Mail, Key, AtSign, Check, X, Loader2 } from 'lucide-react';
+import { UserCircle, Mail, ChevronLeft, Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { UserProfile, createOrUpdateUserProfile } from '@/lib/supabase';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 // Form schemas
 const profileFormSchema = z.object({
-  username: z.string().min(3, 'Username must be at least 3 characters'),
-  avatarUrl: z.string().nullable().optional(),
+  displayName: z.string().min(3, 'Display name must be at least 3 characters'),
 });
 
 const passwordFormSchema = z.object({
@@ -67,15 +66,16 @@ const Profile: React.FC = () => {
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
   const [resetPasswordSent, setResetPasswordSent] = useState(false);
   const [resetEmailSent, setResetEmailSent] = useState(false);
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [displayName, setDisplayName] = useState('');
-  const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Define the form
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      username: user?.username || '',
-      avatarUrl: null,
+      displayName: '',
     },
   });
 
@@ -91,7 +91,7 @@ const Profile: React.FC = () => {
   const emailForm = useForm<EmailFormValues>({
     resolver: zodResolver(emailFormSchema),
     defaultValues: {
-      email: user?.email || '',
+      email: '',
       password: '',
     },
   });
@@ -101,15 +101,21 @@ const Profile: React.FC = () => {
       if (!user?.id) return;
 
       try {
+        setIsLoading(true);
         const { data, error } = await supabase
           .from('user_profiles')
-          .select('display_name, username')
+          .select('display_name, username, email')
           .eq('id', user.id)
           .single();
 
         if (error) throw error;
 
-        setDisplayName(data.display_name || data.username);
+        setUsername(data.username || '');
+        setEmail(data.email || user.email || '');
+        setDisplayName(data.display_name || data.username || '');
+        
+        profileForm.setValue('displayName', data.display_name || data.username || '');
+        emailForm.setValue('email', data.email || user.email || '');
       } catch (error) {
         console.error('Error fetching user profile:', error);
         toast({
@@ -117,45 +123,43 @@ const Profile: React.FC = () => {
           description: 'An unexpected error occurred',
           variant: 'destructive',
         });
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchUserProfile();
-  }, [user?.id]);
+  }, [user?.id, user?.email, profileForm, emailForm]);
 
   const onProfileSubmit = async (data: ProfileFormValues) => {
     if (!user) return;
     
     try {
       setIsUpdatingProfile(true);
-      const result = await createOrUpdateUserProfile(
-        user.id,
-        data.username,
-        user.email,
-        data.avatarUrl
-      );
       
-      if (result.error) {
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({ 
+          display_name: data.displayName,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+      
+      if (error) {
         toast({
           title: 'Update failed',
-          description: result.error.message || 'Failed to update profile',
+          description: error.message || 'Failed to update profile',
           variant: 'destructive',
         });
         return;
       }
       
+      setDisplayName(data.displayName);
+      
       toast({
         title: 'Profile updated',
-        description: 'Your profile has been successfully updated',
+        description: 'Your display name has been successfully updated',
       });
-      
-      // Update the local user context
-      // This is a simplified approach - in a full implementation,
-      // you might want to refresh the user context more completely
-      if (result.data && result.data[0]) {
-        // Assuming the user context has a way to update these values
-        // This would require extending the AuthContext functionality
-      }
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
@@ -247,6 +251,15 @@ const Profile: React.FC = () => {
         return;
       }
 
+      // Update profile table as well
+      await supabase
+        .from('user_profiles')
+        .update({ 
+          email: data.email,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user?.id);
+
       setResetEmailSent(true);
       toast({
         title: 'Verification email sent',
@@ -259,31 +272,6 @@ const Profile: React.FC = () => {
         description: 'An unexpected error occurred',
         variant: 'destructive',
       });
-    }
-  };
-
-  const handleSave = async () => {
-    if (!user?.id || !displayName.trim()) return;
-
-    setIsLoading(true);
-    try {
-      const { error } = await supabase
-        .from('user_profiles')
-        .update({ 
-          display_name: displayName.trim(),
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', user.id);
-
-      if (error) throw error;
-
-      toast.success('Profile updated successfully');
-      setIsEditing(false);
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      toast.error('Failed to update profile');
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -314,84 +302,174 @@ const Profile: React.FC = () => {
     return null;
   }
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="h-16 w-16 rounded-full border-4 border-heritage-300 border-t-heritage-800 animate-spin"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen">
-      <Header title="Profile" showBackButton />
+    <div className="min-h-screen bg-slate-800/90">
+      <header className="fixed w-full top-0 left-0 z-50 py-4 bg-slate-900/90 backdrop-blur-lg">
+        <div className="container mx-auto px-4 flex items-center">
+          <button
+            onClick={() => navigate('/')}
+            className="mr-3 p-2 rounded-full text-white hover:text-accent hover:bg-slate-800/50 transition-colors"
+            aria-label="Go back"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <h1 className="text-xl font-bold text-white">Profile</h1>
+          
+          <div className="ml-auto">
+            <Link 
+              to="/ar" 
+              className="px-4 py-1.5 rounded-full bg-accent text-sm font-medium text-white"
+            >
+              AR View
+            </Link>
+          </div>
+        </div>
+      </header>
       
-      <main className="container mx-auto px-4 py-20 md:py-24">
+      <main className="container mx-auto px-4 py-20">
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center mb-8">
-            <div className="flex-shrink-0 h-16 w-16 rounded-full bg-gradient-to-r from-accent to-accent-400 flex items-center justify-center">
-              <Avatar className="h-8 w-8 text-white" fallback={<AvatarFallback className={`${getAvatarColor(displayName)} text-white text-xl font-medium`}>{getInitials(displayName)}</AvatarFallback>} />
+          <div className="flex items-center mb-8 mt-4">
+            <div className="mr-5">
+              <Avatar className="h-20 w-20 border-2 border-accent/30">
+                <AvatarFallback className={`${getAvatarColor(displayName)} text-white text-2xl font-medium`}>
+                  {getInitials(displayName)}
+                </AvatarFallback>
+              </Avatar>
             </div>
-            <div className="ml-4">
+            <div>
               <h1 className="text-3xl font-bold text-white">My Profile</h1>
-              <p className="text-heritage-300">Manage your account settings and preferences</p>
+              <p className="text-slate-300">Manage your account settings and preferences</p>
+            </div>
+            
+            <div className="ml-auto mr-3 relative">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="rounded-full h-9 w-9 p-0 overflow-hidden border border-slate-600">
+                    <Avatar className="h-8 w-8 border border-accent/30">
+                      <AvatarFallback className={`${getAvatarColor(displayName)} text-white font-medium`}>
+                        {getInitials(displayName)}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 bg-blue-800/90 backdrop-blur-sm border-blue-700 text-white">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{displayName}</p>
+                      <p className="text-xs leading-none text-blue-300/90">{email}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-blue-700/50" />
+                  <DropdownMenuItem 
+                    className="text-white hover:bg-blue-700 cursor-pointer"
+                    onClick={() => navigate('/profile')}
+                  >
+                    <UserCircle className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="text-white hover:bg-blue-700 cursor-pointer"
+                    onClick={() => navigate('/settings')}
+                  >
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-blue-700/50" />
+                  <DropdownMenuItem 
+                    className="text-white hover:bg-blue-700 cursor-pointer"
+                    onClick={() => {
+                      logout();
+                      navigate('/');
+                    }}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
           
           <Tabs defaultValue="profile" className="space-y-6">
-            <TabsList className="bg-heritage-800 border border-heritage-700">
+            <TabsList className="bg-slate-800 border border-slate-700">
               <TabsTrigger value="profile">Profile</TabsTrigger>
               <TabsTrigger value="security">Security</TabsTrigger>
             </TabsList>
             
             <TabsContent value="profile">
-              <Card className="bg-heritage-800 border-heritage-700">
+              <Card className="bg-slate-800/80 border-slate-700">
                 <CardHeader>
                   <CardTitle className="text-white">Profile Information</CardTitle>
-                  <CardDescription className="text-heritage-300">
+                  <CardDescription className="text-slate-300">
                     Update your personal information
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Form {...profileForm}>
-                    <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
-                      <FormField
-                        control={profileForm.control}
-                        name="username"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-heritage-200">Username</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="Your username"
-                                className="bg-heritage-700 border-heritage-600 text-white"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormDescription className="text-heritage-400">
-                              This is your public display name
-                            </FormDescription>
-                            <FormMessage className="text-red-300" />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <div className="pt-2">
-                        <FormItem>
-                          <FormLabel className="text-heritage-200">Email</FormLabel>
-                          <Input
-                            value={user.email}
-                            disabled
-                            className="bg-heritage-700 border-heritage-600 text-white opacity-70"
-                          />
-                          <FormDescription className="text-heritage-400">
-                            To change your email, go to the Security tab
-                          </FormDescription>
-                        </FormItem>
+                  <div className="space-y-6">
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="text-sm font-medium text-slate-200 mb-1.5">Username</h3>
+                        <Input
+                          value={username}
+                          disabled
+                          className="bg-slate-700/70 border-slate-600 text-white opacity-70"
+                        />
+                        <p className="text-xs text-slate-400 mt-1">This is your unique username and cannot be changed</p>
                       </div>
                       
-                      <Button 
-                        type="submit" 
-                        className="mt-4" 
-                        disabled={isUpdatingProfile || !profileForm.formState.isDirty}
-                      >
-                        {isUpdatingProfile && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Save Changes
-                      </Button>
-                    </form>
-                  </Form>
+                      <Form {...profileForm}>
+                        <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
+                          <FormField
+                            control={profileForm.control}
+                            name="displayName"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-slate-200">Display Name</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder="Your display name"
+                                    className="bg-slate-700/70 border-slate-600 text-white"
+                                    {...field}
+                                  />
+                                </FormControl>
+                                <FormDescription className="text-slate-400">
+                                  This is your public display name visible throughout the app
+                                </FormDescription>
+                                <FormMessage className="text-red-300" />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <div>
+                            <h3 className="text-sm font-medium text-slate-200 mb-1.5">Email</h3>
+                            <Input
+                              value={email}
+                              disabled
+                              className="bg-slate-700/70 border-slate-600 text-white opacity-70"
+                            />
+                            <p className="text-xs text-slate-400 mt-1">To change your email, go to the Security tab</p>
+                          </div>
+                          
+                          <Button 
+                            type="submit" 
+                            className="mt-4" 
+                            disabled={isUpdatingProfile || !profileForm.formState.isDirty}
+                          >
+                            {isUpdatingProfile && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Save Changes
+                          </Button>
+                        </form>
+                      </Form>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -399,17 +477,17 @@ const Profile: React.FC = () => {
             <TabsContent value="security">
               <div className="space-y-6">
                 {/* Password Reset Card */}
-                <Card className="bg-heritage-800 border-heritage-700">
+                <Card className="bg-slate-800/80 border-slate-700">
                   <CardHeader>
                     <CardTitle className="text-white">Password Reset</CardTitle>
-                    <CardDescription className="text-heritage-300">
+                    <CardDescription className="text-slate-300">
                       Change your password securely
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     {resetPasswordSent ? (
                       <Alert className="bg-green-900/50 text-green-100 border-green-700">
-                        <Check className="h-4 w-4" />
+                        <CheckCircle className="h-4 w-4" />
                         <AlertTitle>Reset Email Sent!</AlertTitle>
                         <AlertDescription>
                           We've sent a password reset link to your email address.
@@ -418,7 +496,7 @@ const Profile: React.FC = () => {
                       </Alert>
                     ) : (
                       <div className="space-y-4">
-                        <p className="text-heritage-300">
+                        <p className="text-slate-300">
                           For security reasons, we'll send a password reset link to your registered email address.
                         </p>
                         <Button onClick={onPasswordReset}>
@@ -430,17 +508,17 @@ const Profile: React.FC = () => {
                 </Card>
                 
                 {/* Email Change Card */}
-                <Card className="bg-heritage-800 border-heritage-700">
+                <Card className="bg-slate-800/80 border-slate-700">
                   <CardHeader>
                     <CardTitle className="text-white">Change Email</CardTitle>
-                    <CardDescription className="text-heritage-300">
+                    <CardDescription className="text-slate-300">
                       Update your email address
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     {resetEmailSent ? (
                       <Alert className="bg-green-900/50 text-green-100 border-green-700">
-                        <Check className="h-4 w-4" />
+                        <CheckCircle className="h-4 w-4" />
                         <AlertTitle>Verification Email Sent!</AlertTitle>
                         <AlertDescription>
                           We've sent a verification link to your new email address.
@@ -455,11 +533,11 @@ const Profile: React.FC = () => {
                             name="email"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-heritage-200">New Email Address</FormLabel>
+                                <FormLabel className="text-slate-200">New Email Address</FormLabel>
                                 <FormControl>
                                   <Input
                                     placeholder="your.new.email@example.com"
-                                    className="bg-heritage-700 border-heritage-600 text-white"
+                                    className="bg-slate-700/70 border-slate-600 text-white"
                                     {...field}
                                   />
                                 </FormControl>
@@ -473,16 +551,16 @@ const Profile: React.FC = () => {
                             name="password"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel className="text-heritage-200">Current Password</FormLabel>
+                                <FormLabel className="text-slate-200">Current Password</FormLabel>
                                 <FormControl>
                                   <Input
                                     type="password"
                                     placeholder="••••••••"
-                                    className="bg-heritage-700 border-heritage-600 text-white"
+                                    className="bg-slate-700/70 border-slate-600 text-white"
                                     {...field}
                                   />
                                 </FormControl>
-                                <FormDescription className="text-heritage-400">
+                                <FormDescription className="text-slate-400">
                                   For security, please enter your current password
                                 </FormDescription>
                                 <FormMessage className="text-red-300" />

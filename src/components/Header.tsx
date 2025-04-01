@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, User, LogOut, Settings, UserCircle } from 'lucide-react';
@@ -42,6 +43,7 @@ const Header: React.FC<HeaderProps> = ({
 
         if (error) throw error;
 
+        // Use display_name if available, otherwise fall back to username
         setDisplayName(data.display_name || data.username);
       } catch (error) {
         console.error('Error fetching user profile:', error);
@@ -121,35 +123,35 @@ const Header: React.FC<HeaderProps> = ({
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56 bg-heritage-800 border-heritage-700 text-white">
+                <DropdownMenuContent className="w-56 bg-blue-800/90 backdrop-blur-sm border-blue-700 text-white">
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium leading-none">{displayName || 'User'}</p>
-                      <p className="text-xs leading-none text-heritage-400">{user?.email}</p>
+                      <p className="text-xs leading-none text-blue-300/90">{user?.email}</p>
                     </div>
                   </DropdownMenuLabel>
-                  <DropdownMenuSeparator className="bg-heritage-700" />
+                  <DropdownMenuSeparator className="bg-blue-700/50" />
                   <DropdownMenuItem 
-                    className="text-white hover:bg-heritage-700 cursor-pointer"
+                    className="text-white hover:bg-blue-700 cursor-pointer"
                     onClick={() => navigate('/profile')}
                   >
                     <UserCircle className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem 
-                    className="text-white hover:bg-heritage-700 cursor-pointer"
+                    className="text-white hover:bg-blue-700 cursor-pointer"
                     onClick={() => navigate('/settings')}
                   >
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Settings</span>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator className="bg-heritage-700" />
+                  <DropdownMenuSeparator className="bg-blue-700/50" />
                   <DropdownMenuItem 
-                    className="text-white hover:bg-heritage-700 cursor-pointer"
+                    className="text-white hover:bg-blue-700 cursor-pointer"
                     onClick={handleLogout}
                   >
                     <LogOut className="mr-2 h-4 w-4" />
-                    <span>Log out</span>
+                    <span>Sign out</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

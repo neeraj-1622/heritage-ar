@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { Menu, X, ChevronLeft, LogOut, Settings, User } from 'lucide-react';
+import { Menu, X, ChevronLeft, LogOut, Settings, User, CheckCircle } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 interface HeaderProps {
@@ -66,6 +66,8 @@ const AnimatedHeader: React.FC<HeaderProps> = ({ title, showBackButton = false }
     const index = Math.abs(hash) % colors.length;
     return colors[index];
   };
+  
+  const displayName = user?.display_name || user?.username || 'User';
 
   return (
     <header 
@@ -113,18 +115,18 @@ const AnimatedHeader: React.FC<HeaderProps> = ({ title, showBackButton = false }
                 className="flex items-center space-x-1 text-white hover:text-accent"
               >
                 <Avatar className="h-9 w-9 border-2 border-accent/30">
-                  <AvatarFallback className={`${getAvatarColor(user?.username)} text-white font-medium`}>
-                    {user?.username ? getInitials(user.username) : 'U'}
+                  <AvatarFallback className={`${getAvatarColor(displayName)} text-white font-medium`}>
+                    {getInitials(displayName)}
                   </AvatarFallback>
                 </Avatar>
               </button>
               
               {isDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-heritage-800 rounded-md shadow-lg overflow-hidden z-20">
-                  <div className="py-1 border-b border-heritage-700">
+                <div className="absolute right-0 mt-2 w-56 bg-blue-800/90 backdrop-blur-sm rounded-md shadow-lg overflow-hidden z-20 border border-blue-700/50">
+                  <div className="py-2 border-b border-blue-700/50">
                     <div className="px-4 py-2">
-                      <p className="text-sm font-medium text-white leading-none">{user?.username || 'User'}</p>
-                      <p className="text-xs text-heritage-400">{user?.email}</p>
+                      <p className="text-sm font-medium text-white leading-none">{displayName}</p>
+                      <p className="text-xs text-blue-300/90">{user?.email}</p>
                     </div>
                   </div>
                   <div className="py-1">
@@ -133,7 +135,7 @@ const AnimatedHeader: React.FC<HeaderProps> = ({ title, showBackButton = false }
                         setIsDropdownOpen(false);
                         navigate('/profile');
                       }}
-                      className="flex items-center w-full px-4 py-2 text-sm text-heritage-300 hover:text-white hover:bg-heritage-700"
+                      className="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-blue-700/80 transition-colors"
                     >
                       <User className="h-4 w-4 mr-2" />
                       Profile
@@ -143,14 +145,14 @@ const AnimatedHeader: React.FC<HeaderProps> = ({ title, showBackButton = false }
                         setIsDropdownOpen(false);
                         navigate('/settings');
                       }}
-                      className="flex items-center w-full px-4 py-2 text-sm text-heritage-300 hover:text-white hover:bg-heritage-700"
+                      className="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-blue-700/80 transition-colors"
                     >
                       <Settings className="h-4 w-4 mr-2" />
                       Settings
                     </button>
                     <button
                       onClick={handleLogout}
-                      className="flex items-center w-full px-4 py-2 text-sm text-heritage-300 hover:text-white hover:bg-heritage-700"
+                      className="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-blue-700/80 transition-colors"
                     >
                       <LogOut className="h-4 w-4 mr-2" />
                       Sign out
@@ -203,12 +205,12 @@ const AnimatedHeader: React.FC<HeaderProps> = ({ title, showBackButton = false }
             <div className="border-t border-heritage-700 pt-2 mt-2">
               <div className="py-2 flex items-center">
                 <Avatar className="h-8 w-8 mr-2">
-                  <AvatarFallback className={`${getAvatarColor(user?.username)} text-white font-medium`}>
-                    {user?.username ? getInitials(user.username) : 'U'}
+                  <AvatarFallback className={`${getAvatarColor(displayName)} text-white font-medium`}>
+                    {getInitials(displayName)}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="text-sm font-medium text-white">{user?.username || 'User'}</p>
+                  <p className="text-sm font-medium text-white">{displayName}</p>
                   <p className="text-xs text-heritage-400">{user?.email}</p>
                 </div>
               </div>

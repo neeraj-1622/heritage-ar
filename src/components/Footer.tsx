@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -5,8 +6,9 @@ import { Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
 
 const Footer: React.FC = () => {
   const footerLinks = [
-    { name: 'Home', path: '/' },
     { name: 'About', path: '/about' },
+    { name: 'Privacy', path: '/privacy' },
+    { name: 'Terms', path: '/terms' },
     { name: 'Contact', path: '/contact' },
   ];
 
@@ -45,8 +47,8 @@ const Footer: React.FC = () => {
         whileInView="visible"
         viewport={{ once: true }}
       >
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
-          <motion.div variants={childVariants} className="md:col-span-2">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+          <motion.div variants={childVariants} className="md:col-span-1">
             <Link to="/" className="flex items-center space-x-2 mb-4">
               <div className="relative w-8 h-8 flex items-center justify-center">
                 <div className="absolute inset-0 bg-gradient-to-tr from-accent to-accent/70 rounded-md"></div>
