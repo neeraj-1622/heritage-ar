@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, User, LogOut, Settings, UserCircle } from 'lucide-react';
@@ -44,14 +43,19 @@ const Header: React.FC<HeaderProps> = ({
         if (error) throw error;
 
         // Use display_name if available, otherwise fall back to username
-        setDisplayName(data.display_name || data.username);
+        if (data && (data.display_name || data.username)) {
+          setDisplayName(data.display_name || data.username);
+        } else {
+          setDisplayName(user.display_name || user.username || 'User');
+        }
       } catch (error) {
         console.error('Error fetching user profile:', error);
+        setDisplayName(user.display_name || user.username || 'User');
       }
     };
 
     fetchUserProfile();
-  }, [user?.id]);
+  }, [user?.id, user?.display_name, user?.username]);
 
   const handleLogout = () => {
     logout();
@@ -62,7 +66,6 @@ const Header: React.FC<HeaderProps> = ({
     return name.substring(0, 2).toUpperCase();
   };
 
-  // Generate a consistent color based on the username
   const getAvatarColor = (username: string) => {
     const colors = [
       'bg-purple-800', 'bg-indigo-800', 'bg-blue-800', 
@@ -126,7 +129,7 @@ const Header: React.FC<HeaderProps> = ({
                 <DropdownMenuContent className="w-56 bg-blue-800/90 backdrop-blur-sm border-blue-700 text-white">
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{displayName || 'User'}</p>
+                      <p className="text-sm font-medium leading-none">{displayName}</p>
                       <p className="text-xs leading-none text-blue-300/90">{user?.email}</p>
                     </div>
                   </DropdownMenuLabel>

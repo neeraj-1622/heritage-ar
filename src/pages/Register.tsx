@@ -21,6 +21,7 @@ import { Mail } from 'lucide-react';
 
 const registerSchema = z.object({
   username: z.string().min(3, 'Username must be at least 3 characters'),
+  displayName: z.string().min(1, 'Display name is required'),
   email: z.string().email('Please enter a valid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string().min(6, 'Confirm password is required'),
@@ -41,6 +42,7 @@ const Register = () => {
     resolver: zodResolver(registerSchema),
     defaultValues: {
       username: '',
+      displayName: '',
       email: '',
       password: '',
       confirmPassword: '',
@@ -48,7 +50,7 @@ const Register = () => {
   });
 
   const onSubmit = async (data: RegisterFormValues) => {
-    const success = await register(data.username, data.email, data.password);
+    const success = await register(data.username, data.email, data.password, data.displayName);
     if (success) {
       setRegistrationSuccess(true);
       setRegisteredEmail(data.email);
@@ -86,6 +88,20 @@ const Register = () => {
                       <FormLabel className="text-white">Username</FormLabel>
                       <FormControl>
                         <Input placeholder="username" {...field} className="bg-heritage-800/70 text-white border-heritage-700 placeholder:text-heritage-400" />
+                      </FormControl>
+                      <FormMessage className="text-red-300" />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="displayName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-white">Display Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="How you'll be seen by others" {...field} className="bg-heritage-800/70 text-white border-heritage-700 placeholder:text-heritage-400" />
                       </FormControl>
                       <FormMessage className="text-red-300" />
                     </FormItem>
