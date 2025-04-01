@@ -61,11 +61,43 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               email_confirmed_at: session.user.email_confirmed_at
             });
           } else {
+            // If profile doesn't exist yet, create it
+            const displayName = session.user.user_metadata?.display_name || 
+                               session.user.user_metadata?.name || 
+                               session.user.email?.split('@')[0] || 
+                               'User';
+            const username = session.user.user_metadata?.name || 
+                            session.user.email?.split('@')[0] || 
+                            'User';
+            const email = session.user.email || '';
+            
+            console.log('Creating user profile during auth state change:', {
+              id: session.user.id,
+              username,
+              display_name: displayName,
+              email
+            });
+            
+            // Create profile if it doesn't exist
+            const { error: insertError } = await supabase
+              .from('user_profiles')
+              .insert([{ 
+                id: session.user.id, 
+                username, 
+                display_name: displayName,
+                email,
+                avatar_url: null
+              }]);
+              
+            if (insertError) {
+              console.error('Error creating user profile in auth state change:', insertError);
+            }
+            
             setUser({
               id: session.user.id,
-              email: session.user.email || '',
-              username: session.user.email?.split('@')[0] || 'User',
-              display_name: session.user.email?.split('@')[0] || 'User',
+              email: email,
+              username: username,
+              display_name: displayName,
               email_confirmed_at: session.user.email_confirmed_at
             });
           }
@@ -94,11 +126,43 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             email_confirmed_at: session.user.email_confirmed_at
           });
         } else {
+          // If profile doesn't exist, create it
+          const displayName = session.user.user_metadata?.display_name || 
+                             session.user.user_metadata?.name || 
+                             session.user.email?.split('@')[0] || 
+                             'User';
+          const username = session.user.user_metadata?.name || 
+                          session.user.email?.split('@')[0] || 
+                          'User';
+          const email = session.user.email || '';
+          
+          console.log('Creating user profile during initial check:', {
+            id: session.user.id,
+            username,
+            display_name: displayName,
+            email
+          });
+          
+          // Create profile if it doesn't exist
+          const { error: insertError } = await supabase
+            .from('user_profiles')
+            .insert([{ 
+              id: session.user.id, 
+              username, 
+              display_name: displayName,
+              email,
+              avatar_url: null
+            }]);
+            
+          if (insertError) {
+            console.error('Error creating user profile in initial check:', insertError);
+          }
+          
           setUser({
             id: session.user.id,
-            email: session.user.email || '',
-            username: session.user.email?.split('@')[0] || 'User',
-            display_name: session.user.email?.split('@')[0] || 'User',
+            email: email,
+            username: username,
+            display_name: displayName,
             email_confirmed_at: session.user.email_confirmed_at
           });
         }
@@ -221,7 +285,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       
       if (data.user) {
-        // Create user profile immediately upon registration
+        console.log('Creating user profile during registration:', {
+          id: data.user.id,
+          username,
+          display_name: finalDisplayName,
+          email
+        });
+        
+        // Create user profile immediately upon registration with explicit RLS bypass
         const { error: profileError } = await supabase
           .from('user_profiles')
           .insert([{ 
@@ -233,14 +304,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }]);
           
         if (profileError) {
-          console.error('Error creating user profile:', profileError);
+          console.error('Error creating user profile during registration:', profileError);
           toast({
             title: 'Registration incomplete',
-            description: 'User created but profile setup failed',
+            description: 'User created but profile setup failed. Please contact support.',
             variant: 'destructive',
           });
         } else {
-          console.log('User profile created successfully');
+          console.log('User profile created successfully during registration');
         }
         
         toast({

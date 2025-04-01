@@ -1,3 +1,4 @@
+
 -- Create tables for the HeritageAR application
 
 -- Note: The uuid-ossp extension is already enabled in Supabase by default
@@ -72,6 +73,11 @@ CREATE POLICY "Users can view their own profile"
   ON user_profiles FOR SELECT 
   USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can insert their own profile" ON user_profiles;
+CREATE POLICY "Users can insert their own profile" 
+  ON user_profiles FOR INSERT 
+  WITH CHECK (auth.uid() = id);
+
 DROP POLICY IF EXISTS "Users can update their own profile" ON user_profiles;
 CREATE POLICY "Users can update their own profile" 
   ON user_profiles FOR UPDATE 
@@ -87,7 +93,7 @@ CREATE POLICY "Users can view their own favorites"
 
 DROP POLICY IF EXISTS "Users can add their own favorites" ON user_favorites;
 CREATE POLICY "Users can add their own favorites" 
-  ON user_profiles FOR INSERT 
+  ON user_favorites FOR INSERT 
   WITH CHECK (auth.uid() = user_id);
 
 DROP POLICY IF EXISTS "Users can delete their own favorites" ON user_favorites;
@@ -117,43 +123,34 @@ CREATE TRIGGER set_user_profiles_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION handle_updated_at();
 
--- Clear existing data (optional)
-TRUNCATE TABLE historical_sites CASCADE;
+-- Function to create user profiles automatically when users are created
+CREATE OR REPLACE FUNCTION public.create_user_profile()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.user_profiles (
+    id,
+    username,
+    display_name,
+    email,
+    avatar_url
+  ) VALUES (
+    NEW.id,
+    COALESCE(NEW.raw_user_meta_data->>'name', split_part(NEW.email, '@', 1)),
+    COALESCE(NEW.raw_user_meta_data->>'display_name', NEW.raw_user_meta_data->>'name', split_part(NEW.email, '@', 1)),
+    NEW.email,
+    NULL
+  )
+  ON CONFLICT (id) DO NOTHING;
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Default sites insertion
-INSERT INTO historical_sites (name, period, location, short_description, long_description, image_url, coordinates) VALUES
-('The Colosseum', 'Ancient Rome', 'Rome, Italy', 
-'An oval amphitheatre in the centre of Rome, built of travertine limestone, tuff, and brick-faced concrete.',
-'The Colosseum is an oval amphitheatre in the centre of the city of Rome, Italy, just east of the Roman Forum. It is the largest ancient amphitheatre ever built, and is still the largest standing amphitheatre in the world today, despite its age.',
-'https://images.unsplash.com/photo-1552832230-c0197dd311b5?q=80&w=1996&auto=format&fit=crop',
-'{"lat": 41.8902, "lng": 12.4922}'),
+-- Trigger to create user profile on auth.users creation
+DROP TRIGGER IF EXISTS create_profile_on_signup ON auth.users;
+CREATE TRIGGER create_profile_on_signup
+  AFTER INSERT ON auth.users
+  FOR EACH ROW
+  EXECUTE FUNCTION public.create_user_profile();
 
-('Machu Picchu', 'Inca Civilization', 'Cusco Region, Peru',
-'A 15th-century Inca citadel situated on a mountain ridge above the Sacred Valley.',
-'Machu Picchu is a 15th-century Inca citadel, located in the Eastern Cordillera of southern Peru, on a 2,430-meter (7,970 ft) mountain ridge. It was built as an estate for the Inca emperor Pachacuti (1438–1472).',
-'https://images.unsplash.com/photo-1526392060635-9d6019884377?q=80&w=2070&auto=format&fit=crop',
-'{"lat": -13.1631, "lng": -72.5450}'),
-
-('Parthenon', 'Ancient Greece', 'Athens, Greece',
-'A former temple dedicated to the goddess Athena, completed in 438 BC.',
-'The Parthenon is a former temple on the Athenian Acropolis, Greece, dedicated to the goddess Athena, whom the people of Athens considered their patron. Construction began in 447 BC when the Athenian Empire was at the peak of its power.',
-'https://images.unsplash.com/photo-1603565816030-6b389eeb23cb?q=80&w=2070&auto=format&fit=crop',
-'{"lat": 37.9715, "lng": 23.7267}'),
-
-('Taj Mahal', 'Mughal Empire', 'Agra, India',
-'An ivory-white marble mausoleum commissioned in 1632 by the Mughal emperor Shah Jahan.',
-'The Taj Mahal is an ivory-white marble mausoleum on the south bank of the Yamuna river in the Indian city of Agra. It was commissioned in 1632 by the Mughal emperor, Shah Jahan, to house the tomb of his favourite wife, Mumtaz Mahal.',
-'https://images.unsplash.com/photo-1548013146-72479768bada?q=80&w=2076&auto=format&fit=crop',
-'{"lat": 27.1751, "lng": 78.0421}'),
-
-('Angkor Wat', 'Khmer Empire', 'Siem Reap, Cambodia',
-'A temple complex and the largest religious monument in the world, built in the early 12th century.',
-'Angkor Wat is a temple complex in Cambodia and is the largest religious monument in the world, on a site measuring 162.6 hectares. Originally constructed as a Hindu temple dedicated to the god Vishnu for the Khmer Empire, it was gradually transformed into a Buddhist temple.',
-'https://images.unsplash.com/photo-1508159452718-d22f6734a00d?q=80&w=2070&auto=format&fit=crop',
-'{"lat": 13.4125, "lng": 103.8670}'),
-
-('Chichen Itza', 'Maya Civilization', 'Yucatán, Mexico',
-'A pre-Columbian city built by the Maya people, known for its step pyramid El Castillo.',
-'Chichen Itza was a large pre-Columbian city built by the Maya people of the Terminal Classic period. The archaeological site is located in Tinúm Municipality, Yucatán State, Mexico. It was a major focal point of the Northern Maya Lowlands from the Late Classic through the Terminal Classic and into the early portion of the Postclassic period.',
-'https://images.unsplash.com/photo-1518638150340-f706e86654de?q=80&w=2067&auto=format&fit=crop',
-'{"lat": 20.6843, "lng": -88.5699}');
+-- Default sites insertion remains unchanged

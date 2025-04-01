@@ -29,6 +29,7 @@ const Header: React.FC<HeaderProps> = ({
   const { user, logout, isAuthenticated } = useAuth();
   const [displayName, setDisplayName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
+  const [avatarColor, setAvatarColor] = useState<string>('');
   const isHomePage = location.pathname === '/';
 
   useEffect(() => {
@@ -42,25 +43,41 @@ const Header: React.FC<HeaderProps> = ({
           .eq('id', user.id)
           .single();
 
-        if (error) throw error;
-
-        // Use display_name if available, otherwise fall back to username
-        if (data) {
-          setDisplayName(data.display_name || data.username || 'User');
-          setEmail(data.email || user.email || '');
-        } else {
+        if (error) {
+          console.error('Error fetching user profile:', error);
+          
+          // Fall back to user object from auth context
           setDisplayName(user.display_name || user.username || 'User');
           setEmail(user.email || '');
+          
+          // Generate avatar color once and store it
+          if (!avatarColor) {
+            setAvatarColor(getAvatarColor(user.display_name || user.username || 'User'));
+          }
+        } else if (data) {
+          setDisplayName(data.display_name || data.username || 'User');
+          setEmail(data.email || user.email || '');
+          
+          // Generate avatar color once and store it
+          if (!avatarColor) {
+            setAvatarColor(getAvatarColor(data.display_name || data.username || 'User'));
+          }
         }
       } catch (error) {
-        console.error('Error fetching user profile:', error);
+        console.error('Error in header profile fetch:', error);
+        
+        // Default values as fallback
         setDisplayName(user.display_name || user.username || 'User');
         setEmail(user.email || '');
+        
+        if (!avatarColor) {
+          setAvatarColor(getAvatarColor(user.display_name || user.username || 'User'));
+        }
       }
     };
 
     fetchUserProfile();
-  }, [user?.id, user?.display_name, user?.username, user?.email]);
+  }, [user?.id, user?.display_name, user?.username, user?.email, avatarColor]);
 
   const handleLogout = () => {
     logout();
@@ -72,10 +89,10 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   const getAvatarColor = (username: string) => {
-    const colors = [
-      'bg-purple-800', 'bg-indigo-800', 'bg-blue-800', 
-      'bg-teal-800', 'bg-green-800', 'bg-amber-800', 
-      'bg-red-800', 'bg-pink-800'
+    // Always use blue tones for the avatar background to match the theme
+    const blueColors = [
+      'bg-blue-800', 'bg-blue-700', 'bg-indigo-800', 
+      'bg-indigo-700', 'bg-blue-900'
     ];
     
     let hash = 0;
@@ -84,8 +101,8 @@ const Header: React.FC<HeaderProps> = ({
       hash = hash & hash; // Convert to 32bit integer
     }
     
-    const index = Math.abs(hash) % colors.length;
-    return colors[index];
+    const index = Math.abs(hash) % blueColors.length;
+    return blueColors[index];
   };
 
   return (
@@ -125,7 +142,7 @@ const Header: React.FC<HeaderProps> = ({
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="rounded-full p-0 h-10 w-10 overflow-hidden ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
                     <Avatar className="h-10 w-10 border-2 border-accent/30">
-                      <AvatarFallback className={`${getAvatarColor(displayName)} text-white font-medium`}>
+                      <AvatarFallback className={`${avatarColor || 'bg-blue-800'} text-white font-medium`}>
                         {getInitials(displayName || 'User')}
                       </AvatarFallback>
                     </Avatar>

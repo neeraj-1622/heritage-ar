@@ -1,3 +1,4 @@
+
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,7 +15,7 @@ app.use(express.json());
 // Authentication Routes
 app.post('/api/auth/register', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email, password, name } = req.body;
+    const { email, password, name, displayName } = req.body;
     
     // Build the redirect URL from origin or default to localhost
     const origin = req.headers.origin || 'http://localhost:5173';
@@ -28,6 +29,7 @@ app.post('/api/auth/register', async (req: Request, res: Response): Promise<void
         emailRedirectTo: redirectUrl,
         data: {
           name: name,
+          display_name: displayName || name,
         }
       }
     });
@@ -44,13 +46,18 @@ app.post('/api/auth/register', async (req: Request, res: Response): Promise<void
         id: authData.user?.id, 
         username: name, 
         email: email,
+        display_name: displayName || name,
         avatar_url: null
       }]);
 
     if (profileError) {
       console.error('Error creating user profile:', profileError);
-      res.status(500).json({ message: profileError.message });
-      return;
+      
+      // Don't fail registration if profile creation fails
+      // The trigger should handle this
+      console.log('Relying on database trigger to create profile');
+    } else {
+      console.log('User profile created successfully during registration');
     }
 
     res.status(201).json({ 
@@ -94,12 +101,25 @@ app.post('/api/auth/login', async (req: Request, res: Response): Promise<void> =
       .single();
 
     if (profileError || !profileData) {
+      const displayName = data.user.user_metadata?.display_name || 
+                         data.user.user_metadata?.name || 
+                         data.user.email?.split('@')[0];
+      const username = data.user.user_metadata?.name || data.user.email?.split('@')[0];
+      
+      console.log('Creating missing profile during login:', {
+        id: data.user.id,
+        username,
+        display_name: displayName,
+        email: data.user.email
+      });
+      
       // Create user profile if it doesn't exist
       await supabase
         .from('user_profiles')
         .insert([{ 
           id: data.user.id, 
-          username: data.user.email?.split('@')[0] || 'User', 
+          username: username || 'User', 
+          display_name: displayName || username || 'User',
           email: data.user.email || '',
           avatar_url: null
         }]);

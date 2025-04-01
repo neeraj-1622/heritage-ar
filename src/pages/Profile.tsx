@@ -1,9 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
-import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
@@ -76,6 +76,7 @@ const Profile: React.FC = () => {
   const [email, setEmail] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [avatarColor, setAvatarColor] = useState('');
 
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -117,33 +118,64 @@ const Profile: React.FC = () => {
 
         if (error) {
           console.error('Error fetching user profile:', error);
-          // Fallback to user object from auth context
-          setUsername(user.username || '');
-          setEmail(user.email || '');
-          setDisplayName(user.display_name || user.username || '');
-          
-          profileForm.setValue('displayName', user.display_name || user.username || '');
-          emailForm.setValue('email', user.email || '');
           
           // Create profile if it doesn't exist
-          await supabase
+          const newDisplayName = user.display_name || user.username || user.email?.split('@')[0] || 'User';
+          const newUsername = user.username || user.email?.split('@')[0] || 'User';
+          const newEmail = user.email || '';
+          
+          console.log("Creating missing user profile:", {
+            id: user.id,
+            username: newUsername,
+            display_name: newDisplayName,
+            email: newEmail
+          });
+          
+          const { error: createError } = await supabase
             .from('user_profiles')
             .insert([{ 
               id: user.id, 
-              username: user.username || user.email?.split('@')[0] || 'User', 
-              display_name: user.display_name || user.username || user.email?.split('@')[0] || 'User',
-              email: user.email || '',
+              username: newUsername, 
+              display_name: newDisplayName,
+              email: newEmail,
               avatar_url: null
             }]);
           
+          if (createError) {
+            console.error('Error creating user profile:', createError);
+            toast({
+              title: 'Profile Creation Failed',
+              description: 'Could not create your profile. Please try again later.',
+              variant: 'destructive',
+            });
+          } else {
+            // Set values from newly created profile
+            setUsername(newUsername);
+            setEmail(newEmail);
+            setDisplayName(newDisplayName);
+            
+            profileForm.setValue('displayName', newDisplayName);
+            emailForm.setValue('email', newEmail);
+            
+            // Generate avatar color once
+            setAvatarColor(getAvatarColor(newDisplayName));
+          }
         } else if (data) {
           console.log("Profile data retrieved:", data);
-          setUsername(data.username || '');
-          setEmail(data.email || user.email || '');
-          setDisplayName(data.display_name || data.username || '');
           
-          profileForm.setValue('displayName', data.display_name || data.username || '');
-          emailForm.setValue('email', data.email || user.email || '');
+          const profileUsername = data.username || '';
+          const profileDisplayName = data.display_name || data.username || '';
+          const profileEmail = data.email || user.email || '';
+          
+          setUsername(profileUsername);
+          setEmail(profileEmail);
+          setDisplayName(profileDisplayName);
+          
+          profileForm.setValue('displayName', profileDisplayName);
+          emailForm.setValue('email', profileEmail);
+          
+          // Generate avatar color once
+          setAvatarColor(getAvatarColor(profileDisplayName));
         }
       } catch (error) {
         console.error('Error in profile fetch:', error);
@@ -166,7 +198,10 @@ const Profile: React.FC = () => {
     try {
       setIsUpdatingProfile(true);
       
-      const { error } = await supabase
+      console.log("Updating display name to:", data.displayName);
+      
+      // Update user_profiles table
+      const { error: profileError } = await supabase
         .from('user_profiles')
         .update({ 
           display_name: data.displayName,
@@ -174,13 +209,23 @@ const Profile: React.FC = () => {
         })
         .eq('id', user.id);
       
-      if (error) {
+      if (profileError) {
+        console.error('Error updating user_profiles:', profileError);
         toast({
           title: 'Update failed',
-          description: error.message || 'Failed to update profile',
+          description: profileError.message || 'Failed to update profile',
           variant: 'destructive',
         });
         return;
+      }
+      
+      // Update auth.users metadata as well
+      const { error: authError } = await supabase.auth.updateUser({
+        data: { display_name: data.displayName }
+      });
+      
+      if (authError) {
+        console.error('Error updating auth metadata:', authError);
       }
       
       setDisplayName(data.displayName);
@@ -309,10 +354,10 @@ const Profile: React.FC = () => {
   };
 
   const getAvatarColor = (username: string) => {
-    const colors = [
-      'bg-purple-800', 'bg-indigo-800', 'bg-blue-800', 
-      'bg-teal-800', 'bg-green-800', 'bg-amber-800', 
-      'bg-red-800', 'bg-pink-800'
+    // Always use blue tones for the avatar background to match the theme
+    const blueColors = [
+      'bg-blue-800', 'bg-blue-700', 'bg-indigo-800', 
+      'bg-indigo-700', 'bg-blue-900'
     ];
     
     let hash = 0;
@@ -321,8 +366,8 @@ const Profile: React.FC = () => {
       hash = hash & hash; // Convert to 32bit integer
     }
     
-    const index = Math.abs(hash) % colors.length;
-    return colors[index];
+    const index = Math.abs(hash) % blueColors.length;
+    return blueColors[index];
   };
 
   if (!user) {
@@ -367,8 +412,8 @@ const Profile: React.FC = () => {
           <div className="flex items-center mb-8 mt-4">
             <div className="mr-5">
               <Avatar className="h-20 w-20 border-2 border-accent/30">
-                <AvatarFallback className={`${getAvatarColor(displayName)} text-white text-2xl font-medium`}>
-                  {getInitials(displayName)}
+                <AvatarFallback className={`${avatarColor || 'bg-blue-800'} text-white text-2xl font-medium`}>
+                  {getInitials(displayName || 'User')}
                 </AvatarFallback>
               </Avatar>
             </div>
@@ -382,8 +427,8 @@ const Profile: React.FC = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="rounded-full h-9 w-9 p-0 overflow-hidden border border-slate-600">
                     <Avatar className="h-8 w-8 border border-accent/30">
-                      <AvatarFallback className={`${getAvatarColor(displayName)} text-white font-medium`}>
-                        {getInitials(displayName)}
+                      <AvatarFallback className={`${avatarColor || 'bg-blue-800'} text-white font-medium`}>
+                        {getInitials(displayName || 'User')}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
