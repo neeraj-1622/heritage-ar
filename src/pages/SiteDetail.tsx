@@ -6,9 +6,15 @@ import { toast } from '@/hooks/use-toast';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { HeartIcon, MapPinIcon, CalendarIcon, View, Loader2 } from 'lucide-react';
+import { HeartIcon, MapPinIcon, CalendarIcon, View3d, Cube, Loader2 } from 'lucide-react';
 import { isSiteFavorited, addToFavorites, removeFromFavorites } from '@/lib/supabase';
 import type { HistoricalSite } from '@/lib/supabase';
+
+// Map of site names to their Sketchfab model IDs
+const SKETCHFAB_MODELS: Record<string, string> = {
+  'Parthenon': 'fa23b514e7564ebca473d7e041a07118',
+  // Add more model IDs for other historical sites as needed
+};
 
 const SiteDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -127,6 +133,34 @@ const SiteDetail = () => {
     );
   }
 
+  // Get Sketchfab model ID if available for this site
+  const sketchfabModelId = SKETCHFAB_MODELS[site.name] || '';
+  
+  const handleViewInAR = () => {
+    const params = new URLSearchParams();
+    if (site.ar_model_url) {
+      params.append('modelUrl', site.ar_model_url);
+    }
+    params.append('siteName', site.name);
+    if (sketchfabModelId) {
+      params.append('sketchfabId', sketchfabModelId);
+    }
+    navigate(`/ar?${params.toString()}`);
+  };
+
+  const handleView3DModel = () => {
+    // Direct to AR experience but with sketchfab mode if available
+    const params = new URLSearchParams();
+    params.append('siteName', site.name);
+    if (sketchfabModelId) {
+      params.append('sketchfabId', sketchfabModelId);
+      params.append('viewMode', 'sketchfab');
+    } else if (site.ar_model_url) {
+      params.append('modelUrl', site.ar_model_url);
+    }
+    navigate(`/ar?${params.toString()}`);
+  };
+
   return (
     <div className="min-h-screen bg-heritage-50">
       <Header showBackButton />
@@ -159,12 +193,23 @@ const SiteDetail = () => {
           <h2 className="text-2xl font-bold">About this site</h2>
           <div className="flex space-x-2">
             {site.ar_model_url && (
-              <Link to={`/ar?modelUrl=${site.ar_model_url}&siteName=${site.name}`}>
-                <Button className="bg-accent hover:bg-accent/90">
-                  <View className="mr-2 h-4 w-4" />
-                  View in AR
-                </Button>
-              </Link>
+              <Button 
+                className="bg-accent hover:bg-accent/90"
+                onClick={handleViewInAR}
+              >
+                <View3d className="mr-2 h-4 w-4" />
+                View in AR
+              </Button>
+            )}
+            
+            {sketchfabModelId && (
+              <Button 
+                variant="outline"
+                onClick={handleView3DModel}
+              >
+                <Cube className="mr-2 h-4 w-4" />
+                View 3D Model
+              </Button>
             )}
             
             <Button
