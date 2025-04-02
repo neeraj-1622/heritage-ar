@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { HistoricalSite } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
@@ -216,7 +217,7 @@ const ARView: React.FC<ARViewProps> = ({
         </div>
       )}
 
-      {isModelLoaded && (
+      {isModelLoaded && selectedSite && (
         <div className="absolute bottom-20 left-0 right-0 z-30 p-4">
           <div className="glass-panel rounded-2xl p-4 max-w-lg mx-auto animate-slide-up">
             <h3 className="text-lg font-medium text-white">{selectedSite.name}</h3>
