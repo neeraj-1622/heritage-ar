@@ -1,225 +1,128 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import ARView from '../components/ARView';
-import ARModelViewer from '../components/ARModelViewer';
-import WebcamObjectDetector from '../components/WebcamObjectDetector';
-import { HistoricalSite } from '@/lib/supabase';
-import { getAllSites } from '@/frontend/api/sitesApi';
-import { ArrowLeft, Image, Camera, Layers, Compass, Info, Scan, Webcam } from 'lucide-react';
-import { toast } from "sonner";
 
-const ARExperience: React.FC = () => {
-  const navigate = useNavigate();
+import React, { useEffect, useState } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { toast } from '@/hooks/use-toast';
+import ARView from '@/components/ARView';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { useMobile } from '@/hooks/use-mobile';
+import { ArrowLeft, Info, Settings } from 'lucide-react';
+
+const ARExperience = () => {
   const [searchParams] = useSearchParams();
-  const siteId = searchParams.get('siteId');
-  
-  const [sites, setSites] = useState<HistoricalSite[]>([]);
-  const [selectedSiteIndex, setSelectedSiteIndex] = useState<number>(0);
-  const [selectedSite, setSelectedSite] = useState<HistoricalSite | null>(null);
-  const [isSiteMenuOpen, setIsSiteMenuOpen] = useState(false);
-  const [isInitializing, setIsInitializing] = useState(true);
-  const [showTip, setShowTip] = useState(false);
-  const [showARModel, setShowARModel] = useState(false);
-  const [enableRotation, setEnableRotation] = useState(false);
-  const [useRealAR, setUseRealAR] = useState(false);
-  const [detectedObject, setDetectedObject] = useState<{ class: string; score: number } | null>(null);
-  const [objectDetectionMode, setObjectDetectionMode] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const isMobile = useMobile();
+  const [showInstructions, setShowInstructions] = useState(true);
 
+  // Get model URL and site name from URL parameters
+  const modelUrl = searchParams.get('modelUrl') || '/models/monument.glb';
+  const siteName = searchParams.get('siteName') || 'Historical Monument';
+
+  const handleBackClick = () => {
+    navigate(-1);
+  };
+
+  // Show instructions toast on load
   useEffect(() => {
-    const loadSites = async () => {
-      setLoading(true);
-      try {
-        const result = await getAllSites();
-        if (result.sites && result.sites.length > 0) {
-          setSites(result.sites);
-          
-          // Find site with AR model if any
-          const arSiteIndex = result.sites.findIndex(site => site.ar_model_url);
-          if (arSiteIndex >= 0) {
-            setSelectedSiteIndex(arSiteIndex);
-            setSelectedSite(result.sites[arSiteIndex]);
-          }
-        }
-      } catch (error) {
-        console.error('Error loading sites:', error);
-        setError('Failed to load sites data.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadSites();
-    
-    // Add AR mode class to body
-    document.body.classList.add('ar-mode');
-    
-    // Remove AR mode class when component unmounts
-    return () => {
-      document.body.classList.remove('ar-mode');
-    };
+    toast({
+      title: 'AR Experience Loaded',
+      description: 'Move your device around to place the 3D model in your environment',
+      duration: 5000,
+    });
   }, []);
 
-  useEffect(() => {
-    setShowARModel(false);
-  }, [selectedSite]);
-
-  const handleNextSite = () => {
-    const nextIndex = (selectedSiteIndex + 1) % sites.length;
-    setSelectedSiteIndex(nextIndex);
-    setSelectedSite(sites[nextIndex]);
-  };
-
-  const handlePreviousSite = () => {
-    const prevIndex = selectedSiteIndex === 0 ? sites.length - 1 : selectedSiteIndex - 1;
-    setSelectedSiteIndex(prevIndex);
-    setSelectedSite(sites[prevIndex]);
-  };
-
-  if (isInitializing || !selectedSite) {
-    return (
-      <div className="flex h-screen w-screen items-center justify-center bg-black">
-        <div className="text-center text-white">
-          <div className="mb-4 text-2xl font-bold">Loading AR Experience...</div>
-          <div className="text-sm text-gray-400">Please wait while we prepare your experience</div>
-        </div>
+  const Instructions = () => (
+    <>
+      <div className="space-y-4 mb-4">
+        <h3 className="text-lg font-medium">How to use AR mode:</h3>
+        <ol className="list-decimal pl-5 space-y-2">
+          <li>Allow camera access when prompted</li>
+          <li>Slowly move your device to scan the environment</li>
+          <li>Tap on a flat surface (floor, table) to place the model</li>
+          <li>Pinch to resize or drag to reposition</li>
+        </ol>
       </div>
-    );
-  }
+    </>
+  );
 
   return (
-    <div className="relative h-screen w-screen">
-      {/* AR View */}
-      <div className="absolute inset-0">
-        {useRealAR ? (
-          <WebcamObjectDetector
-            onDetection={setDetectedObject}
-            enabled={objectDetectionMode}
-          />
-        ) : (
-          <ARView
-            selectedSite={selectedSite}
-            showModel={showARModel}
-            enableRotation={enableRotation}
-            onNextSite={handleNextSite}
-            onInfoClick={() => setIsSiteMenuOpen(true)}
-          />
-        )}
-      </div>
-
-      {/* Controls Overlay */}
-      <div className="absolute inset-x-0 top-0 z-10 p-4">
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => navigate(-1)}
-            className="rounded-full bg-black/50 p-2 text-white backdrop-blur-md"
+    <div className="h-screen w-screen bg-black overflow-hidden relative">
+      <ARView modelPath={modelUrl} />
+      
+      {/* Overlay Controls */}
+      <div className="absolute top-0 left-0 right-0 p-4 z-10">
+        <div className="flex justify-between items-center">
+          <Button 
+            variant="outline" 
+            size="icon" 
+            className="rounded-full bg-black/50 text-white hover:bg-black/70"
+            onClick={handleBackClick}
           >
-            <ArrowLeft className="h-6 w-6" />
-          </button>
-
-          <div className="flex space-x-2">
-            <button
-              onClick={() => setShowARModel(!showARModel)}
-              className={`rounded-full p-2 backdrop-blur-md ${
-                showARModel ? 'bg-accent text-white' : 'bg-black/50 text-white'
-              }`}
-            >
-              <Layers className="h-6 w-6" />
-            </button>
-            
-            <button
-              onClick={() => setEnableRotation(!enableRotation)}
-              className={`rounded-full p-2 backdrop-blur-md ${
-                enableRotation ? 'bg-accent text-white' : 'bg-black/50 text-white'
-              }`}
-            >
-              <Compass className="h-6 w-6" />
-            </button>
-
-            <button
-              onClick={() => setIsSiteMenuOpen(true)}
-              className="rounded-full bg-black/50 p-2 text-white backdrop-blur-md"
-            >
-              <Info className="h-6 w-6" />
-            </button>
-          </div>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          
+          <h1 className="text-white font-medium text-xl">
+            {siteName}
+          </h1>
+          
+          {isMobile ? (
+            <Drawer>
+              <DrawerTrigger asChild>
+                <Button variant="outline" size="icon" className="rounded-full bg-black/50 text-white hover:bg-black/70">
+                  <Info className="h-5 w-5" />
+                </Button>
+              </DrawerTrigger>
+              <DrawerContent>
+                <DrawerHeader>
+                  <DrawerTitle>AR Instructions</DrawerTitle>
+                </DrawerHeader>
+                <div className="px-4">
+                  <Instructions />
+                </div>
+                <DrawerFooter>
+                  <Button onClick={() => setShowInstructions(false)}>Got it</Button>
+                </DrawerFooter>
+              </DrawerContent>
+            </Drawer>
+          ) : (
+            <Dialog open={showInstructions} onOpenChange={setShowInstructions}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="icon" className="rounded-full bg-black/50 text-white hover:bg-black/70">
+                  <Info className="h-5 w-5" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>AR Instructions</DialogTitle>
+                  <DialogDescription>
+                    Learn how to use AR mode effectively
+                  </DialogDescription>
+                </DialogHeader>
+                <Instructions />
+                <DialogFooter>
+                  <Button onClick={() => setShowInstructions(false)}>Got it</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
       </div>
-
-      {/* Site Info Panel */}
-      {isSiteMenuOpen && (
-        <div className="absolute inset-0 z-20 bg-black/80 backdrop-blur-sm">
-          <div className="mx-auto max-w-2xl p-6">
-            <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-white">{selectedSite.name}</h2>
-              <button
-                onClick={() => setIsSiteMenuOpen(false)}
-                className="rounded-full bg-white/10 p-2 text-white"
-              >
-                <ArrowLeft className="h-6 w-6" />
-              </button>
-            </div>
-
-            <div className="mb-6 overflow-hidden rounded-xl">
-              <img
-                src={selectedSite.image_url}
-                alt={selectedSite.name}
-                className="h-64 w-full object-cover"
-              />
-            </div>
-
-            <div className="space-y-4 text-white">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="rounded-lg bg-white/10 p-3">
-                  <div className="text-sm text-gray-400">Location</div>
-                  <div>{selectedSite.location}</div>
-                </div>
-                <div className="rounded-lg bg-white/10 p-3">
-                  <div className="text-sm text-gray-400">Period</div>
-                  <div>{selectedSite.period}</div>
-                </div>
-              </div>
-
-              <p className="text-gray-300">
-                {selectedSite.long_description || selectedSite.short_description}
-              </p>
-
-              <div className="grid grid-cols-2 gap-4">
-                <button
-                  onClick={handlePreviousSite}
-                  className="rounded-lg bg-white/10 p-3 text-left hover:bg-white/20"
-                >
-                  <div className="text-sm text-gray-400">Previous</div>
-                  <div>{sites[(selectedSiteIndex - 1 + sites.length) % sites.length].name}</div>
-                </button>
-                <button
-                  onClick={handleNextSite}
-                  className="rounded-lg bg-white/10 p-3 text-left hover:bg-white/20"
-                >
-                  <div className="text-sm text-gray-400">Next</div>
-                  <div>{sites[(selectedSiteIndex + 1) % sites.length].name}</div>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Tips */}
-      {showTip && (
-        <div className="absolute inset-x-0 bottom-20 z-10 px-4">
-          <div className="mx-auto max-w-md rounded-lg bg-black/50 p-4 text-center text-white backdrop-blur-md">
-            <p>Tap and hold to place the 3D model in your environment</p>
-            <button
-              onClick={() => setShowTip(false)}
-              className="mt-2 text-sm text-gray-400"
-            >
-              Got it
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

@@ -1,92 +1,127 @@
 
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { HistoricalSite, isSiteFavorited } from '@/lib/supabase';
-import { getSiteById } from '@/frontend/api/sitesApi';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
-import { Heart, GaugeIcon } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { toast } from '@/hooks/use-toast';
+import Header from '@/components/Header';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { HeartIcon, MapPinIcon, CalendarIcon, View3d, Loader2 } from 'lucide-react';
+import { isSiteFavorited, addToFavorites, removeFromFavorites } from '@/lib/supabase';
+import type { HistoricalSite } from '@/lib/supabase';
 
-const SiteDetail: React.FC = () => {
-  const { id } = useParams();
-  const [siteData, setSiteData] = useState<HistoricalSite | null>(null);
+const SiteDetail = () => {
+  const { id } = useParams<{ id: string }>();
+  const [site, setSite] = useState<HistoricalSite | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isFavorited, setIsFavorited] = useState(false);
-  const { user } = useAuth();
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchSiteData = async () => {
+    const fetchSiteDetail = async () => {
+      if (!id) return;
+
       try {
         setLoading(true);
-        
-        // Get site details from API
-        const { site, error } = await getSiteById(id as string);
-        
-        if (error || !site) {
-          setError('Could not load site details.');
-          console.error('Error loading site:', error);
+
+        const { data, error } = await supabase
+          .from('historical_sites')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+        if (error) {
+          console.error("Error fetching site detail:", error);
+          toast({
+            title: "Error",
+            description: "Failed to load site details. Please try again later.",
+            variant: "destructive",
+          });
           return;
         }
-        
-        setSiteData(site);
-        
-        // If user is authenticated, check if this site is favorited
-        if (user) {
-          const isFavorite = await isSiteFavorited(user.id, id as string);
-          setIsFavorited(isFavorite);
+
+        setSite(data as HistoricalSite);
+
+        // Check if site is favorited by current user
+        if (isAuthenticated && user?.id) {
+          const favStatus = await isSiteFavorited(user.id, id);
+          setIsFavorite(favStatus);
         }
       } catch (err) {
-        console.error('Error in fetchSiteData:', err);
-        setError('An unexpected error occurred.');
+        console.error("Error in fetchSiteDetail:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    if (id) {
-      fetchSiteData();
-    } else {
-      setError('Invalid site ID.');
-    }
-  }, [id, user]);
+    fetchSiteDetail();
+  }, [id, isAuthenticated, user?.id]);
 
-  const handleFavorite = () => {
-    // Placeholder for favorite action
-    alert('Favorite action not implemented yet.');
+  const toggleFavorite = async () => {
+    if (!isAuthenticated || !user?.id || !site?.id) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to favorite sites",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setFavoriteLoading(true);
+
+      if (isFavorite) {
+        const { error } = await removeFromFavorites(user.id, site.id);
+        if (error) throw error;
+        setIsFavorite(false);
+        toast({ 
+          title: "Removed from favorites",
+          description: `${site.name} has been removed from your favorites` 
+        });
+      } else {
+        const { error } = await addToFavorites(user.id, site.id);
+        if (error) throw error;
+        setIsFavorite(true);
+        toast({ 
+          title: "Added to favorites",
+          description: `${site.name} has been added to your favorites` 
+        });
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update favorites",
+        variant: "destructive",
+      });
+    } finally {
+      setFavoriteLoading(false);
+    }
   };
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-12">
-        <div className="w-full max-w-4xl mx-auto">
-          <div className="animate-pulse space-y-8">
-            <div className="h-8 w-3/4 bg-heritage-100 rounded"></div>
-            <div className="h-64 bg-heritage-100 rounded-lg"></div>
-            <div className="space-y-4">
-              <div className="h-4 bg-heritage-100 rounded w-1/2"></div>
-              <div className="h-4 bg-heritage-100 rounded w-full"></div>
-              <div className="h-4 bg-heritage-100 rounded w-full"></div>
-            </div>
-          </div>
+      <div className="min-h-screen bg-heritage-50">
+        <Header showBackButton />
+        <div className="container mx-auto pt-24 pb-16 px-4 flex justify-center items-center">
+          <Loader2 className="h-12 w-12 animate-spin text-heritage-600" />
         </div>
       </div>
     );
   }
 
-  if (error || !siteData) {
+  if (!site) {
     return (
-      <div className="container mx-auto px-4 py-12">
-        <div className="w-full max-w-4xl mx-auto">
-          <div className="p-6 bg-red-50 rounded-lg border border-red-100 text-center">
-            <h2 className="text-2xl font-medium text-red-800">Site Not Found</h2>
-            <p className="mt-2 text-red-600">
-              {error || 'The requested site could not be found.'}
-            </p>
-            <Link to="/" className="mt-4 inline-flex button-secondary">
-              Return Home
-            </Link>
+      <div className="min-h-screen bg-heritage-50">
+        <Header showBackButton />
+        <div className="container mx-auto pt-24 pb-16 px-4">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Site Not Found</h1>
+            <p className="mb-6">The historical site you're looking for doesn't exist or has been removed.</p>
+            <Button onClick={() => navigate('/')}>Return Home</Button>
           </div>
         </div>
       </div>
@@ -94,157 +129,84 @@ const SiteDetail: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen pb-12">
-      {/* Hero Section */}
-      <div 
-        className="relative h-96 bg-cover bg-center"
-        style={{ backgroundImage: `url(${siteData.image_url})` }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-transparent">
-          <div className="container mx-auto px-4 h-full flex items-end pb-8">
-            <div className="text-white">
-              <h1 className="text-4xl md:text-5xl font-bold">{siteData.name}</h1>
-              <div className="flex items-center mt-3 space-x-4">
-                <Badge className="bg-heritage-500 text-white px-3 py-1 text-sm">
-                  {siteData.period}
-                </Badge>
-                <span className="text-sm md:text-base opacity-90">
-                  {siteData.name} | {siteData.location}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-heritage-50">
+      <Header showBackButton />
       
-      {/* Content */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col md:flex-row gap-8">
-          {/* Main Content */}
-          <div className="flex-1 space-y-8">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <h2 className="text-2xl font-semibold text-heritage-100">About {siteData.period}</h2>
-              
-              <div className="flex items-center gap-3">
-                <Link to="/ar" className="button-accent flex items-center gap-2">
-                  <GaugeIcon className="w-4 h-4" />
-                  <span>View in AR</span>
-                </Link>
-                
-                {user && (
-                  <Button
-                    onClick={handleFavorite}
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-2"
-                  >
-                    {isFavorited ? (
-                      <>
-                        <Heart className="w-4 h-4 text-red-500 fill-red-500" />
-                        <span>Saved</span>
-                      </>
-                    ) : (
-                      <>
-                        <Heart className="w-4 h-4" />
-                        <span>Save</span>
-                      </>
-                    )}
-                  </Button>
-                )}
-              </div>
-            </div>
-            
-            <div className="prose prose-invert max-w-none">
-              {siteData.long_description ? (
-                <p>{siteData.long_description}</p>
-              ) : (
-                <p>{siteData.short_description}</p>
-              )}
-            </div>
-            
-            <div className="mt-8">
-              <h3 className="text-xl font-semibold text-heritage-100 mb-4">
-                Additional Media
-              </h3>
-              <p className="text-heritage-300">
-                Explore more about {siteData.name} through these resources:
-              </p>
-              <ul className="list-disc list-inside mt-2 space-y-2">
-                <li>
-                  <a
-                    href="#"
-                    className="text-accent hover:underline"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Learn more on Wikipedia
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-accent hover:underline"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Watch a documentary on YouTube
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-accent hover:underline"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    View 3D models on Sketchfab
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
+      <main className="container mx-auto pt-20 pb-16 px-4">
+        <div className="relative rounded-xl overflow-hidden h-60 md:h-80 lg:h-96 mb-6">
+          <img 
+            src={site.image_url} 
+            alt={site.name} 
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
           
-          {/* Sidebar */}
-          <div className="md:w-96">
-            <div className="p-4 bg-heritage-900 rounded-lg">
-              <h4 className="text-lg font-semibold text-heritage-100 mb-3">
-                Plan Your Visit
-              </h4>
-              <p className="text-heritage-300">
-                {siteData.name} is located at:
-              </p>
-              <address className="text-heritage-400 not-italic mt-2">
-                {siteData.location}
-              </address>
-              <p className="text-heritage-300 mt-3">
-                Consider visiting these nearby attractions:
-              </p>
-              <ul className="list-disc list-inside mt-2 space-y-2">
-                <li>
-                  <a
-                    href="#"
-                    className="text-accent hover:underline"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Local Museum
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-accent hover:underline"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Historical Park
-                  </a>
-                </li>
-              </ul>
+          <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+            <h1 className="text-3xl font-bold mb-2">{site.name}</h1>
+            <div className="flex flex-wrap gap-3 text-sm">
+              <span className="inline-flex items-center bg-black/30 px-3 py-1 rounded-full">
+                <MapPinIcon size={14} className="mr-1" />
+                {site.location}
+              </span>
+              <span className="inline-flex items-center bg-black/30 px-3 py-1 rounded-full">
+                <CalendarIcon size={14} className="mr-1" />
+                {site.period}
+              </span>
             </div>
           </div>
         </div>
-      </div>
+        
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold">About this site</h2>
+          <div className="flex space-x-2">
+            {site.ar_model_url && (
+              <Link to={`/ar?modelUrl=${site.ar_model_url}&siteName=${site.name}`}>
+                <Button className="bg-accent hover:bg-accent/90">
+                  <View3d className="mr-2 h-4 w-4" />
+                  View in AR
+                </Button>
+              </Link>
+            )}
+            
+            <Button
+              variant={isFavorite ? "default" : "outline"}
+              onClick={toggleFavorite}
+              disabled={favoriteLoading}
+              className={isFavorite ? "bg-red-500 hover:bg-red-600" : ""}
+            >
+              {favoriteLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <HeartIcon className={`h-4 w-4 ${isFavorite ? "fill-white" : ""}`} />
+              )}
+              <span className="ml-2">{isFavorite ? "Favorited" : "Favorite"}</span>
+            </Button>
+          </div>
+        </div>
+        
+        <Tabs defaultValue="description" className="mb-8">
+          <TabsList className="mb-4">
+            <TabsTrigger value="description">Description</TabsTrigger>
+            <TabsTrigger value="history">History</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="description" className="text-gray-700 leading-relaxed">
+            <div className="prose prose-slate max-w-none">
+              <p className="text-lg mb-4">{site.short_description}</p>
+              <p>{site.long_description}</p>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="history" className="text-gray-700 leading-relaxed">
+            <div className="prose prose-slate max-w-none">
+              <p className="text-lg mb-4">
+                {site.name} is from the {site.period} period and is located in {site.location}.
+              </p>
+              <p>{site.long_description}</p>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </main>
     </div>
   );
 };

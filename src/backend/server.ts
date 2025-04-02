@@ -188,6 +188,7 @@ app.get('/api/sites/:id', async (req: Request, res: Response): Promise<void> => 
       .single();
 
     if (error) {
+      console.error(`Error fetching site ${req.params.id}:`, error);
       res.status(404).json({ message: 'Site not found' });
       return;
     }
