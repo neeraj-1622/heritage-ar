@@ -1,11 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
 import { HistoricalSite } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
 
 interface ARViewProps {
+  modelUrl?: string;
   selectedSite?: HistoricalSite;
-  showModel: boolean;
+  showModel?: boolean;
   enableRotation?: boolean;
   onNextSite?: () => void;
   onInfoClick?: () => void;
@@ -13,7 +13,8 @@ interface ARViewProps {
 
 const ARView: React.FC<ARViewProps> = ({ 
   selectedSite, 
-  showModel, 
+  modelUrl,
+  showModel = true,
   enableRotation = false,
   onNextSite,
   onInfoClick
@@ -26,7 +27,7 @@ const ARView: React.FC<ARViewProps> = ({
   const [rotation, setRotation] = useState(0);
 
   useEffect(() => {
-    if (!selectedSite) return;
+    if (!selectedSite && !modelUrl) return;
     
     setIsLoading(true);
     setIsModelLoaded(false);
@@ -47,7 +48,7 @@ const ARView: React.FC<ARViewProps> = ({
       clearTimeout(timer1);
       clearTimeout(timer2);
     };
-  }, [selectedSite, showModel]);
+  }, [selectedSite, modelUrl, showModel]);
 
   useEffect(() => {
     if (cameraReady && showModel && !isModelLoaded) {
@@ -95,12 +96,11 @@ const ARView: React.FC<ARViewProps> = ({
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, [isModelLoaded]);
 
-  // Handle go back to home
   const handleGoBack = () => {
     navigate('/');
   };
 
-  if (!selectedSite) {
+  if (!selectedSite && !modelUrl) {
     return (
       <div className="relative h-full w-full flex items-center justify-center bg-heritage-100">
         <button 
@@ -120,6 +120,9 @@ const ARView: React.FC<ARViewProps> = ({
       </div>
     );
   }
+
+  const imageUrl = selectedSite?.image_url || 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=2071&auto=format&fit=crop';
+  const siteName = selectedSite?.name || 'Historical Monument';
 
   return (
     <div className="relative h-full w-full bg-black overflow-hidden">
@@ -175,8 +178,8 @@ const ARView: React.FC<ARViewProps> = ({
             }}
           >
             <img 
-              src={selectedSite.image_url} 
-              alt={`AR model of ${selectedSite.name}`} 
+              src={imageUrl} 
+              alt={`AR model of ${siteName}`} 
               className="h-96 object-contain"
               style={{
                 filter: 'drop-shadow(0 10px 8px rgba(0, 0, 0, 0.4))',
@@ -207,7 +210,7 @@ const ARView: React.FC<ARViewProps> = ({
         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center">
           <div className="p-6 rounded-2xl glass-panel max-w-xs text-center animate-float">
             <p className="text-white">
-              Point your camera at a flat surface to place the {selectedSite.name} model
+              Point your camera at a flat surface to place the {siteName} model
             </p>
           </div>
         </div>

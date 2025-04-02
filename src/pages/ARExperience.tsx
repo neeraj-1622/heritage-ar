@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { ArrowLeft, Info, Settings } from 'lucide-react';
+import { ArrowLeft, Info } from 'lucide-react';
 
 const ARExperience = () => {
   const [searchParams] = useSearchParams();
@@ -63,6 +63,7 @@ const ARExperience = () => {
 
   return (
     <div className="h-screen w-screen bg-black overflow-hidden relative">
+      {/* Pass modelUrl to ARView component */}
       <ARView modelUrl={modelUrl} />
       
       {/* Overlay Controls */}

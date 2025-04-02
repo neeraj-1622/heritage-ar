@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
@@ -13,9 +14,9 @@ export interface User {
 export interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  register: (email: string, password: string, username: string) => Promise<{ success: boolean; error?: string }>;
+  loading: boolean; // Added loading property
+  login: (email: string, password: string) => Promise<boolean>;
+  register: (username: string, email: string, password: string, displayName: string) => Promise<boolean>;
   logout: () => Promise<void>;
   updateProfile: (data: Partial<User>) => Promise<{ success: boolean; error?: string }>;
   resendVerificationEmail: (email: string) => Promise<{ success: boolean; error?: string }>;
@@ -25,9 +26,9 @@ export interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   isAuthenticated: false,
-  isLoading: true,
-  login: async () => ({ success: false }),
-  register: async () => ({ success: false }),
+  loading: true, // Initialize loading
+  login: async () => false,
+  register: async () => false,
   logout: async () => {},
   updateProfile: async () => ({ success: false }),
   resendVerificationEmail: async () => ({ success: false }),
@@ -41,7 +42,7 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Initialize loading state
 
   useEffect(() => {
     const getSession = async () => {
@@ -62,7 +63,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setIsAuthenticated(false);
         }
       }
-      setIsLoading(false);
+      setLoading(false);
     };
 
     getSession();
@@ -88,7 +89,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const fetchUserMetadata = async (userId: string): Promise<Omit<User, 'id' | 'email'> | {}> => {
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from('user_profiles')  // Using correct table name 'user_profiles' instead of 'profiles'
         .select('username, display_name, avatar_url')
         .eq('id', userId)
         .single();
@@ -105,7 +106,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+  const login = async (email: string, password: string): Promise<boolean> => {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -118,7 +119,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           description: error.message,
           variant: "destructive",
         });
-        return { success: false, error: error.message };
+        return false;
       }
 
       if (data.user) {
@@ -133,9 +134,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           title: "Login successful",
           description: "You have successfully logged in.",
         });
-        return { success: true };
+        return true;
       } else {
-        return { success: false, error: "No user session found after login." };
+        return false;
       }
     } catch (error: any) {
       toast({
@@ -143,19 +144,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         description: error.message,
         variant: "destructive",
       });
-      return { success: false, error: error.message };
+      return false;
     }
   };
 
-  const register = async (email: string, password: string, username: string): Promise<{ success: boolean; error?: string }> => {
+  const register = async (
+    username: string, 
+    email: string, 
+    password: string, 
+    displayName: string
+  ): Promise<boolean> => {
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
-            username: username,
-            display_name: username,
+            username,
+            display_name: displayName || username,
           }
         }
       });
@@ -166,14 +172,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           description: error.message,
           variant: "destructive",
         });
-        return { success: false, error: error.message };
+        return false;
       }
 
       if (data.user) {
         // Create a profile for the user
         const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([{ id: data.user.id, username: username, display_name: username }]);
+          .from('user_profiles')  // Using correct table name 'user_profiles'
+          .insert([{ 
+            id: data.user.id, 
+            username, 
+            display_name: displayName || username,
+            email: data.user.email 
+          }]);
 
         if (profileError) {
           console.error("Error creating profile:", profileError);
@@ -182,23 +193,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             description: profileError.message,
             variant: "destructive",
           });
-          return { success: false, error: profileError.message };
+          return false;
         }
 
         setUser({
           id: data.user.id,
           email: data.user.email || '',
           username: username,
-          display_name: username,
+          display_name: displayName || username,
         });
         setIsAuthenticated(true);
         toast({
           title: "Registration successful",
           description: "Please check your email to verify your account.",
         });
-        return { success: true };
+        return true;
       } else {
-        return { success: false, error: "No user found after registration." };
+        return false;
       }
     } catch (error: any) {
       toast({
@@ -206,7 +217,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         description: error.message,
         variant: "destructive",
       });
-      return { success: false, error: error.message };
+      return false;
     }
   };
 
@@ -237,7 +248,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       const { error } = await supabase
-        .from('profiles')
+        .from('user_profiles')  // Using correct table name 'user_profiles'
         .update(data)
         .eq('id', userId);
 
@@ -251,7 +262,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       // Optimistically update the user context
-      setUser((prevUser) => ({ ...prevUser, ...data }));
+      setUser((prevUser) => ({ ...prevUser!, ...data }));
 
       toast({
         title: "Profile updated",
@@ -270,8 +281,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const resendVerificationEmail = async (email: string): Promise<{ success: boolean; error?: string }> => {
     try {
+      // Fix the resend email type - using 'signup' instead of 'email'
       const { error } = await supabase.auth.resend({
-        type: 'email',
+        type: 'signup',
         email: email,
       });
 
@@ -305,25 +317,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (!userId) {
         return { success: false, error: "User not authenticated" };
       }
-  
-      // First, delete the user from the auth.users table
-      const { error: deleteAuthError } = await supabase.auth.admin.deleteUser(userId);
-  
-      if (deleteAuthError) {
-        toast({
-          title: "Failed to delete account",
-          description: deleteAuthError.message,
-          variant: "destructive",
-        });
-        return { success: false, error: deleteAuthError.message };
-      }
-  
-      // If auth.users deletion is successful, also delete the profile
+      
+      // Delete user profile from the database
       const { error: deleteProfileError } = await supabase
-        .from('profiles')
+        .from('user_profiles')  // Using correct table name 'user_profiles'
         .delete()
         .eq('id', userId);
-  
+
       if (deleteProfileError) {
         console.error("Error deleting profile:", deleteProfileError);
         toast({
@@ -331,8 +331,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           description: deleteProfileError.message,
           variant: "destructive",
         });
-        // Consider whether to return an error or continue with partial deletion
         return { success: false, error: deleteProfileError.message };
+      }
+
+      // Delete the user authentication account
+      const { error: deleteAuthError } = await supabase.auth.admin.deleteUser(userId);
+      
+      if (deleteAuthError) {
+        toast({
+          title: "Failed to delete account",
+          description: deleteAuthError.message,
+          variant: "destructive",
+        });
+        return { success: false, error: deleteAuthError.message };
       }
   
       setUser(null);
@@ -355,7 +366,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const value: AuthContextType = {
     user,
     isAuthenticated,
-    isLoading,
+    loading,
     login,
     register,
     logout,
@@ -366,7 +377,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   return (
     <AuthContext.Provider value={value}>
-      {!isLoading && children}
+      {children}
     </AuthContext.Provider>
   );
 };
