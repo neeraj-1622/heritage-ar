@@ -127,15 +127,6 @@ const ARView: React.FC<ARViewProps> = ({
 
   return (
     <div className="relative h-full w-full bg-black overflow-hidden">
-      <button 
-        onClick={handleGoBack}
-        className="absolute top-4 left-4 z-50 p-2 rounded-full bg-heritage-800/50 text-white hover:bg-heritage-800 transition-colors"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
-      </button>
-      
       <div className="absolute inset-0 z-0">
         <img 
           src="https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=2071&auto=format&fit=crop" 
@@ -211,7 +202,7 @@ const ARView: React.FC<ARViewProps> = ({
         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center">
           <div className="p-6 rounded-2xl glass-panel max-w-xs text-center animate-float">
             <p className="text-white">
-              Point your camera at a flat surface to place the {siteName} model
+              Point your camera at a flat surface to place the model
             </p>
           </div>
         </div>

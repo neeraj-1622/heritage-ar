@@ -258,7 +258,7 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-heritage-50">
+    <div className="min-h-screen bg-background animate-fade-in scrollbar-none">
       <Header title="Profile" showBackButton />
       
       <main className="container mx-auto pt-24 pb-16 px-4">
@@ -271,7 +271,7 @@ const Profile = () => {
                 getInitials(form.watch('display_name') || 'User')
               )}
             </div>
-            <h1 className="text-2xl font-bold mt-4">
+            <h1 className="text-2xl font-bold mt-4 text-heritage-100">
               {loading ? 'Loading...' : form.watch('display_name') || 'User Profile'}
             </h1>
           </div>
@@ -281,10 +281,10 @@ const Profile = () => {
               <Loader2 className="h-8 w-8 animate-spin text-heritage-600" />
             </div>
           ) : (
-            <Card>
+            <Card className="border border-white/10 backdrop-blur-xl bg-white/5">
               <CardHeader>
-                <CardTitle>Edit Profile</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-heritage-100">Edit Profile</CardTitle>
+                <CardDescription className="text-heritage-300">
                   Update your personal information
                 </CardDescription>
               </CardHeader>
@@ -296,9 +296,9 @@ const Profile = () => {
                       name="username"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Username</FormLabel>
+                          <FormLabel className="text-heritage-200">Username</FormLabel>
                           <FormControl>
-                            <Input placeholder="username" {...field} />
+                            <Input placeholder="username" {...field} className="bg-white/10 border-white/20 text-heritage-100" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -310,9 +310,9 @@ const Profile = () => {
                       name="display_name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Display Name</FormLabel>
+                          <FormLabel className="text-heritage-200">Display Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="Display Name" {...field} />
+                            <Input placeholder="Display Name" {...field} className="bg-white/10 border-white/20 text-heritage-100" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -324,9 +324,9 @@ const Profile = () => {
                       name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Email</FormLabel>
+                          <FormLabel className="text-heritage-200">Email</FormLabel>
                           <FormControl>
-                            <Input placeholder="email@example.com" {...field} />
+                            <Input placeholder="email@example.com" {...field} className="bg-white/10 border-white/20 text-heritage-100" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -337,7 +337,7 @@ const Profile = () => {
                       <Button 
                         type="submit" 
                         disabled={saving}
-                        className="bg-heritage-700 hover:bg-heritage-800"
+                        className="bg-accent hover:bg-accent/90"
                       >
                         {saving ? (
                           <>
@@ -350,10 +350,11 @@ const Profile = () => {
                   </form>
                 </Form>
               </CardContent>
-              <CardFooter className="flex justify-between border-t pt-6">
+              <CardFooter className="flex justify-between border-t border-white/10 pt-6">
                 <Button 
                   variant="outline" 
                   onClick={() => navigate(-1)}
+                  className="border-white/20 text-heritage-200 hover:bg-white/10"
                 >
                   Cancel
                 </Button>

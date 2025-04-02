@@ -23,14 +23,17 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { ArrowLeft, Info, Box, View } from 'lucide-react';
+import { ArrowLeft, Info, Box, View, History } from 'lucide-react';
+import { defaultSites } from '@/backend/data/defaultSites';
 
 const ARExperience = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [showInstructions, setShowInstructions] = useState(true);
   const [viewMode, setViewMode] = useState<'ar' | 'sketchfab'>('ar');
+  const [sitesList, setSitesList] = useState(defaultSites);
+  const [showSitesDrawer, setShowSitesDrawer] = useState(false);
 
   const modelUrl = searchParams.get('modelUrl') || '/models/monument.glb';
   const siteName = searchParams.get('siteName') || 'Historical Monument';
@@ -50,6 +53,29 @@ const ARExperience = () => {
       duration: 5000,
     });
   }, [viewMode]);
+
+  const handleSiteSelect = (site: any) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('siteName', site.name);
+    
+    // Set sketchfabId based on site name if available
+    if (site.name === "Parthenon") {
+      params.set('sketchfabId', 'fa23b514e7564ebca473d7e041a07118');
+    } else if (site.name === "The Colosseum") {
+      params.set('sketchfabId', '44fc46a0d04547f29b5ea0763fa0e43a');
+    } else if (site.name === "Machu Picchu") {
+      params.set('sketchfabId', 'a63454cea04e4d3c9980732b6ee53f07');
+    } else if (site.name === "Taj Mahal") {
+      params.set('sketchfabId', 'ba05e56f72f34b3eaf9b93ffa6001fa8');
+    } else if (site.name === "Angkor Wat") {
+      params.set('sketchfabId', '2ea9f5964f304b3eadf1030c4b33338d');
+    } else if (site.name === "Chichen Itza") {
+      params.set('sketchfabId', '6e5b69da9371448e8eebee160b10bfb8');
+    }
+    
+    setSearchParams(params);
+    setShowSitesDrawer(false);
+  };
 
   const Instructions = () => (
     <>
@@ -99,52 +125,95 @@ const ARExperience = () => {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           
-          <h1 className="text-white font-medium text-xl">
-            {siteName}
-          </h1>
+          {/* Removed site name from top bar */}
           
-          {isMobile ? (
-            <Drawer>
-              <DrawerTrigger asChild>
-                <Button variant="outline" size="icon" className="rounded-full bg-black/50 text-white hover:bg-black/70">
-                  <Info className="h-5 w-5" />
-                </Button>
-              </DrawerTrigger>
-              <DrawerContent>
-                <DrawerHeader>
-                  <DrawerTitle>Instructions</DrawerTitle>
-                </DrawerHeader>
-                <div className="px-4">
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="rounded-full bg-black/50 text-white hover:bg-black/70"
+              onClick={() => setShowSitesDrawer(true)}
+            >
+              <History className="h-5 w-5" />
+            </Button>
+            
+            {isMobile ? (
+              <Drawer open={showInstructions} onOpenChange={setShowInstructions}>
+                <DrawerTrigger asChild>
+                  <Button variant="outline" size="icon" className="rounded-full bg-black/50 text-white hover:bg-black/70">
+                    <Info className="h-5 w-5" />
+                  </Button>
+                </DrawerTrigger>
+                <DrawerContent>
+                  <DrawerHeader>
+                    <DrawerTitle>Instructions</DrawerTitle>
+                  </DrawerHeader>
+                  <div className="px-4">
+                    <Instructions />
+                  </div>
+                  <DrawerFooter>
+                    <Button onClick={() => setShowInstructions(false)}>Got it</Button>
+                  </DrawerFooter>
+                </DrawerContent>
+              </Drawer>
+            ) : (
+              <Dialog open={showInstructions} onOpenChange={setShowInstructions}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="icon" className="rounded-full bg-black/50 text-white hover:bg-black/70">
+                    <Info className="h-5 w-5" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Instructions</DialogTitle>
+                    <DialogDescription>
+                      Learn how to use {viewMode === 'ar' ? 'AR' : '3D'} mode effectively
+                    </DialogDescription>
+                  </DialogHeader>
                   <Instructions />
-                </div>
-                <DrawerFooter>
-                  <Button onClick={() => setShowInstructions(false)}>Got it</Button>
-                </DrawerFooter>
-              </DrawerContent>
-            </Drawer>
-          ) : (
-            <Dialog open={showInstructions} onOpenChange={setShowInstructions}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="icon" className="rounded-full bg-black/50 text-white hover:bg-black/70">
-                  <Info className="h-5 w-5" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Instructions</DialogTitle>
-                  <DialogDescription>
-                    Learn how to use {viewMode === 'ar' ? 'AR' : '3D'} mode effectively
-                  </DialogDescription>
-                </DialogHeader>
-                <Instructions />
-                <DialogFooter>
-                  <Button onClick={() => setShowInstructions(false)}>Got it</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          )}
+                  <DialogFooter>
+                    <Button onClick={() => setShowInstructions(false)}>Got it</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            )}
+          </div>
         </div>
       </div>
+      
+      {/* Sites selection drawer */}
+      <Drawer open={showSitesDrawer} onOpenChange={setShowSitesDrawer}>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>Select Historical Site</DrawerTitle>
+          </DrawerHeader>
+          <div className="px-4 py-2">
+            <div className="grid gap-2">
+              {sitesList.map((site) => (
+                <Button 
+                  key={site.id}
+                  variant="outline"
+                  className="justify-start h-auto py-3 border-white/10"
+                  onClick={() => handleSiteSelect(site)}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-md overflow-hidden">
+                      <img src={site.image_url} alt={site.name} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="text-left">
+                      <h4 className="font-medium">{site.name}</h4>
+                      <p className="text-xs text-muted-foreground">{site.location}</p>
+                    </div>
+                  </div>
+                </Button>
+              ))}
+            </div>
+          </div>
+          <DrawerFooter>
+            <Button onClick={() => setShowSitesDrawer(false)}>Close</Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
 
       <div className="absolute bottom-8 left-0 right-0 flex justify-center z-10">
         <div className="bg-black/50 rounded-full backdrop-blur-sm p-1">
@@ -164,10 +233,18 @@ const ARExperience = () => {
             onClick={() => setViewMode('sketchfab')}
           >
             <Box className="h-4 w-4 mr-1" />
-            3D Model
+            Historical Site
           </Button>
         </div>
       </div>
+      
+      {viewMode === 'sketchfab' && (
+        <div className="absolute top-16 left-0 right-0 flex justify-center z-10">
+          <div className="bg-black/50 backdrop-blur-sm p-2 px-4 rounded-full">
+            <p className="text-white font-medium">{siteName}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

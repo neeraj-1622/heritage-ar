@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Card3D from './Card3D';
 import { HistoricalSite } from '@/lib/supabase';
 
@@ -9,8 +9,15 @@ interface SiteCardProps {
 }
 
 const SiteCard: React.FC<SiteCardProps> = ({ site }) => {
+  const navigate = useNavigate();
+  
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    navigate(`/sites/${site.id}`);
+  };
+  
   return (
-    <Link to={`/sites/${site.id}`}>
+    <div onClick={handleClick} className="cursor-pointer">
       <Card3D className="group relative overflow-hidden rounded-xl">
         <div className="relative h-[300px] w-full overflow-hidden">
           <img
@@ -26,7 +33,7 @@ const SiteCard: React.FC<SiteCardProps> = ({ site }) => {
           </div>
         </div>
       </Card3D>
-    </Link>
+    </div>
   );
 };
 
