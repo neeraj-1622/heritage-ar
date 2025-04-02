@@ -21,13 +21,13 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { useMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { ArrowLeft, Info, Settings } from 'lucide-react';
 
 const ARExperience = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   const [showInstructions, setShowInstructions] = useState(true);
 
   // Get model URL and site name from URL parameters
@@ -63,7 +63,7 @@ const ARExperience = () => {
 
   return (
     <div className="h-screen w-screen bg-black overflow-hidden relative">
-      <ARView modelPath={modelUrl} />
+      <ARView modelUrl={modelUrl} />
       
       {/* Overlay Controls */}
       <div className="absolute top-0 left-0 right-0 p-4 z-10">

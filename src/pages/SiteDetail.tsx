@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -7,7 +6,7 @@ import { toast } from '@/hooks/use-toast';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { HeartIcon, MapPinIcon, CalendarIcon, View3d, Loader2 } from 'lucide-react';
+import { HeartIcon, MapPinIcon, CalendarIcon, View, Loader2 } from 'lucide-react';
 import { isSiteFavorited, addToFavorites, removeFromFavorites } from '@/lib/supabase';
 import type { HistoricalSite } from '@/lib/supabase';
 
@@ -162,7 +161,7 @@ const SiteDetail = () => {
             {site.ar_model_url && (
               <Link to={`/ar?modelUrl=${site.ar_model_url}&siteName=${site.name}`}>
                 <Button className="bg-accent hover:bg-accent/90">
-                  <View3d className="mr-2 h-4 w-4" />
+                  <View className="mr-2 h-4 w-4" />
                   View in AR
                 </Button>
               </Link>
