@@ -10,7 +10,6 @@ import {
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
-  DrawerTrigger,
 } from '@/components/ui/drawer';
 import {
   Dialog,
@@ -25,6 +24,8 @@ import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ArrowLeft, Info, Box, View, History } from 'lucide-react';
 import { defaultSites } from '@/backend/data/defaultSites';
+import { supabase } from '@/lib/supabase';
+import { HistoricalSite } from '@/lib/supabase';
 
 const ARExperience = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -32,13 +33,52 @@ const ARExperience = () => {
   const isMobile = useIsMobile();
   const [showInstructions, setShowInstructions] = useState(true);
   const [viewMode, setViewMode] = useState<'ar' | 'sketchfab'>('ar');
-  const [sitesList, setSitesList] = useState(defaultSites);
-  const [showSitesDrawer, setShowSitesDrawer] = useState(false);
+  const [sitesList, setSitesList] = useState<HistoricalSite[]>(defaultSites);
+  const [selectedSite, setSelectedSite] = useState<HistoricalSite | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const modelUrl = searchParams.get('modelUrl') || '/models/monument.glb';
   const siteName = searchParams.get('siteName') || 'Historical Monument';
   
   const sketchfabModelId = searchParams.get('sketchfabId') || 'fa23b514e7564ebca473d7e041a07118'; // Default to Parthenon
+
+  useEffect(() => {
+    // Load historical sites from the database
+    const fetchSites = async () => {
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('historical_sites')
+          .select('*')
+          .order('name');
+        
+        if (error) {
+          console.error('Error fetching historical sites:', error);
+          toast({
+            title: 'Error',
+            description: 'Failed to load historical sites',
+            variant: 'destructive',
+          });
+        } else if (data) {
+          setSitesList(data);
+          
+          // Set initially selected site based on URL param
+          if (siteName) {
+            const site = data.find(site => site.name === siteName);
+            if (site) {
+              setSelectedSite(site);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error in fetchSites:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSites();
+  }, [siteName]);
 
   const handleBackClick = () => {
     navigate(-1);
@@ -54,9 +94,10 @@ const ARExperience = () => {
     });
   }, [viewMode]);
 
-  const handleSiteSelect = (site: any) => {
+  const handleSiteSelect = (site: HistoricalSite) => {
     const params = new URLSearchParams(searchParams);
     params.set('siteName', site.name);
+    setSelectedSite(site);
     
     // Set sketchfabId based on site name if available
     if (site.name === "Parthenon") {
@@ -74,7 +115,6 @@ const ARExperience = () => {
     }
     
     setSearchParams(params);
-    setShowSitesDrawer(false);
   };
 
   const Instructions = () => (
@@ -103,7 +143,20 @@ const ARExperience = () => {
   return (
     <div className="h-screen w-screen bg-black overflow-hidden relative">
       {viewMode === 'ar' ? (
-        <ARView modelUrl={modelUrl} />
+        <ARView
+          modelUrl={modelUrl}
+          selectedSite={selectedSite || undefined}
+          showModel={true} 
+          enableRotation={false}
+          onInfoClick={() => {
+            // Handle info click if needed
+          }}
+          onNextSite={() => {
+            const currentIndex = sitesList.findIndex(site => site.name === selectedSite?.name);
+            const nextIndex = (currentIndex + 1) % sitesList.length;
+            handleSiteSelect(sitesList[nextIndex]);
+          }}
+        />
       ) : (
         <SketchfabEmbed 
           modelId={sketchfabModelId}
@@ -125,95 +178,53 @@ const ARExperience = () => {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           
-          {/* Removed site name from top bar */}
-          
           <div className="flex gap-2">
             <Button 
               variant="outline" 
               size="icon" 
               className="rounded-full bg-black/50 text-white hover:bg-black/70"
-              onClick={() => setShowSitesDrawer(true)}
+              onClick={() => setShowInstructions(true)}
             >
-              <History className="h-5 w-5" />
+              <Info className="h-5 w-5" />
             </Button>
-            
-            {isMobile ? (
-              <Drawer open={showInstructions} onOpenChange={setShowInstructions}>
-                <DrawerTrigger asChild>
-                  <Button variant="outline" size="icon" className="rounded-full bg-black/50 text-white hover:bg-black/70">
-                    <Info className="h-5 w-5" />
-                  </Button>
-                </DrawerTrigger>
-                <DrawerContent>
-                  <DrawerHeader>
-                    <DrawerTitle>Instructions</DrawerTitle>
-                  </DrawerHeader>
-                  <div className="px-4">
-                    <Instructions />
-                  </div>
-                  <DrawerFooter>
-                    <Button onClick={() => setShowInstructions(false)}>Got it</Button>
-                  </DrawerFooter>
-                </DrawerContent>
-              </Drawer>
-            ) : (
-              <Dialog open={showInstructions} onOpenChange={setShowInstructions}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="icon" className="rounded-full bg-black/50 text-white hover:bg-black/70">
-                    <Info className="h-5 w-5" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Instructions</DialogTitle>
-                    <DialogDescription>
-                      Learn how to use {viewMode === 'ar' ? 'AR' : '3D'} mode effectively
-                    </DialogDescription>
-                  </DialogHeader>
-                  <Instructions />
-                  <DialogFooter>
-                    <Button onClick={() => setShowInstructions(false)}>Got it</Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            )}
           </div>
         </div>
       </div>
       
-      {/* Sites selection drawer */}
-      <Drawer open={showSitesDrawer} onOpenChange={setShowSitesDrawer}>
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>Select Historical Site</DrawerTitle>
-          </DrawerHeader>
-          <div className="px-4 py-2">
-            <div className="grid gap-2">
-              {sitesList.map((site) => (
-                <Button 
-                  key={site.id}
-                  variant="outline"
-                  className="justify-start h-auto py-3 border-white/10"
-                  onClick={() => handleSiteSelect(site)}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-md overflow-hidden">
-                      <img src={site.image_url} alt={site.name} className="w-full h-full object-cover" />
-                    </div>
-                    <div className="text-left">
-                      <h4 className="font-medium">{site.name}</h4>
-                      <p className="text-xs text-muted-foreground">{site.location}</p>
-                    </div>
-                  </div>
-                </Button>
-              ))}
+      {/* Instructions dialog/drawer */}
+      {isMobile ? (
+        <Drawer open={showInstructions} onOpenChange={setShowInstructions}>
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle>Instructions</DrawerTitle>
+            </DrawerHeader>
+            <div className="px-4">
+              <Instructions />
             </div>
-          </div>
-          <DrawerFooter>
-            <Button onClick={() => setShowSitesDrawer(false)}>Close</Button>
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
+            <DrawerFooter>
+              <Button onClick={() => setShowInstructions(false)}>Got it</Button>
+            </DrawerFooter>
+          </DrawerContent>
+        </Drawer>
+      ) : (
+        <Dialog open={showInstructions} onOpenChange={setShowInstructions}>
+          <DialogTrigger asChild>
+            <span style={{display: 'none'}}></span>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Instructions</DialogTitle>
+              <DialogDescription>
+                Learn how to use {viewMode === 'ar' ? 'AR' : '3D'} mode effectively
+              </DialogDescription>
+            </DialogHeader>
+            <Instructions />
+            <DialogFooter>
+              <Button onClick={() => setShowInstructions(false)}>Got it</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
 
       <div className="absolute bottom-8 left-0 right-0 flex justify-center z-10">
         <div className="bg-black/50 rounded-full backdrop-blur-sm p-1">
@@ -230,7 +241,9 @@ const ARExperience = () => {
             variant={viewMode === 'sketchfab' ? 'default' : 'outline'}
             size="sm"
             className={`rounded-full ${viewMode === 'sketchfab' ? 'bg-accent' : 'bg-transparent text-white'}`}
-            onClick={() => setViewMode('sketchfab')}
+            onClick={() => {
+              setViewMode('sketchfab');
+            }}
           >
             <Box className="h-4 w-4 mr-1" />
             Historical Site
@@ -238,10 +251,33 @@ const ARExperience = () => {
         </div>
       </div>
       
+      {/* Site selector for Historical Site mode */}
       {viewMode === 'sketchfab' && (
-        <div className="absolute top-16 left-0 right-0 flex justify-center z-10">
-          <div className="bg-black/50 backdrop-blur-sm p-2 px-4 rounded-full">
-            <p className="text-white font-medium">{siteName}</p>
+        <div className="absolute top-16 left-6 right-6 z-10">
+          <div className="bg-black/50 backdrop-blur-sm p-4 rounded-xl">
+            <p className="text-white text-center font-medium mb-3">{siteName}</p>
+            
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[50vh] overflow-y-auto">
+              {sitesList.map((site) => (
+                <Button 
+                  key={site.id}
+                  variant="outline"
+                  className={`justify-start h-auto py-2 px-3 border-white/10 ${
+                    selectedSite?.id === site.id ? 'bg-accent/20 border-accent/50' : ''
+                  }`}
+                  onClick={() => handleSiteSelect(site)}
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-16 h-16 rounded-md overflow-hidden">
+                      <img src={site.image_url} alt={site.name} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs font-medium line-clamp-2">{site.name}</p>
+                    </div>
+                  </div>
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
       )}

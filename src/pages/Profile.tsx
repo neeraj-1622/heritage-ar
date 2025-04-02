@@ -175,7 +175,7 @@ const Profile = () => {
         .update({
           username: values.username,
           display_name: values.display_name,
-          email: values.email,
+          // Not updating email as it's now read-only
         })
         .eq('id', user?.id);
 
@@ -258,8 +258,8 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background animate-fade-in scrollbar-none">
-      <Header title="Profile" showBackButton />
+    <div className="min-h-screen bg-gradient-to-b from-heritage-900 to-heritage-800 animate-fade-in scrollbar-none">
+      <Header title="Profile" showBackButton hideArView={true} />
       
       <main className="container mx-auto pt-24 pb-16 px-4">
         <div className="max-w-2xl mx-auto">
@@ -326,7 +326,12 @@ const Profile = () => {
                         <FormItem>
                           <FormLabel className="text-heritage-200">Email</FormLabel>
                           <FormControl>
-                            <Input placeholder="email@example.com" {...field} className="bg-white/10 border-white/20 text-heritage-100" />
+                            <Input 
+                              placeholder="email@example.com" 
+                              {...field} 
+                              readOnly 
+                              className="bg-white/10 border-white/20 text-heritage-100 opacity-75 cursor-not-allowed" 
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

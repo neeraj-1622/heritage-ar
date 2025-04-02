@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, LogOut, Settings, UserCircle } from 'lucide-react';
+import { ArrowLeft, User, LogOut, UserCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import {
@@ -18,11 +18,13 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 interface HeaderProps {
   title?: string;
   showBackButton?: boolean;
+  hideArView?: boolean;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
   title = 'HeritageAR',
-  showBackButton = false
+  showBackButton = false,
+  hideArView = false
 }) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -127,16 +129,18 @@ const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center space-x-2">
           {isAuthenticated ? (
             <>
-              <Link 
-                to="/ar" 
-                className={`text-sm px-4 py-2 rounded-full transition-all duration-300 ${
-                  location.pathname === '/ar' 
-                    ? 'bg-accent text-white' 
-                    : 'bg-heritage-100/20 text-white hover:bg-heritage-200/30'
-                }`}
-              >
-                AR View
-              </Link>
+              {!hideArView && (
+                <Link 
+                  to="/ar" 
+                  className={`text-sm px-4 py-2 rounded-full transition-all duration-300 ${
+                    location.pathname === '/ar' 
+                      ? 'bg-accent text-white' 
+                      : 'bg-heritage-100/20 text-white hover:bg-heritage-200/30'
+                  }`}
+                >
+                  AR View
+                </Link>
+              )}
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -162,13 +166,6 @@ const Header: React.FC<HeaderProps> = ({
                   >
                     <UserCircle className="mr-2 h-4 w-4" />
                     <span>Profile</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    className="text-white hover:bg-blue-700 cursor-pointer"
-                    onClick={() => navigate('/settings')}
-                  >
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-blue-700/50" />
                   <DropdownMenuItem 
