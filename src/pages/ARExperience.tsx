@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
@@ -23,7 +22,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { ArrowLeft, Info, Cube, View3d } from 'lucide-react';
+import { ArrowLeft, Info, Box, View } from 'lucide-react';
 
 const ARExperience = () => {
   const [searchParams] = useSearchParams();
@@ -32,18 +31,15 @@ const ARExperience = () => {
   const [showInstructions, setShowInstructions] = useState(true);
   const [viewMode, setViewMode] = useState<'ar' | 'sketchfab'>('ar');
 
-  // Get model URL and site name from URL parameters
   const modelUrl = searchParams.get('modelUrl') || '/models/monument.glb';
   const siteName = searchParams.get('siteName') || 'Historical Monument';
   
-  // Get Sketchfab model ID if available
   const sketchfabModelId = searchParams.get('sketchfabId') || 'fa23b514e7564ebca473d7e041a07118'; // Default to Parthenon
 
   const handleBackClick = () => {
     navigate(-1);
   };
 
-  // Show instructions toast on load
   useEffect(() => {
     toast({
       title: 'AR Experience Loaded',
@@ -79,7 +75,6 @@ const ARExperience = () => {
 
   return (
     <div className="h-screen w-screen bg-black overflow-hidden relative">
-      {/* Show either AR View or Sketchfab model based on mode */}
       {viewMode === 'ar' ? (
         <ARView modelUrl={modelUrl} />
       ) : (
@@ -92,7 +87,6 @@ const ARExperience = () => {
         />
       )}
       
-      {/* Overlay Controls */}
       <div className="absolute top-0 left-0 right-0 p-4 z-10">
         <div className="flex justify-between items-center">
           <Button 
@@ -151,7 +145,6 @@ const ARExperience = () => {
         </div>
       </div>
 
-      {/* Toggle between AR and Sketchfab view */}
       <div className="absolute bottom-8 left-0 right-0 flex justify-center z-10">
         <div className="bg-black/50 rounded-full backdrop-blur-sm p-1">
           <Button
@@ -160,7 +153,7 @@ const ARExperience = () => {
             className={`rounded-full ${viewMode === 'ar' ? 'bg-accent' : 'bg-transparent text-white'}`}
             onClick={() => setViewMode('ar')}
           >
-            <View3d className="h-4 w-4 mr-1" />
+            <View className="h-4 w-4 mr-1" />
             AR View
           </Button>
           <Button 
@@ -169,7 +162,7 @@ const ARExperience = () => {
             className={`rounded-full ${viewMode === 'sketchfab' ? 'bg-accent' : 'bg-transparent text-white'}`}
             onClick={() => setViewMode('sketchfab')}
           >
-            <Cube className="h-4 w-4 mr-1" />
+            <Box className="h-4 w-4 mr-1" />
             3D Model
           </Button>
         </div>

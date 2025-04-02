@@ -10,6 +10,12 @@ interface SketchfabEmbedProps {
   className?: string;
 }
 
+declare global {
+  interface Window {
+    Sketchfab?: any;
+  }
+}
+
 const SketchfabEmbed: React.FC<SketchfabEmbedProps> = ({
   modelId,
   title = "3D Model",
@@ -47,9 +53,8 @@ const SketchfabEmbed: React.FC<SketchfabEmbedProps> = ({
         allow="autoplay; fullscreen; xr-spatial-tracking"
         mozallowfullscreen="true"
         webkitallowfullscreen="true"
-        xr-spatial-tracking
         src={embedUrl}
-      ></iframe>
+      />
     </div>
   );
 };

@@ -6,11 +6,10 @@ import { toast } from '@/hooks/use-toast';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { HeartIcon, MapPinIcon, CalendarIcon, View3d, Cube, Loader2 } from 'lucide-react';
+import { HeartIcon, MapPinIcon, CalendarIcon, View, Box, Loader2 } from 'lucide-react';
 import { isSiteFavorited, addToFavorites, removeFromFavorites } from '@/lib/supabase';
 import type { HistoricalSite } from '@/lib/supabase';
 
-// Map of site names to their Sketchfab model IDs
 const SKETCHFAB_MODELS: Record<string, string> = {
   'Parthenon': 'fa23b514e7564ebca473d7e041a07118',
   // Add more model IDs for other historical sites as needed
@@ -133,7 +132,6 @@ const SiteDetail = () => {
     );
   }
 
-  // Get Sketchfab model ID if available for this site
   const sketchfabModelId = SKETCHFAB_MODELS[site.name] || '';
   
   const handleViewInAR = () => {
@@ -149,7 +147,6 @@ const SiteDetail = () => {
   };
 
   const handleView3DModel = () => {
-    // Direct to AR experience but with sketchfab mode if available
     const params = new URLSearchParams();
     params.append('siteName', site.name);
     if (sketchfabModelId) {
@@ -197,7 +194,7 @@ const SiteDetail = () => {
                 className="bg-accent hover:bg-accent/90"
                 onClick={handleViewInAR}
               >
-                <View3d className="mr-2 h-4 w-4" />
+                <View className="mr-2 h-4 w-4" />
                 View in AR
               </Button>
             )}
@@ -207,7 +204,7 @@ const SiteDetail = () => {
                 variant="outline"
                 onClick={handleView3DModel}
               >
-                <Cube className="mr-2 h-4 w-4" />
+                <Box className="mr-2 h-4 w-4" />
                 View 3D Model
               </Button>
             )}
