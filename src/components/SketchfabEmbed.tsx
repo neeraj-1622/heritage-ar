@@ -49,10 +49,10 @@ const SketchfabEmbed: React.FC<SketchfabEmbedProps> = ({
         title={title}
         className="w-full h-full"
         frameBorder="0"
-        allowFullScreen
+        allowFullScreen={true}
         allow="autoplay; fullscreen; xr-spatial-tracking"
-        mozallowfullscreen="true"
-        webkitallowfullscreen="true"
+        data-mozallowfullscreen="true"
+        data-webkitallowfullscreen="true"
         src={embedUrl}
       />
     </div>
