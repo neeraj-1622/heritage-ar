@@ -123,24 +123,52 @@ CREATE TRIGGER set_user_profiles_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION handle_updated_at();
 
--- Function to create user profiles automatically when users are created
+-- IMPROVED Function to create user profiles automatically when users are created
 CREATE OR REPLACE FUNCTION public.create_user_profile()
 RETURNS TRIGGER AS $$
+DECLARE
+  username_val TEXT;
+  display_name_val TEXT;
 BEGIN
+  -- Set username with fallbacks
+  username_val := COALESCE(
+    NEW.raw_user_meta_data->>'name',
+    split_part(NEW.email, '@', 1),
+    'User'
+  );
+  
+  -- Set display_name with fallbacks, prioritizing the display_name from metadata
+  display_name_val := COALESCE(
+    NEW.raw_user_meta_data->>'display_name',
+    NEW.raw_user_meta_data->>'name',
+    split_part(NEW.email, '@', 1),
+    'User'
+  );
+
+  -- More robust insertion with explicit columns and avoiding constraint violations
   INSERT INTO public.user_profiles (
     id,
     username,
     display_name,
     email,
-    avatar_url
+    avatar_url,
+    created_at,
+    updated_at
   ) VALUES (
     NEW.id,
-    COALESCE(NEW.raw_user_meta_data->>'name', split_part(NEW.email, '@', 1)),
-    COALESCE(NEW.raw_user_meta_data->>'display_name', NEW.raw_user_meta_data->>'name', split_part(NEW.email, '@', 1)),
-    NEW.email,
-    NULL
+    username_val,
+    display_name_val,
+    COALESCE(NEW.email, ''),
+    NULL,
+    NOW(),
+    NOW()
   )
-  ON CONFLICT (id) DO NOTHING;
+  ON CONFLICT (id) DO UPDATE
+  SET 
+    username = EXCLUDED.username,
+    display_name = EXCLUDED.display_name,
+    email = EXCLUDED.email,
+    updated_at = NOW();
   
   RETURN NEW;
 END;

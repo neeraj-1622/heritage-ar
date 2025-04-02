@@ -40,28 +40,130 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Helper function to ensure user profile exists
+  const ensureUserProfileExists = async (userId: string, sessionData: any) => {
+    try {
+      // First check if profile already exists
+      const { data: existingProfile, error: checkError } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      // If profile exists, no need to create it
+      if (existingProfile && !checkError) {
+        console.log("User profile already exists for ID:", userId);
+        return existingProfile;
+      }
+      
+      // Extract data for profile creation
+      const displayName = sessionData.user_metadata?.display_name || 
+                          sessionData.user_metadata?.name || 
+                          sessionData.email?.split('@')[0] || 
+                          'User';
+      const username = sessionData.user_metadata?.name || 
+                      sessionData.email?.split('@')[0] || 
+                      'User';
+      const email = sessionData.email || '';
+      
+      console.log("Creating user profile for ID:", userId, {
+        username,
+        display_name: displayName,
+        email
+      });
+      
+      // Create profile
+      const { data: newProfile, error: createError } = await supabase
+        .from('user_profiles')
+        .insert([{ 
+          id: userId, 
+          username, 
+          display_name: displayName,
+          email,
+          avatar_url: null
+        }])
+        .select()
+        .single();
+        
+      if (createError) {
+        console.error('Error creating user profile:', createError);
+        throw createError;
+      }
+      
+      console.log("User profile created successfully:", newProfile);
+      return newProfile;
+    } catch (error) {
+      console.error('Profile creation/verification error:', error);
+      return null;
+    }
+  };
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth event:', event);
         
         if (session && session.user) {
-          const { data: profile, error } = await supabase
-            .from('user_profiles')
-            .select('username, display_name, email')
-            .eq('id', session.user.id)
-            .single();
+          try {
+            // First try to get the user profile
+            const { data: profile, error } = await supabase
+              .from('user_profiles')
+              .select('username, display_name, email')
+              .eq('id', session.user.id)
+              .single();
+              
+            if (!error && profile) {
+              setUser({
+                id: session.user.id,
+                email: profile.email || session.user.email || '',
+                username: profile.username || session.user.email?.split('@')[0] || 'User',
+                display_name: profile.display_name || profile.username || session.user.email?.split('@')[0] || 'User',
+                email_confirmed_at: session.user.email_confirmed_at
+              });
+            } else {
+              // If getting the profile fails, try to create it
+              console.log("Profile not found in auth state change, creating...");
+              
+              // Use setTimeout to avoid blocking the auth state change
+              setTimeout(async () => {
+                try {
+                  const newProfile = await ensureUserProfileExists(session.user.id, session.user);
+                  
+                  if (newProfile) {
+                    setUser({
+                      id: session.user.id,
+                      email: newProfile.email || session.user.email || '',
+                      username: newProfile.username || session.user.email?.split('@')[0] || 'User',
+                      display_name: newProfile.display_name || newProfile.username || session.user.email?.split('@')[0] || 'User',
+                      email_confirmed_at: session.user.email_confirmed_at
+                    });
+                  } else {
+                    // Fallback to user data from session if profile creation fails
+                    const displayName = session.user.user_metadata?.display_name || 
+                                      session.user.user_metadata?.name || 
+                                      session.user.email?.split('@')[0] || 
+                                      'User';
+                    const username = session.user.user_metadata?.name || 
+                                    session.user.email?.split('@')[0] || 
+                                    'User';
+                    
+                    setUser({
+                      id: session.user.id,
+                      email: session.user.email || '',
+                      username: username,
+                      display_name: displayName,
+                      email_confirmed_at: session.user.email_confirmed_at
+                    });
+                  }
+                } catch (error) {
+                  console.error("Failed to create profile in timeout:", error);
+                }
+              }, 0);
+            }
+          } catch (error) {
+            console.error('Error in auth state change:', error);
             
-          if (!error && profile) {
-            setUser({
-              id: session.user.id,
-              email: profile.email || session.user.email || '',
-              username: profile.username || session.user.email?.split('@')[0] || 'User',
-              display_name: profile.display_name || profile.username || session.user.email?.split('@')[0] || 'User',
-              email_confirmed_at: session.user.email_confirmed_at
-            });
-          } else {
-            // If profile doesn't exist yet, create it
+            // Fallback to basic user data from session
             const displayName = session.user.user_metadata?.display_name || 
                                session.user.user_metadata?.name || 
                                session.user.email?.split('@')[0] || 
@@ -69,33 +171,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             const username = session.user.user_metadata?.name || 
                             session.user.email?.split('@')[0] || 
                             'User';
-            const email = session.user.email || '';
-            
-            console.log('Creating user profile during auth state change:', {
-              id: session.user.id,
-              username,
-              display_name: displayName,
-              email
-            });
-            
-            // Create profile if it doesn't exist
-            const { error: insertError } = await supabase
-              .from('user_profiles')
-              .insert([{ 
-                id: session.user.id, 
-                username, 
-                display_name: displayName,
-                email,
-                avatar_url: null
-              }]);
-              
-            if (insertError) {
-              console.error('Error creating user profile in auth state change:', insertError);
-            }
             
             setUser({
               id: session.user.id,
-              email: email,
+              email: session.user.email || '',
               username: username,
               display_name: displayName,
               email_confirmed_at: session.user.email_confirmed_at
@@ -111,22 +190,58 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session && session.user) {
-        const { data: profile, error } = await supabase
-          .from('user_profiles')
-          .select('username, display_name, email')
-          .eq('id', session.user.id)
-          .single();
+        try {
+          // First check if the user profile exists
+          const { data: profile, error } = await supabase
+            .from('user_profiles')
+            .select('username, display_name, email')
+            .eq('id', session.user.id)
+            .single();
+            
+          if (!error && profile) {
+            setUser({
+              id: session.user.id,
+              email: profile.email || session.user.email || '',
+              username: profile.username || session.user.email?.split('@')[0] || 'User',
+              display_name: profile.display_name || profile.username || session.user.email?.split('@')[0] || 'User',
+              email_confirmed_at: session.user.email_confirmed_at
+            });
+          } else {
+            // If profile doesn't exist or error fetching it, try to create it
+            console.log("Profile not found in initial check, creating...");
+            const newProfile = await ensureUserProfileExists(session.user.id, session.user);
+            
+            if (newProfile) {
+              setUser({
+                id: session.user.id,
+                email: newProfile.email || session.user.email || '',
+                username: newProfile.username || session.user.email?.split('@')[0] || 'User',
+                display_name: newProfile.display_name || newProfile.username || session.user.email?.split('@')[0] || 'User',
+                email_confirmed_at: session.user.email_confirmed_at
+              });
+            } else {
+              // Fallback to user data from session if profile creation fails
+              const displayName = session.user.user_metadata?.display_name || 
+                                 session.user.user_metadata?.name || 
+                                 session.user.email?.split('@')[0] || 
+                                 'User';
+              const username = session.user.user_metadata?.name || 
+                              session.user.email?.split('@')[0] || 
+                              'User';
+              
+              setUser({
+                id: session.user.id,
+                email: session.user.email || '',
+                username: username,
+                display_name: displayName,
+                email_confirmed_at: session.user.email_confirmed_at
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Error in initial user check:', error);
           
-        if (!error && profile) {
-          setUser({
-            id: session.user.id,
-            email: profile.email || session.user.email || '',
-            username: profile.username || session.user.email?.split('@')[0] || 'User',
-            display_name: profile.display_name || profile.username || session.user.email?.split('@')[0] || 'User',
-            email_confirmed_at: session.user.email_confirmed_at
-          });
-        } else {
-          // If profile doesn't exist, create it
+          // Fallback to basic user data
           const displayName = session.user.user_metadata?.display_name || 
                              session.user.user_metadata?.name || 
                              session.user.email?.split('@')[0] || 
@@ -134,33 +249,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           const username = session.user.user_metadata?.name || 
                           session.user.email?.split('@')[0] || 
                           'User';
-          const email = session.user.email || '';
-          
-          console.log('Creating user profile during initial check:', {
-            id: session.user.id,
-            username,
-            display_name: displayName,
-            email
-          });
-          
-          // Create profile if it doesn't exist
-          const { error: insertError } = await supabase
-            .from('user_profiles')
-            .insert([{ 
-              id: session.user.id, 
-              username, 
-              display_name: displayName,
-              email,
-              avatar_url: null
-            }]);
-            
-          if (insertError) {
-            console.error('Error creating user profile in initial check:', insertError);
-          }
           
           setUser({
             id: session.user.id,
-            email: email,
+            email: session.user.email || '',
             username: username,
             display_name: displayName,
             email_confirmed_at: session.user.email_confirmed_at
@@ -206,38 +298,41 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           return false;
         }
         
-        const { data: profile } = await supabase
-          .from('user_profiles')
-          .select('username, display_name')
-          .eq('id', data.user.id)
-          .single();
-        
-        if (!profile) {
-          const username = data.user.email?.split('@')[0] || 'User';
-          const displayName = data.user.user_metadata?.display_name || username;
-
-          // Create profile if it doesn't exist
-          await supabase
+        try {
+          // Check for existing profile
+          const { data: profile, error: profileError } = await supabase
             .from('user_profiles')
-            .insert([{ 
-              id: data.user.id, 
-              username: username, 
-              display_name: displayName,
-              email: data.user.email || '',
-              avatar_url: null
-            }]);
+            .select('username, display_name')
+            .eq('id', data.user.id)
+            .single();
+          
+          if (profileError || !profile) {
+            // Create profile if it doesn't exist
+            const username = data.user.email?.split('@')[0] || 'User';
+            const displayName = data.user.user_metadata?.display_name || username;
+
+            await ensureUserProfileExists(data.user.id, data.user);
             
+            toast({
+              title: 'Login successful',
+              description: `Welcome, ${displayName}!`,
+            });
+          } else {
+            const displayName = profile.display_name || profile.username;
+            toast({
+              title: 'Login successful',
+              description: `Welcome back, ${displayName}!`,
+            });
+          }
+        } catch (profileError) {
+          console.error('Error handling profile during login:', profileError);
+          const username = data.user.email?.split('@')[0] || 'User';
           toast({
             title: 'Login successful',
-            description: `Welcome, ${displayName}!`,
-          });
-        } else {
-          const displayName = profile.display_name || profile.username;
-          toast({
-            title: 'Login successful',
-            description: `Welcome back, ${displayName}!`,
+            description: `Welcome, ${username}!`,
           });
         }
+        
         return true;
       }
       return false;
@@ -292,26 +387,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           email
         });
         
-        // Create user profile immediately upon registration with explicit RLS bypass
-        const { error: profileError } = await supabase
-          .from('user_profiles')
-          .insert([{ 
-            id: data.user.id, 
-            username: username,
-            display_name: finalDisplayName,
-            email,
-            avatar_url: null
-          }]);
-          
-        if (profileError) {
-          console.error('Error creating user profile during registration:', profileError);
-          toast({
-            title: 'Registration incomplete',
-            description: 'User created but profile setup failed. Please contact support.',
-            variant: 'destructive',
-          });
-        } else {
-          console.log('User profile created successfully during registration');
+        // Create user profile immediately upon registration
+        try {
+          // Direct insert approach - the trigger should handle this, but we do it explicitly as well
+          const { error: profileError } = await supabase
+            .from('user_profiles')
+            .insert([{ 
+              id: data.user.id, 
+              username: username,
+              display_name: finalDisplayName,
+              email,
+              avatar_url: null
+            }]);
+            
+          if (profileError) {
+            console.error('Error creating user profile during registration:', profileError);
+            console.log('Will rely on database trigger to create profile');
+          } else {
+            console.log('User profile created successfully during registration');
+          }
+        } catch (profileError) {
+          console.error('Exception creating profile during registration:', profileError);
+          // Fall back to the database trigger
         }
         
         toast({

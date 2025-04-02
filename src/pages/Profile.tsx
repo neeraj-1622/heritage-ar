@@ -75,8 +75,10 @@ const Profile: React.FC = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [displayName, setDisplayName] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [avatarColor, setAvatarColor] = useState('');
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [attemptingProfileCreation, setAttemptingProfileCreation] = useState(false);
 
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -108,6 +110,7 @@ const Profile: React.FC = () => {
 
       try {
         setIsLoading(true);
+        setProfileError(null);
         console.log("Fetching profile for user ID:", user.id);
         
         const { data, error } = await supabase
@@ -119,49 +122,65 @@ const Profile: React.FC = () => {
         if (error) {
           console.error('Error fetching user profile:', error);
           
-          // Create profile if it doesn't exist
-          const newDisplayName = user.display_name || user.username || user.email?.split('@')[0] || 'User';
-          const newUsername = user.username || user.email?.split('@')[0] || 'User';
-          const newEmail = user.email || '';
-          
-          console.log("Creating missing user profile:", {
-            id: user.id,
-            username: newUsername,
-            display_name: newDisplayName,
-            email: newEmail
-          });
-          
-          const { error: createError } = await supabase
-            .from('user_profiles')
-            .insert([{ 
-              id: user.id, 
-              username: newUsername, 
+          if (!attemptingProfileCreation) {
+            // Create profile if it doesn't exist
+            setAttemptingProfileCreation(true);
+            
+            const newDisplayName = user.display_name || user.username || user.email?.split('@')[0] || 'User';
+            const newUsername = user.username || user.email?.split('@')[0] || 'User';
+            const newEmail = user.email || '';
+            
+            console.log("Creating missing user profile:", {
+              id: user.id,
+              username: newUsername,
               display_name: newDisplayName,
-              email: newEmail,
-              avatar_url: null
-            }]);
-          
-          if (createError) {
-            console.error('Error creating user profile:', createError);
-            toast({
-              title: 'Profile Creation Failed',
-              description: 'Could not create your profile. Please try again later.',
-              variant: 'destructive',
+              email: newEmail
             });
+            
+            const { error: createError } = await supabase
+              .from('user_profiles')
+              .insert([{ 
+                id: user.id, 
+                username: newUsername, 
+                display_name: newDisplayName,
+                email: newEmail,
+                avatar_url: null
+              }]);
+            
+            if (createError) {
+              console.error('Error creating user profile:', createError);
+              setProfileError('Could not create your profile. Please try again later.');
+              toast({
+                title: 'Profile Creation Failed',
+                description: 'Could not create your profile. Please try again later.',
+                variant: 'destructive',
+              });
+            } else {
+              // Successfully created profile, now set the values
+              setUsername(newUsername);
+              setEmail(newEmail);
+              setDisplayName(newDisplayName);
+              
+              profileForm.setValue('displayName', newDisplayName);
+              emailForm.setValue('email', newEmail);
+              
+              // Generate avatar color once
+              setAvatarColor(getAvatarColor(newDisplayName));
+              
+              toast({
+                title: 'Profile Created',
+                description: 'Your profile has been created successfully.',
+              });
+            }
           } else {
-            // Set values from newly created profile
-            setUsername(newUsername);
-            setEmail(newEmail);
-            setDisplayName(newDisplayName);
-            
-            profileForm.setValue('displayName', newDisplayName);
-            emailForm.setValue('email', newEmail);
-            
-            // Generate avatar color once
-            setAvatarColor(getAvatarColor(newDisplayName));
+            setProfileError('Failed to load your profile. Please try refreshing the page.');
           }
         } else if (data) {
           console.log("Profile data retrieved:", data);
+          
+          // Clear error state if profile is successfully fetched
+          setProfileError(null);
+          setAttemptingProfileCreation(false);
           
           const profileUsername = data.username || '';
           const profileDisplayName = data.display_name || data.username || '';
@@ -174,11 +193,14 @@ const Profile: React.FC = () => {
           profileForm.setValue('displayName', profileDisplayName);
           emailForm.setValue('email', profileEmail);
           
-          // Generate avatar color once
-          setAvatarColor(getAvatarColor(profileDisplayName));
+          // Generate avatar color once if not already set
+          if (!avatarColor) {
+            setAvatarColor(getAvatarColor(profileDisplayName));
+          }
         }
       } catch (error) {
         console.error('Error in profile fetch:', error);
+        setProfileError('An unexpected error occurred while loading your profile.');
         toast({
           title: 'Failed to load profile',
           description: 'An unexpected error occurred',
@@ -190,7 +212,7 @@ const Profile: React.FC = () => {
     };
 
     fetchUserProfile();
-  }, [user?.id, user?.email, user?.username, user?.display_name, profileForm, emailForm]);
+  }, [user?.id, user?.email, user?.username, user?.display_name, profileForm, emailForm, avatarColor, attemptingProfileCreation]);
 
   const onProfileSubmit = async (data: ProfileFormValues) => {
     if (!user) return;
@@ -234,6 +256,12 @@ const Profile: React.FC = () => {
         title: 'Profile updated',
         description: 'Your display name has been successfully updated',
       });
+      
+      // Update user context
+      if (user && typeof user === 'object') {
+        user.display_name = data.displayName;
+      }
+      
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
@@ -370,6 +398,23 @@ const Profile: React.FC = () => {
     return blueColors[index];
   };
 
+  const handleRetryProfileCreation = async () => {
+    if (!user) return;
+    
+    setAttemptingProfileCreation(false); // Reset flag to try creation again
+    setProfileError(null);
+    setIsLoading(true);
+    
+    // Force refresh by triggering the useEffect
+    setTimeout(() => {
+      if (user?.id) {
+        // This will re-trigger the useEffect that fetches/creates the profile
+        console.log("Retrying profile creation for user:", user.id);
+      }
+      setIsLoading(false);
+    }, 100);
+  };
+
   if (!user) {
     navigate('/login');
     return null;
@@ -471,185 +516,210 @@ const Profile: React.FC = () => {
             </div>
           </div>
           
-          <Tabs defaultValue="profile" className="space-y-6">
-            <TabsList className="bg-slate-800 border border-slate-700">
-              <TabsTrigger value="profile">Profile</TabsTrigger>
-              <TabsTrigger value="security">Security</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="profile">
-              <Card className="bg-slate-800/80 border-slate-700">
-                <CardHeader>
-                  <CardTitle className="text-white">Profile Information</CardTitle>
-                  <CardDescription className="text-slate-300">
-                    Update your personal information
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    <div className="space-y-4">
-                      <div>
-                        <h3 className="text-sm font-medium text-slate-200 mb-1.5">Username</h3>
-                        <Input
-                          value={username}
-                          disabled
-                          className="bg-slate-700/70 border-slate-600 text-white opacity-70"
-                        />
-                        <p className="text-xs text-slate-400 mt-1">This is your unique username and cannot be changed</p>
-                      </div>
-                      
-                      <Form {...profileForm}>
-                        <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
-                          <FormField
-                            control={profileForm.control}
-                            name="displayName"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="text-slate-200">Display Name</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="Your display name"
-                                    className="bg-slate-700/70 border-slate-600 text-white"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormDescription className="text-slate-400">
-                                  This is your public display name visible throughout the app
-                                </FormDescription>
-                                <FormMessage className="text-red-300" />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <div>
-                            <h3 className="text-sm font-medium text-slate-200 mb-1.5">Email</h3>
-                            <Input
-                              value={email}
-                              disabled
-                              className="bg-slate-700/70 border-slate-600 text-white opacity-70"
-                            />
-                            <p className="text-xs text-slate-400 mt-1">To change your email, go to the Security tab</p>
-                          </div>
-                          
-                          <Button 
-                            type="submit" 
-                            className="mt-4" 
-                            disabled={isUpdatingProfile || !profileForm.formState.isDirty}
-                          >
-                            {isUpdatingProfile && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Save Changes
-                          </Button>
-                        </form>
-                      </Form>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="security">
-              <div className="space-y-6">
+          {profileError ? (
+            <Card className="bg-slate-800/80 border-slate-700 mb-6">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-white">Profile Error</CardTitle>
+                <CardDescription className="text-slate-300">
+                  There was a problem loading your profile
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Alert className="bg-red-900/50 text-red-100 border-red-700">
+                  <AlertTitle>Error loading profile</AlertTitle>
+                  <AlertDescription>
+                    {profileError}
+                  </AlertDescription>
+                </Alert>
+                <Button 
+                  onClick={handleRetryProfileCreation}
+                  className="mt-4"
+                >
+                  Retry
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <Tabs defaultValue="profile" className="space-y-6">
+              <TabsList className="bg-slate-800 border border-slate-700">
+                <TabsTrigger value="profile">Profile</TabsTrigger>
+                <TabsTrigger value="security">Security</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="profile">
                 <Card className="bg-slate-800/80 border-slate-700">
                   <CardHeader>
-                    <CardTitle className="text-white">Password Reset</CardTitle>
+                    <CardTitle className="text-white">Profile Information</CardTitle>
                     <CardDescription className="text-slate-300">
-                      Change your password securely
+                      Update your personal information
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    {resetPasswordSent ? (
-                      <Alert className="bg-green-900/50 text-green-100 border-green-700">
-                        <CheckCircle className="h-4 w-4" />
-                        <AlertTitle>Reset Email Sent!</AlertTitle>
-                        <AlertDescription>
-                          We've sent a password reset link to your email address.
-                          Please check your inbox and follow the instructions to reset your password.
-                        </AlertDescription>
-                      </Alert>
-                    ) : (
+                    <div className="space-y-6">
                       <div className="space-y-4">
-                        <p className="text-slate-300">
-                          For security reasons, we'll send a password reset link to your registered email address.
-                        </p>
-                        <Button onClick={onPasswordReset}>
-                          Send Password Reset Link
-                        </Button>
+                        <div>
+                          <h3 className="text-sm font-medium text-slate-200 mb-1.5">Username</h3>
+                          <Input
+                            value={username}
+                            disabled
+                            className="bg-slate-700/70 border-slate-600 text-white opacity-70"
+                          />
+                          <p className="text-xs text-slate-400 mt-1">This is your unique username and cannot be changed</p>
+                        </div>
+                        
+                        <Form {...profileForm}>
+                          <form onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-4">
+                            <FormField
+                              control={profileForm.control}
+                              name="displayName"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-slate-200">Display Name</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      placeholder="Your display name"
+                                      className="bg-slate-700/70 border-slate-600 text-white"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormDescription className="text-slate-400">
+                                    This is your public display name visible throughout the app
+                                  </FormDescription>
+                                  <FormMessage className="text-red-300" />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <div>
+                              <h3 className="text-sm font-medium text-slate-200 mb-1.5">Email</h3>
+                              <Input
+                                value={email}
+                                disabled
+                                className="bg-slate-700/70 border-slate-600 text-white opacity-70"
+                              />
+                              <p className="text-xs text-slate-400 mt-1">To change your email, go to the Security tab</p>
+                            </div>
+                            
+                            <Button 
+                              type="submit" 
+                              className="mt-4" 
+                              disabled={isUpdatingProfile || !profileForm.formState.isDirty}
+                            >
+                              {isUpdatingProfile && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                              Save Changes
+                            </Button>
+                          </form>
+                        </Form>
                       </div>
-                    )}
+                    </div>
                   </CardContent>
                 </Card>
-                
-                <Card className="bg-slate-800/80 border-slate-700">
-                  <CardHeader>
-                    <CardTitle className="text-white">Change Email</CardTitle>
-                    <CardDescription className="text-slate-300">
-                      Update your email address
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {resetEmailSent ? (
-                      <Alert className="bg-green-900/50 text-green-100 border-green-700">
-                        <CheckCircle className="h-4 w-4" />
-                        <AlertTitle>Verification Email Sent!</AlertTitle>
-                        <AlertDescription>
-                          We've sent a verification link to your new email address.
-                          Please check your inbox and follow the instructions to confirm your new email.
-                        </AlertDescription>
-                      </Alert>
-                    ) : (
-                      <Form {...emailForm}>
-                        <form onSubmit={emailForm.handleSubmit(onEmailChange)} className="space-y-4">
-                          <FormField
-                            control={emailForm.control}
-                            name="email"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="text-slate-200">New Email Address</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="your.new.email@example.com"
-                                    className="bg-slate-700/70 border-slate-600 text-white"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage className="text-red-300" />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <FormField
-                            control={emailForm.control}
-                            name="password"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="text-slate-200">Current Password</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    type="password"
-                                    placeholder="••••••••"
-                                    className="bg-slate-700/70 border-slate-600 text-white"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormDescription className="text-slate-400">
-                                  For security, please enter your current password
-                                </FormDescription>
-                                <FormMessage className="text-red-300" />
-                              </FormItem>
-                            )}
-                          />
-                          
-                          <Button type="submit">
-                            Change Email
+              </TabsContent>
+              
+              <TabsContent value="security">
+                <div className="space-y-6">
+                  <Card className="bg-slate-800/80 border-slate-700">
+                    <CardHeader>
+                      <CardTitle className="text-white">Password Reset</CardTitle>
+                      <CardDescription className="text-slate-300">
+                        Change your password securely
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {resetPasswordSent ? (
+                        <Alert className="bg-green-900/50 text-green-100 border-green-700">
+                          <CheckCircle className="h-4 w-4" />
+                          <AlertTitle>Reset Email Sent!</AlertTitle>
+                          <AlertDescription>
+                            We've sent a password reset link to your email address.
+                            Please check your inbox and follow the instructions to reset your password.
+                          </AlertDescription>
+                        </Alert>
+                      ) : (
+                        <div className="space-y-4">
+                          <p className="text-slate-300">
+                            For security reasons, we'll send a password reset link to your registered email address.
+                          </p>
+                          <Button onClick={onPasswordReset}>
+                            Send Password Reset Link
                           </Button>
-                        </form>
-                      </Form>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
-          </Tabs>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="bg-slate-800/80 border-slate-700">
+                    <CardHeader>
+                      <CardTitle className="text-white">Change Email</CardTitle>
+                      <CardDescription className="text-slate-300">
+                        Update your email address
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {resetEmailSent ? (
+                        <Alert className="bg-green-900/50 text-green-100 border-green-700">
+                          <CheckCircle className="h-4 w-4" />
+                          <AlertTitle>Verification Email Sent!</AlertTitle>
+                          <AlertDescription>
+                            We've sent a verification link to your new email address.
+                            Please check your inbox and follow the instructions to confirm your new email.
+                          </AlertDescription>
+                        </Alert>
+                      ) : (
+                        <Form {...emailForm}>
+                          <form onSubmit={emailForm.handleSubmit(onEmailChange)} className="space-y-4">
+                            <FormField
+                              control={emailForm.control}
+                              name="email"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-slate-200">New Email Address</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      placeholder="your.new.email@example.com"
+                                      className="bg-slate-700/70 border-slate-600 text-white"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormMessage className="text-red-300" />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={emailForm.control}
+                              name="password"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-slate-200">Current Password</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      type="password"
+                                      placeholder="••••••••"
+                                      className="bg-slate-700/70 border-slate-600 text-white"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormDescription className="text-slate-400">
+                                    For security, please enter your current password
+                                  </FormDescription>
+                                  <FormMessage className="text-red-300" />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <Button type="submit">
+                              Change Email
+                            </Button>
+                          </form>
+                        </Form>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+            </Tabs>
+          )}
         </div>
       </main>
     </div>
