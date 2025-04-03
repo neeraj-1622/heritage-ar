@@ -22,10 +22,11 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { ArrowLeft, Info, Box, View, History } from 'lucide-react';
+import { ArrowLeft, Info, Box, View } from 'lucide-react';
 import { defaultSites } from '@/backend/data/defaultSites';
 import { supabase } from '@/lib/supabase';
 import { HistoricalSite } from '@/lib/supabase';
+import { Json } from '@/integrations/supabase/types';
 
 const ARExperience = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -60,11 +61,32 @@ const ARExperience = () => {
             variant: 'destructive',
           });
         } else if (data) {
-          setSitesList(data);
+          // Map the database response to match the HistoricalSite type
+          const mappedSites: HistoricalSite[] = data.map(site => ({
+            id: site.id,
+            name: site.name,
+            period: site.period,
+            location: site.location,
+            short_description: site.short_description,
+            long_description: site.long_description || undefined,
+            image_url: site.image_url,
+            ar_model_url: site.ar_model_url || undefined,
+            // Parse coordinates from Json to the expected format
+            coordinates: site.coordinates ? 
+              (typeof site.coordinates === 'string' 
+                ? JSON.parse(site.coordinates) 
+                : site.coordinates as { lat: number; lng: number }) 
+              : undefined,
+            created_at: site.created_at,
+            updated_at: site.updated_at,
+            created_by: site.created_by || undefined
+          }));
+
+          setSitesList(mappedSites);
           
           // Set initially selected site based on URL param
           if (siteName) {
-            const site = data.find(site => site.name === siteName);
+            const site = mappedSites.find(site => site.name === siteName);
             if (site) {
               setSelectedSite(site);
             }
@@ -145,7 +167,7 @@ const ARExperience = () => {
       {viewMode === 'ar' ? (
         <ARView
           modelUrl={modelUrl}
-          selectedSite={selectedSite || undefined}
+          selectedSite={selectedSite}
           showModel={true} 
           enableRotation={false}
           onInfoClick={() => {

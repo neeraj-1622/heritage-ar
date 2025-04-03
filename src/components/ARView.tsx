@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 
 interface ARViewProps {
   modelUrl?: string;
-  selectedSite?: HistoricalSite;
+  selectedSite?: HistoricalSite | null;
   showModel?: boolean;
   enableRotation?: boolean;
   onNextSite?: () => void;
@@ -122,6 +122,7 @@ const ARView: React.FC<ARViewProps> = ({
     );
   }
 
+  // Safely access properties with null checks
   const imageUrl = selectedSite?.image_url || 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=2071&auto=format&fit=crop';
   const siteName = selectedSite?.name || 'Historical Monument';
 
