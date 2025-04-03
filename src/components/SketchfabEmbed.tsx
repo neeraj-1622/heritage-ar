@@ -8,6 +8,7 @@ interface SketchfabEmbedProps {
   autoSpin?: boolean;
   uiTheme?: 'dark' | 'light';
   className?: string;
+  hideUi?: boolean;
 }
 
 declare global {
@@ -23,6 +24,7 @@ const SketchfabEmbed: React.FC<SketchfabEmbedProps> = ({
   autoSpin = true,
   uiTheme = "dark",
   className = "",
+  hideUi = false,
 }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   
@@ -40,7 +42,8 @@ const SketchfabEmbed: React.FC<SketchfabEmbedProps> = ({
     loadAPI();
   }, []);
 
-  const embedUrl = `https://sketchfab.com/models/${modelId}/embed?autospin=${autoSpin ? 1 : 0}&autostart=${autoStart ? 1 : 0}&preload=1&ui_theme=${uiTheme}`;
+  // Construct the URL with parameters
+  const embedUrl = `https://sketchfab.com/models/${modelId}/embed?autospin=${autoSpin ? 1 : 0}&autostart=${autoStart ? 1 : 0}&preload=1&ui_theme=${uiTheme}&ui_infos=${hideUi ? 0 : 1}&ui_controls=${hideUi ? 0 : 1}&ui_inspector=${hideUi ? 0 : 1}`;
   
   return (
     <div className={`sketchfab-embed-wrapper h-full w-full ${className}`}>

@@ -42,7 +42,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
 const ARExperience = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -99,6 +99,15 @@ const ARExperience = () => {
           }));
 
           setSitesList(mappedSites);
+
+          // Check if there's a site name in the URL params
+          const siteNameParam = searchParams.get('siteName');
+          if (siteNameParam) {
+            const site = mappedSites.find(site => site.name === siteNameParam);
+            if (site) {
+              setSelectedSite(site);
+            }
+          }
         }
       } catch (error) {
         console.error('Error in fetchSites:', error);
@@ -108,14 +117,19 @@ const ARExperience = () => {
     };
 
     fetchSites();
-  }, []);
+  }, [searchParams]);
 
   const handleBackClick = () => {
-    navigate(-1);
+    navigate('/');
   };
   
   const handleGoToHistoricalSite = () => {
-    navigate('/historical-site');
+    // If a site is selected, include it in the URL params
+    if (selectedSite) {
+      navigate(`/historical-site?siteName=${encodeURIComponent(selectedSite.name)}`);
+    } else {
+      navigate('/historical-site');
+    }
   };
   
   const handleSelectSite = (site: HistoricalSite) => {
@@ -150,9 +164,10 @@ const ARExperience = () => {
   };
 
   useEffect(() => {
+    // Show toast with camera instructions when the page loads
     toast({
       title: 'AR Experience Loaded',
-      description: 'Activate the camera to detect objects and create 3D models',
+      description: 'Click the camera button to start detecting objects',
       duration: 5000,
     });
   }, []);
@@ -186,10 +201,17 @@ const ARExperience = () => {
           showModel={objectDetection !== null}
           enableRotation={false}
           onInfoClick={() => {
-            // Handle info click if needed
+            // Handle info click
           }}
           onNextSite={() => {
-            // Handle next site if needed
+            // Handle next site selection
+            if (sitesList.length > 0) {
+              const currentIndex = selectedSite 
+                ? sitesList.findIndex(site => site.id === selectedSite.id)
+                : -1;
+              const nextIndex = (currentIndex + 1) % sitesList.length;
+              handleSelectSite(sitesList[nextIndex]);
+            }
           }}
         />
       )}
@@ -239,6 +261,12 @@ const ARExperience = () => {
                 onClick={() => setIsSiteMenuOpen(true)}
               >
                 Select Historical Site
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                className="hover:bg-heritage-700 cursor-pointer"
+                onClick={() => navigate('/')}
+              >
+                Home
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -292,7 +320,7 @@ const ARExperience = () => {
         </Dialog>
       )}
 
-      {/* Camera Alert Dialog */}
+      {/* Camera Alert Dialog - Show when camera isn't active */}
       <AlertDialog open={showCameraAlert && !isCameraActive} onOpenChange={setShowCameraAlert}>
         <AlertDialogContent className="bg-heritage-800/95 backdrop-blur-sm text-white border-heritage-700">
           <AlertDialogHeader>

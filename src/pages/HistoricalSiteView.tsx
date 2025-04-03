@@ -9,12 +9,10 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from '@/components/ui/sheet';
 import {
   AlertDialog,
   AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -138,6 +136,7 @@ const HistoricalSiteView = () => {
           title={siteName}
           autoSpin={true}
           autoStart={true}
+          hideUi={true}
           className="h-full w-full"
         />
       ) : (
@@ -244,39 +243,6 @@ const HistoricalSiteView = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Site Information Card */}
-      {selectedSite && (
-        <div className="absolute bottom-24 left-4 right-4 z-10">
-          <div className="bg-black/60 backdrop-blur-sm rounded-xl p-4 text-white">
-            <h3 className="text-xl font-medium">{selectedSite.name}</h3>
-            <p className="text-sm text-white/80 mt-1">{selectedSite.period} • {selectedSite.location}</p>
-            <p className="mt-2">{selectedSite.short_description}</p>
-            
-            <div className="mt-4 flex space-x-3">
-              <Button 
-                variant="default" 
-                size="sm"
-                onClick={() => setShowSiteInfo(true)}
-              >
-                More Info
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="text-white border-white/30"
-                onClick={() => {
-                  const currentIndex = sitesList.findIndex(site => site.id === selectedSite.id);
-                  const nextIndex = (currentIndex + 1) % sitesList.length;
-                  handleSiteSelect(sitesList[nextIndex]);
-                }}
-              >
-                Next Site
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Mode Switch Buttons */}
       <div className="absolute bottom-8 left-0 right-0 flex justify-center z-10">
