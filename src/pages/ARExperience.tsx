@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import ARView from '@/components/ARView';
+import WebcamObjectDetector from '@/components/WebcamObjectDetector';
 import {
   Drawer,
   DrawerContent,
@@ -21,11 +22,10 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { ArrowLeft, Info, Box, View, Menu } from 'lucide-react';
+import { ArrowLeft, Info, Box, View, Menu, Camera } from 'lucide-react';
 import { defaultSites } from '@/backend/data/defaultSites';
 import { supabase } from '@/lib/supabase';
 import { HistoricalSite } from '@/lib/supabase';
-import { Json } from '@/integrations/supabase/types';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,72 +38,12 @@ const ARExperience = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [showInstructions, setShowInstructions] = useState(true);
-  const [sitesList, setSitesList] = useState<HistoricalSite[]>(defaultSites);
-  const [selectedSite, setSelectedSite] = useState<HistoricalSite | null>(null);
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [objectDetection, setObjectDetection] = useState<{ class: string; score: number } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const modelUrl = searchParams.get('modelUrl') || '/models/monument.glb';
-  const siteName = searchParams.get('siteName') || 'Historical Monument';
   
-  useEffect(() => {
-    // Load historical sites from the database
-    const fetchSites = async () => {
-      setIsLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('historical_sites')
-          .select('*')
-          .order('name');
-        
-        if (error) {
-          console.error('Error fetching historical sites:', error);
-          toast({
-            title: 'Error',
-            description: 'Failed to load historical sites',
-            variant: 'destructive',
-          });
-        } else if (data) {
-          // Map the database response to match the HistoricalSite type
-          const mappedSites: HistoricalSite[] = data.map(site => ({
-            id: site.id,
-            name: site.name,
-            period: site.period,
-            location: site.location,
-            short_description: site.short_description,
-            long_description: site.long_description || undefined,
-            image_url: site.image_url,
-            ar_model_url: site.ar_model_url || undefined,
-            // Parse coordinates from Json to the expected format
-            coordinates: site.coordinates ? 
-              (typeof site.coordinates === 'string' 
-                ? JSON.parse(site.coordinates) 
-                : site.coordinates as { lat: number; lng: number }) 
-              : undefined,
-            created_at: site.created_at,
-            updated_at: site.updated_at,
-            created_by: site.created_by || undefined
-          }));
-
-          setSitesList(mappedSites);
-          
-          // Set initially selected site based on URL param
-          if (siteName) {
-            const site = mappedSites.find(site => site.name === siteName);
-            if (site) {
-              setSelectedSite(site);
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Error in fetchSites:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchSites();
-  }, [siteName]);
-
   const handleBackClick = () => {
     navigate(-1);
   };
@@ -111,11 +51,35 @@ const ARExperience = () => {
   const handleGoToHistoricalSite = () => {
     navigate('/historical-site');
   };
+  
+  const handleSelectSite = () => {
+    navigate('/historical-site');
+  };
+
+  const handleCameraToggle = () => {
+    setIsCameraActive(!isCameraActive);
+    if (!isCameraActive) {
+      toast({
+        title: 'Camera activated',
+        description: 'Point your camera at an object to create a 3D model',
+      });
+    }
+  };
+
+  const handleObjectDetection = (detection: { class: string; score: number } | null) => {
+    if (detection && detection.score > 0.7) {
+      setObjectDetection(detection);
+      toast({
+        title: `Detected ${detection.class}`,
+        description: `Confidence: ${Math.round(detection.score * 100)}%`,
+      });
+    }
+  };
 
   useEffect(() => {
     toast({
       title: 'AR Experience Loaded',
-      description: 'Move your device around to place the 3D model in your environment',
+      description: 'Activate the camera to detect objects and create 3D models',
       duration: 5000,
     });
   }, []);
@@ -125,10 +89,10 @@ const ARExperience = () => {
       <div className="space-y-4 mb-4">
         <h3 className="text-lg font-medium">How to use AR mode:</h3>
         <ol className="list-decimal pl-5 space-y-2">
-          <li>Allow camera access when prompted</li>
-          <li>Slowly move your device to scan the environment</li>
-          <li>Tap on a flat surface (floor, table) to place the model</li>
-          <li>Pinch to resize or drag to reposition</li>
+          <li>Click the camera button to activate your device camera</li>
+          <li>Point your camera at an object to analyze and create a 3D model</li>
+          <li>Click the "Historical Site" button to switch to historical site view</li>
+          <li>Select a historical site from the dropdown to view its 3D model</li>
         </ol>
       </div>
     </>
@@ -136,20 +100,26 @@ const ARExperience = () => {
 
   return (
     <div className="h-screen w-screen bg-black overflow-hidden relative">
-      <ARView
-        modelUrl={modelUrl}
-        selectedSite={selectedSite}
-        showModel={true} 
-        enableRotation={false}
-        onInfoClick={() => {
-          // Handle info click if needed
-        }}
-        onNextSite={() => {
-          const currentIndex = sitesList.findIndex(site => site.name === selectedSite?.name);
-          const nextIndex = (currentIndex + 1) % sitesList.length;
-          setSelectedSite(sitesList[nextIndex]);
-        }}
-      />
+      {isCameraActive ? (
+        <WebcamObjectDetector 
+          onDetection={handleObjectDetection} 
+          enabled={true} 
+          className="h-full w-full"
+        />
+      ) : (
+        <ARView
+          modelUrl={modelUrl}
+          selectedSite={null}
+          showModel={objectDetection !== null}
+          enableRotation={false}
+          onInfoClick={() => {
+            // Handle info click if needed
+          }}
+          onNextSite={() => {
+            // Handle next site if needed
+          }}
+        />
+      )}
       
       <div className="absolute top-0 left-0 right-0 p-4 z-10">
         <div className="flex justify-between items-center">
@@ -191,9 +161,27 @@ const ARExperience = () => {
               >
                 Settings
               </DropdownMenuItem>
+              <DropdownMenuItem 
+                className="hover:bg-heritage-700 cursor-pointer"
+                onClick={handleSelectSite}
+              >
+                Select Historical Site
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+      </div>
+
+      {/* Camera activation button */}
+      <div className="absolute bottom-24 right-4 z-20">
+        <Button
+          variant="default"
+          size="icon"
+          className="rounded-full h-14 w-14 bg-accent hover:bg-accent/90 shadow-lg"
+          onClick={handleCameraToggle}
+        >
+          <Camera className="h-6 w-6" />
+        </Button>
       </div>
       
       {/* Instructions dialog/drawer */}

@@ -182,6 +182,15 @@ const HistoricalSiteView = () => {
             <h3 className="text-xl font-medium">{selectedSite.name}</h3>
             <p className="text-sm text-white/80 mt-1">{selectedSite.period} • {selectedSite.location}</p>
             <p className="mt-2">{selectedSite.short_description}</p>
+            
+            <div className="mt-4 flex space-x-3">
+              <Button variant="default" size="sm">
+                More Info
+              </Button>
+              <Button variant="outline" size="sm" className="text-white border-white/30">
+                Next Site
+              </Button>
+            </div>
           </div>
         </div>
       )}
