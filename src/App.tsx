@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -11,6 +12,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import Index from "./pages/Index";
 import SiteDetail from "./pages/SiteDetail";
 import ARExperience from "./pages/ARExperience";
+import HistoricalSiteView from "./pages/HistoricalSiteView";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
@@ -71,7 +73,7 @@ const AnimationLayout = () => {
     }
   }, []);
 
-  const isARPage = location.pathname === '/ar';
+  const isARPage = location.pathname === '/ar' || location.pathname === '/historical-site';
 
   return (
     <AnimatePresence mode="wait">
@@ -97,6 +99,11 @@ const AnimationLayout = () => {
           <Route path="/ar" element={
             <ProtectedRoute>
               <ARExperience />
+            </ProtectedRoute>
+          } />
+          <Route path="/historical-site" element={
+            <ProtectedRoute>
+              <HistoricalSiteView />
             </ProtectedRoute>
           } />
           <Route 
