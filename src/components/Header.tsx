@@ -167,6 +167,13 @@ const Header: React.FC<HeaderProps> = ({
                     <UserCircle className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                   </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="text-white hover:bg-blue-700 cursor-pointer"
+                    onClick={() => navigate('/update-password')}
+                  >
+                    <UserCircle className="mr-2 h-4 w-4" />
+                    <span>Update Password</span>
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-blue-700/50" />
                   <DropdownMenuItem 
                     className="text-white hover:bg-blue-700 cursor-pointer"

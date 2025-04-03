@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -51,10 +50,9 @@ const AnimatedHeader: React.FC<HeaderProps> = ({ title, showBackButton = false }
 
   // Generate a consistent color based on the username
   const getAvatarColor = (username: string = 'User') => {
-    const colors = [
-      'bg-purple-800', 'bg-indigo-800', 'bg-blue-800', 
-      'bg-teal-800', 'bg-green-800', 'bg-amber-800', 
-      'bg-red-800', 'bg-pink-800'
+    const blueColors = [
+      'bg-blue-800', 'bg-indigo-800', 'bg-blue-900', 
+      'bg-indigo-900', 'bg-blue-700'
     ];
     
     let hash = 0;
@@ -63,8 +61,8 @@ const AnimatedHeader: React.FC<HeaderProps> = ({ title, showBackButton = false }
       hash = hash & hash; // Convert to 32bit integer
     }
     
-    const index = Math.abs(hash) % colors.length;
-    return colors[index];
+    const index = Math.abs(hash) % blueColors.length;
+    return blueColors[index];
   };
   
   const displayName = user?.display_name || user?.username || 'User';
@@ -143,12 +141,12 @@ const AnimatedHeader: React.FC<HeaderProps> = ({ title, showBackButton = false }
                     <button
                       onClick={() => {
                         setIsDropdownOpen(false);
-                        navigate('/settings');
+                        navigate('/update-password');
                       }}
                       className="flex items-center w-full px-4 py-2 text-sm text-white hover:bg-blue-700/80 transition-colors"
                     >
                       <Settings className="h-4 w-4 mr-2" />
-                      Settings
+                      Update Password
                     </button>
                     <button
                       onClick={handleLogout}
@@ -227,12 +225,12 @@ const AnimatedHeader: React.FC<HeaderProps> = ({ title, showBackButton = false }
               <button
                 onClick={() => {
                   setIsMenuOpen(false);
-                  navigate('/settings');
+                  navigate('/update-password');
                 }}
                 className="flex items-center w-full py-2 text-white hover:text-accent hover:pl-2 transition-all"
               >
                 <Settings className="h-4 w-4 mr-2" />
-                Settings
+                Update Password
               </button>
               <button
                 onClick={handleLogout}
