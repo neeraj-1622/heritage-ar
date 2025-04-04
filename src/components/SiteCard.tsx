@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Card3D from './Card3D';
 import { HistoricalSite } from '@/lib/supabase';
 
@@ -13,7 +13,7 @@ const SiteCard: React.FC<SiteCardProps> = ({ site }) => {
   
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    navigate(`/sites/${site.id}`);
+    navigate(`/site/${site.id}`);
   };
   
   return (

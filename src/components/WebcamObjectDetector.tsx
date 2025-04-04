@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from 'react';
 import * as tf from '@tensorflow/tfjs';
 import '@tensorflow/tfjs-backend-webgl';
@@ -26,6 +27,10 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [isCameraOn, setIsCameraOn] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [detectionConfidence, setDetectionConfidence] = useState<number>(0);
+  
+  // List of classes to filter out (human-related)
+  const filteredClasses = ['person', 'man', 'woman', 'child', 'boy', 'girl', 'face', 'human'];
   
   useEffect(() => {
     const initializeModel = async () => {
@@ -49,41 +54,9 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
   }, []);
 
   useEffect(() => {
-    const setupWebcam = async () => {
-      if (!videoRef.current) return;
-
-      try {
-        const constraints = {
-          video: {
-            width: { ideal: 640 },
-            height: { ideal: 480 },
-            facingMode: 'environment'
-          }
-        };
-        
-        const stream = await navigator.mediaDevices.getUserMedia(constraints);
-        
-        videoRef.current.srcObject = stream;
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current?.play().catch(err => {
-            console.error("Error playing video:", err);
-            setError("Could not start video stream. Please check permissions.");
-          });
-          setIsStreamActive(true);
-          setIsCameraOn(true);
-          toast({
-            title: "Camera activated",
-            description: "Point your camera at an object to detect it",
-          });
-        };
-      } catch (error) {
-        console.error('Error accessing webcam:', error);
-        setError('Could not access webcam. Please check permissions and try again.');
-      }
-    };
-
+    // Automatically setup webcam when component mounts
     setupWebcam();
-
+    
     return () => {
       if (videoRef.current?.srcObject) {
         const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
@@ -91,6 +64,39 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
       }
     };
   }, []);
+
+  const setupWebcam = async () => {
+    if (!videoRef.current) return;
+
+    try {
+      const constraints = {
+        video: {
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          facingMode: 'environment'
+        }
+      };
+      
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      
+      videoRef.current.srcObject = stream;
+      videoRef.current.onloadedmetadata = () => {
+        videoRef.current?.play().catch(err => {
+          console.error("Error playing video:", err);
+          setError("Could not start video stream. Please check permissions.");
+        });
+        setIsStreamActive(true);
+        setIsCameraOn(true);
+        toast({
+          title: "Camera activated",
+          description: "Point your camera at an object to detect it",
+        });
+      };
+    } catch (error) {
+      console.error('Error accessing webcam:', error);
+      setError('Could not access webcam. Please check permissions and try again.');
+    }
+  };
 
   useEffect(() => {
     if (!model || !videoRef.current || !enabled) {
@@ -108,16 +114,29 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
         const predictions = await model.detect(videoRef.current);
         
         if (predictions && predictions.length > 0) {
-          const bestPrediction = predictions.reduce((prev, current) => 
-            (current.score > prev.score) ? current : prev
+          // Filter out human-related detections
+          const filteredPredictions = predictions.filter(
+            pred => !filteredClasses.includes(pred.class.toLowerCase())
           );
           
-          onDetection({
-            class: bestPrediction.class,
-            score: bestPrediction.score
-          });
+          if (filteredPredictions.length > 0) {
+            const bestPrediction = filteredPredictions.reduce((prev, current) => 
+              (current.score > prev.score) ? current : prev
+            );
+            
+            onDetection({
+              class: bestPrediction.class,
+              score: bestPrediction.score
+            });
+            
+            setDetectionConfidence(bestPrediction.score * 100);
+          } else {
+            onDetection(null);
+            setDetectionConfidence(0);
+          }
         } else {
           onDetection(null);
+          setDetectionConfidence(0);
         }
       } catch (error) {
         console.error('Error detecting objects:', error);
@@ -165,9 +184,14 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
     // Detect objects in the captured image
     if (model) {
       model.detect(canvas).then(predictions => {
-        if (predictions.length > 0) {
+        // Filter out human-related detections
+        const filteredPredictions = predictions.filter(
+          pred => !filteredClasses.includes(pred.class.toLowerCase())
+        );
+        
+        if (filteredPredictions.length > 0) {
           // Find prediction with highest confidence
-          const topPrediction = predictions.reduce((prev, current) => 
+          const topPrediction = filteredPredictions.reduce((prev, current) => 
             (prev.score > current.score) ? prev : current
           );
           
@@ -182,7 +206,7 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
         } else {
           toast({
             title: "No objects detected",
-            description: "Try again with a different angle or object"
+            description: "Try again with a different object"
           });
         }
       });
@@ -196,36 +220,7 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
         title: "Camera deactivated",
       });
     } else {
-      try {
-        const constraints = {
-          video: {
-            width: { ideal: 640 },
-            height: { ideal: 480 },
-            facingMode: 'environment'
-          }
-        };
-        
-        const stream = await navigator.mediaDevices.getUserMedia(constraints);
-        
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.onloadedmetadata = () => {
-            videoRef.current?.play().catch(err => {
-              console.error("Error playing video:", err);
-              setError("Could not start video stream. Please check permissions.");
-            });
-            setIsStreamActive(true);
-            setIsCameraOn(true);
-            toast({
-              title: "Camera activated",
-              description: "Point your camera at an object to detect it",
-            });
-          };
-        }
-      } catch (error) {
-        console.error('Error accessing webcam:', error);
-        setError('Could not access webcam. Please check permissions and try again.');
-      }
+      setupWebcam();
     }
   };
 
@@ -238,6 +233,27 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
       setIsStreamActive(false);
       setIsCameraOn(false);
     }
+  };
+
+  // Render detection confidence indicator
+  const renderConfidenceIndicator = () => {
+    if (!isStreamActive || detectionConfidence === 0) return null;
+    
+    return (
+      <div className="absolute top-2 left-2 right-2 z-30">
+        <div className="bg-black/40 backdrop-blur-sm rounded-lg p-2">
+          <div className="w-full bg-gray-700 rounded-full h-2.5">
+            <div 
+              className="bg-accent h-2.5 rounded-full" 
+              style={{ width: `${Math.min(detectionConfidence, 100)}%` }}
+            ></div>
+          </div>
+          <p className="text-xs text-white/80 mt-1 text-center">
+            Detection confidence: {Math.round(detectionConfidence)}%
+          </p>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -293,6 +309,9 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
           ref={canvasRef}
           className="absolute top-0 left-0 w-full h-full"
         />
+
+        {/* Confidence indicator */}
+        {renderConfidenceIndicator()}
 
         {isStreamActive && (
           <div className="absolute bottom-4 right-4 z-20 flex space-x-2">

@@ -140,16 +140,6 @@ const ARView: React.FC<ARViewProps> = ({
         {cameraReady && !isModelLoaded && (
           <div className="absolute inset-0 z-5 animate-fade-in">
             <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/20 to-transparent"></div>
-            <div 
-              className="absolute inset-x-0 bottom-0 h-1/3 transform-gpu perspective-1000"
-              style={{
-                backgroundImage: `repeating-linear-gradient(0deg, rgba(255,255,255,0.3) 0px, transparent 1px, transparent 20px),
-                                repeating-linear-gradient(90deg, rgba(255,255,255,0.3) 0px, transparent 1px, transparent 20px)`,
-                transform: 'rotateX(60deg)',
-                transformOrigin: 'bottom',
-                backgroundSize: '20px 20px',
-              }}
-            ></div>
           </div>
         )}
       </div>
@@ -178,16 +168,6 @@ const ARView: React.FC<ARViewProps> = ({
                 filter: 'drop-shadow(0 10px 8px rgba(0, 0, 0, 0.4))',
               }}
             />
-            
-            <div className="absolute top-1/4 left-1/4 w-6 h-6 rounded-full bg-accent/80 animate-pulse-slow flex items-center justify-center" 
-                 style={{ transform: `rotateY(${-rotation}deg)` }}>
-              <div className="w-3 h-3 rounded-full bg-white"></div>
-            </div>
-            
-            <div className="absolute bottom-1/3 right-1/4 w-6 h-6 rounded-full bg-accent/80 animate-pulse-slow flex items-center justify-center"
-                 style={{ transform: `rotateY(${-rotation}deg)` }}>
-              <div className="w-3 h-3 rounded-full bg-white"></div>
-            </div>
           </div>
         </div>
       )}

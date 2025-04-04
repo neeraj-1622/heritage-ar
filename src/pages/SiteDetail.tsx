@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -31,6 +30,7 @@ const SiteDetail = () => {
 
       try {
         setLoading(true);
+        console.log("Fetching site with ID:", id);
 
         const { data, error } = await supabase
           .from('historical_sites')
@@ -49,6 +49,7 @@ const SiteDetail = () => {
         }
 
         setSite(data as HistoricalSite);
+        console.log("Site data loaded:", data);
 
         // Check if site is favorited by current user
         if (isAuthenticated && user?.id) {

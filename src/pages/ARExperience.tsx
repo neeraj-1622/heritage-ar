@@ -20,16 +20,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ArrowLeft, Info, Box, View, Menu, Camera } from 'lucide-react';
@@ -48,8 +38,8 @@ const ARExperience = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const [showInstructions, setShowInstructions] = useState(true);
-  const [showCameraAlert, setShowCameraAlert] = useState(true);
+  const [showInstructions, setShowInstructions] = useState(false);
+  const [showCameraAlert, setShowCameraAlert] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [objectDetection, setObjectDetection] = useState<{ class: string; score: number } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -88,7 +78,6 @@ const ARExperience = () => {
             long_description: site.long_description || undefined,
             image_url: site.image_url,
             ar_model_url: site.ar_model_url || undefined,
-            // Parse coordinates from Json to the expected format
             coordinates: site.coordinates ? 
               (typeof site.coordinates === 'string' 
                 ? JSON.parse(site.coordinates) 
@@ -117,6 +106,11 @@ const ARExperience = () => {
     };
 
     fetchSites();
+    
+    // Automatically activate camera when page loads
+    setTimeout(() => {
+      handleCameraToggle();
+    }, 1000);
   }, [searchParams]);
 
   const handleBackClick = () => {
@@ -154,12 +148,20 @@ const ARExperience = () => {
   };
 
   const handleObjectDetection = (detection: { class: string; score: number } | null) => {
-    if (detection && detection.score > 0.7) {
+    // Filter out human-related detections
+    const humanClasses = ['person', 'man', 'woman', 'child', 'boy', 'girl', 'face', 'human'];
+    
+    if (detection && detection.score > 0.7 && !humanClasses.includes(detection.class.toLowerCase())) {
       setObjectDetection(detection);
-      toast({
-        title: `Detected ${detection.class}`,
-        description: `Confidence: ${Math.round(detection.score * 100)}%`,
-      });
+      // Only show toast for significant changes to avoid spamming
+      if (!objectDetection || objectDetection.class !== detection.class) {
+        toast({
+          title: `Detected ${detection.class}`,
+          description: `Confidence: ${Math.round(detection.score * 100)}%`,
+        });
+      }
+    } else if (!detection) {
+      setObjectDetection(null);
     }
   };
 
@@ -167,8 +169,8 @@ const ARExperience = () => {
     // Show toast with camera instructions when the page loads
     toast({
       title: 'AR Experience Loaded',
-      description: 'Click the camera button to start detecting objects',
-      duration: 5000,
+      description: 'Camera is being activated automatically',
+      duration: 3000,
     });
   }, []);
 
@@ -177,8 +179,8 @@ const ARExperience = () => {
       <div className="space-y-4 mb-4">
         <h3 className="text-lg font-medium">How to use AR mode:</h3>
         <ol className="list-decimal pl-5 space-y-2">
-          <li>Click the camera button to activate your device camera</li>
           <li>Point your camera at an object to analyze and create a 3D model</li>
+          <li>The camera will ignore human faces and focus on objects</li>
           <li>Click the "Historical Site" button to switch to historical site view</li>
           <li>Select a historical site from the dropdown to view its 3D model</li>
         </ol>
@@ -323,31 +325,16 @@ const ARExperience = () => {
         </Dialog>
       )}
 
-      {/* Camera Alert Dialog - Show when camera isn't active */}
-      <AlertDialog open={showCameraAlert && !isCameraActive} onOpenChange={setShowCameraAlert}>
-        <AlertDialogContent className="bg-heritage-800/95 backdrop-blur-sm text-white border-heritage-700">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Camera Access Required</AlertDialogTitle>
-            <AlertDialogDescription className="text-gray-300">
-              Click on the camera button to activate your device's camera. 
-              This will allow you to analyze objects and create 3D models in AR.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel 
-              className="bg-transparent border-heritage-600 text-white hover:bg-heritage-700"
-            >
-              Later
-            </AlertDialogCancel>
-            <AlertDialogAction 
-              className="bg-accent hover:bg-accent/90" 
-              onClick={handleCameraToggle}
-            >
-              Activate Camera
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Detection status indicator */}
+      {isCameraActive && (
+        <div className="absolute top-16 left-0 right-0 z-20 flex justify-center">
+          <div className={`px-4 py-2 rounded-full ${objectDetection ? 'bg-accent' : 'bg-heritage-800/70'} text-white text-sm backdrop-blur-sm transition-all duration-300`}>
+            {objectDetection ? 
+              `Detected: ${objectDetection.class} (${Math.round(objectDetection.score * 100)}%)` : 
+              'No objects detected'}
+          </div>
+        </div>
+      )}
 
       <div className="absolute bottom-8 left-0 right-0 flex justify-center z-10">
         <div className="bg-black/50 rounded-full backdrop-blur-sm p-1">
