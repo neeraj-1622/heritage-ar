@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -181,7 +182,7 @@ const SiteDetail = () => {
         </div>
         
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">About this site</h2>
+          <h2 className="text-2xl font-bold text-heritage-900">About this site</h2>
           <div className="flex space-x-2">
             {site.ar_model_url && (
               <Button 
@@ -225,14 +226,14 @@ const SiteDetail = () => {
             <TabsTrigger value="history">History</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="description" className="text-gray-700 leading-relaxed">
+          <TabsContent value="description" className="bg-white shadow-sm rounded-lg p-6 text-gray-700 leading-relaxed">
             <div className="prose prose-slate max-w-none">
               <p className="text-lg mb-4">{site.short_description}</p>
               <p>{site.long_description || "No detailed description available for this historical site."}</p>
             </div>
           </TabsContent>
           
-          <TabsContent value="history" className="text-gray-700 leading-relaxed">
+          <TabsContent value="history" className="bg-white shadow-sm rounded-lg p-6 text-gray-700 leading-relaxed">
             <div className="prose prose-slate max-w-none">
               <p className="text-lg mb-4">
                 {site.name} is from the {site.period} period and is located in {site.location}.
