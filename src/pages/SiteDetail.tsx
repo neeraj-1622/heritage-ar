@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -44,8 +43,8 @@ const SiteDetail = () => {
           return;
         }
 
-        setSite(data as HistoricalSite);
         console.log("Site data loaded:", data);
+        setSite(data as HistoricalSite);
 
         // Check if site is favorited by current user
         if (isAuthenticated && user?.id) {
@@ -54,6 +53,11 @@ const SiteDetail = () => {
         }
       } catch (err) {
         console.error("Error in fetchSiteDetail:", err);
+        toast({
+          title: "Error",
+          description: "An unexpected error occurred. Please try again.",
+          variant: "destructive",
+        });
       } finally {
         setLoading(false);
       }
@@ -224,7 +228,7 @@ const SiteDetail = () => {
           <TabsContent value="description" className="text-gray-700 leading-relaxed">
             <div className="prose prose-slate max-w-none">
               <p className="text-lg mb-4">{site.short_description}</p>
-              <p>{site.long_description}</p>
+              <p>{site.long_description || "No detailed description available for this historical site."}</p>
             </div>
           </TabsContent>
           
@@ -233,7 +237,7 @@ const SiteDetail = () => {
               <p className="text-lg mb-4">
                 {site.name} is from the {site.period} period and is located in {site.location}.
               </p>
-              <p>{site.long_description}</p>
+              <p>{site.long_description || "Historical information about this site is currently being compiled."}</p>
             </div>
           </TabsContent>
         </Tabs>

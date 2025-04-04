@@ -14,7 +14,17 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ site, className = '' }) => {
   const navigate = useNavigate();
   
   const handleViewInAR = () => {
-    navigate(`/ar?siteId=${site.id}`);
+    // Use the site ID rather than just the AR path
+    const params = new URLSearchParams();
+    params.append('siteName', site.name);
+    if (site.ar_model_url) {
+      params.append('modelUrl', site.ar_model_url);
+    }
+    navigate(`/ar?${params.toString()}`);
+  };
+  
+  const handleViewDetails = () => {
+    navigate(`/site/${site.id}`);
   };
   
   return (
@@ -38,13 +48,22 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ site, className = '' }) => {
           {site.short_description}
         </p>
 
-        <div className="pt-2">
+        <div className="pt-2 flex space-x-2">
           <Button 
             onClick={handleViewInAR}
             className="bg-accent hover:bg-accent/80 text-white rounded-xl transition-all duration-300 
             hover:shadow-accent/20 active:scale-95"
           >
             View in AR
+          </Button>
+          
+          <Button 
+            onClick={handleViewDetails}
+            variant="outline"
+            className="text-white border-heritage-600 rounded-xl transition-all duration-300 
+            hover:bg-heritage-700 active:scale-95"
+          >
+            View Details
           </Button>
         </div>
       </div>

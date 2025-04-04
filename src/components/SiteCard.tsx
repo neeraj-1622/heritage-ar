@@ -11,9 +11,8 @@ interface SiteCardProps {
 const SiteCard: React.FC<SiteCardProps> = ({ site }) => {
   const navigate = useNavigate();
   
-  const handleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    // Ensure we're using the correct path format for site details
+  const handleClick = () => {
+    // Navigate to the site detail page with the site ID
     navigate(`/site/${site.id}`);
   };
   

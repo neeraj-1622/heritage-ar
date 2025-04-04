@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, User, LogOut, UserCircle } from 'lucide-react';
@@ -107,13 +106,18 @@ const Header: React.FC<HeaderProps> = ({
     return blueColors[index];
   };
 
+  // Ensure back button always navigates to home
+  const handleBackClick = () => {
+    navigate('/');
+  };
+
   return (
     <header className="fixed top-0 left-0 right-0 z-10 glass-panel px-4 py-4 flex items-center">
       <div className="container mx-auto flex items-center justify-between">
         <div className="flex items-center space-x-4">
           {showBackButton && (
             <button 
-              onClick={() => navigate('/')} 
+              onClick={handleBackClick} 
               className="p-2 rounded-full hover:bg-heritage-100 transition-colors duration-200"
               aria-label="Go back to home"
             >
@@ -206,5 +210,11 @@ const Header: React.FC<HeaderProps> = ({
     </header>
   );
 };
+
+// Preserving existing functions
+const useEffect = Header.prototype.constructor.useEffect;
+const handleLogout = Header.prototype.handleLogout;
+const getInitials = Header.prototype.getInitials;
+const getAvatarColor = Header.prototype.getAvatarColor;
 
 export default Header;
