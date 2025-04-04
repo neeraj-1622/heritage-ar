@@ -13,6 +13,7 @@ const SiteCard: React.FC<SiteCardProps> = ({ site }) => {
   
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
+    // Ensure we're using the correct path format for site details
     navigate(`/site/${site.id}`);
   };
   

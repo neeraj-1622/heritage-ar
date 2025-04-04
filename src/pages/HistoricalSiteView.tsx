@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
-import SketchfabEmbed from '@/components/SketchfabEmbed';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, PerspectiveCamera, useGLTF } from '@react-three/drei';
 import {
   Sheet,
   SheetContent,
@@ -24,13 +25,31 @@ import { ArrowLeft, Box, View, Menu, Info } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { HistoricalSite } from '@/lib/supabase';
 import { defaultSites } from '@/backend/data/defaultSites';
-import { getSketchfabModelId } from '@/utils/sketchfabModels';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+
+// Model component to display 3D GLB models
+const Model = ({ url }: { url: string }) => {
+  const { scene } = useGLTF(url);
+  
+  return (
+    <primitive object={scene} position={[0, 0, 0]} scale={1} />
+  );
+};
+
+// Fallback model when no model is available
+const PlaceholderModel = () => {
+  return (
+    <mesh>
+      <boxGeometry args={[1, 1, 1]} />
+      <meshStandardMaterial color="white" wireframe />
+    </mesh>
+  );
+};
 
 const HistoricalSiteView = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -41,10 +60,9 @@ const HistoricalSiteView = () => {
   const [isSiteMenuOpen, setIsSiteMenuOpen] = useState(false);
   const [showSiteInfo, setShowSiteInfo] = useState(false);
   
-  // Get site name from URL or use default
+  // Get site name and model URL from URL
   const siteName = searchParams.get('siteName') || '';
-  // Get model ID directly from URL params or based on site name
-  const sketchfabId = searchParams.get('sketchfabId') || (siteName ? getSketchfabModelId(siteName) : '');
+  const modelUrl = searchParams.get('modelUrl') || '';
 
   useEffect(() => {
     // Load historical sites from the database
@@ -106,13 +124,16 @@ const HistoricalSiteView = () => {
   }, [siteName]);
 
   const handleBackClick = () => {
-    navigate(-1);
+    navigate('/');
   };
 
   const handleGoToAR = () => {
     if (selectedSite) {
       const params = new URLSearchParams();
       params.append('siteName', selectedSite.name);
+      if (selectedSite.ar_model_url) {
+        params.append('modelUrl', selectedSite.ar_model_url);
+      }
       navigate(`/ar?${params.toString()}`);
     } else {
       navigate('/ar');
@@ -123,12 +144,11 @@ const HistoricalSiteView = () => {
     const params = new URLSearchParams(searchParams);
     params.set('siteName', site.name);
     
-    // Add sketchfabId if available
-    const modelId = getSketchfabModelId(site.name);
-    if (modelId) {
-      params.set('sketchfabId', modelId);
+    // Add model URL if available
+    if (site.ar_model_url) {
+      params.set('modelUrl', site.ar_model_url);
     } else {
-      params.delete('sketchfabId');
+      params.delete('modelUrl');
     }
     
     setSelectedSite(site);
@@ -142,34 +162,31 @@ const HistoricalSiteView = () => {
     });
   };
 
+  // Function to get the effective model URL (either from the selected site or from URL params)
+  const getEffectiveModelUrl = () => {
+    if (modelUrl) return modelUrl;
+    if (selectedSite?.ar_model_url) return selectedSite.ar_model_url;
+    return '';
+  };
+
   return (
     <div className="h-screen w-screen bg-heritage-900 overflow-hidden relative">
       {/* 3D Model View */}
-      {sketchfabId ? (
-        <SketchfabEmbed 
-          modelId={sketchfabId}
-          title={siteName}
-          autoSpin={true}
-          autoStart={true}
-          hideUi={true}
-          className="h-full w-full"
-        />
-      ) : (
-        <div className="h-full w-full flex items-center justify-center bg-heritage-800">
-          <div className="text-center p-8 max-w-md">
-            <h2 className="text-2xl text-white font-bold mb-4">Select a Historical Site</h2>
-            <p className="text-gray-300 mb-6">
-              Click the "Select Historical Site" button above to choose a monument or building to view in 3D.
-            </p>
-            <Button 
-              onClick={() => setIsSiteMenuOpen(true)}
-              className="bg-accent hover:bg-accent/90"
-            >
-              Browse Sites
-            </Button>
-          </div>
-        </div>
-      )}
+      <div className="h-full w-full">
+        <Canvas>
+          <ambientLight intensity={0.5} />
+          <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} />
+          <PerspectiveCamera makeDefault position={[0, 0, 5]} />
+          
+          {getEffectiveModelUrl() ? (
+            <Model url={getEffectiveModelUrl()} />
+          ) : (
+            <PlaceholderModel />
+          )}
+          
+          <OrbitControls enableZoom={true} autoRotate={true} autoRotateSpeed={0.5} />
+        </Canvas>
+      </div>
       
       {/* Top Navigation */}
       <div className="absolute top-0 left-0 right-0 p-4 z-20">

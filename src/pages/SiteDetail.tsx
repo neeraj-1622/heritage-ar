@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/hooks/use-toast';
@@ -9,11 +10,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { HeartIcon, MapPinIcon, CalendarIcon, View, Box, Loader2 } from 'lucide-react';
 import { isSiteFavorited, addToFavorites, removeFromFavorites } from '@/lib/supabase';
 import type { HistoricalSite } from '@/lib/supabase';
-
-const SKETCHFAB_MODELS: Record<string, string> = {
-  'Parthenon': 'fa23b514e7564ebca473d7e041a07118',
-  // Add more model IDs for other historical sites as needed
-};
 
 const SiteDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -133,8 +129,6 @@ const SiteDetail = () => {
       </div>
     );
   }
-
-  const sketchfabModelId = SKETCHFAB_MODELS[site.name] || '';
   
   const handleViewInAR = () => {
     const params = new URLSearchParams();
@@ -142,19 +136,13 @@ const SiteDetail = () => {
       params.append('modelUrl', site.ar_model_url);
     }
     params.append('siteName', site.name);
-    if (sketchfabModelId) {
-      params.append('sketchfabId', sketchfabModelId);
-    }
     navigate(`/ar?${params.toString()}`);
   };
 
   const handleView3DModel = () => {
     const params = new URLSearchParams();
     params.append('siteName', site.name);
-    if (sketchfabModelId) {
-      params.append('sketchfabId', sketchfabModelId);
-      params.append('viewMode', 'sketchfab');
-    } else if (site.ar_model_url) {
+    if (site.ar_model_url) {
       params.append('modelUrl', site.ar_model_url);
     }
     navigate(`/historical-site?${params.toString()}`);
@@ -201,7 +189,7 @@ const SiteDetail = () => {
               </Button>
             )}
             
-            {sketchfabModelId && (
+            {site.ar_model_url && (
               <Button 
                 variant="outline"
                 onClick={handleView3DModel}

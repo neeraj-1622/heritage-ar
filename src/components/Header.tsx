@@ -111,14 +111,14 @@ const Header: React.FC<HeaderProps> = ({
     <header className="fixed top-0 left-0 right-0 z-10 glass-panel px-4 py-4 flex items-center">
       <div className="container mx-auto flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          {showBackButton && !isHomePage && (
-            <Link 
-              to="/" 
+          {showBackButton && (
+            <button 
+              onClick={() => navigate('/')} 
               className="p-2 rounded-full hover:bg-heritage-100 transition-colors duration-200"
-              aria-label="Go back"
+              aria-label="Go back to home"
             >
               <ArrowLeft size={20} className="text-white" />
-            </Link>
+            </button>
           )}
           
           <Link to="/" className="text-xl font-medium tracking-tight text-white">
