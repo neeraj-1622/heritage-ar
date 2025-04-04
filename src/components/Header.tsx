@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, User, LogOut, UserCircle } from 'lucide-react';
@@ -210,11 +211,5 @@ const Header: React.FC<HeaderProps> = ({
     </header>
   );
 };
-
-// Preserving existing functions
-const useEffect = Header.prototype.constructor.useEffect;
-const handleLogout = Header.prototype.handleLogout;
-const getInitials = Header.prototype.getInitials;
-const getAvatarColor = Header.prototype.getAvatarColor;
 
 export default Header;
