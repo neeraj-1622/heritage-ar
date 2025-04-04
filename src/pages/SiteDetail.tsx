@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -155,7 +156,7 @@ const SiteDetail = () => {
     } else if (site.ar_model_url) {
       params.append('modelUrl', site.ar_model_url);
     }
-    navigate(`/ar?${params.toString()}`);
+    navigate(`/historical-site?${params.toString()}`);
   };
 
   return (

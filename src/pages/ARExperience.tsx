@@ -58,6 +58,7 @@ const ARExperience = () => {
   const [selectedSite, setSelectedSite] = useState<HistoricalSite | null>(null);
 
   const modelUrl = searchParams.get('modelUrl') || '/models/monument.glb';
+  const siteName = searchParams.get('siteName') || '';
   
   useEffect(() => {
     // Load historical sites from the database
@@ -101,9 +102,8 @@ const ARExperience = () => {
           setSitesList(mappedSites);
 
           // Check if there's a site name in the URL params
-          const siteNameParam = searchParams.get('siteName');
-          if (siteNameParam) {
-            const site = mappedSites.find(site => site.name === siteNameParam);
+          if (siteName) {
+            const site = mappedSites.find(site => site.name === siteName);
             if (site) {
               setSelectedSite(site);
             }
@@ -198,10 +198,13 @@ const ARExperience = () => {
         <ARView
           modelUrl={modelUrl}
           selectedSite={selectedSite}
-          showModel={objectDetection !== null}
+          showModel={true}
           enableRotation={false}
           onInfoClick={() => {
-            // Handle info click
+            // Show site info if available
+            if (selectedSite) {
+              setShowInstructions(true);
+            }
           }}
           onNextSite={() => {
             // Handle next site selection
@@ -254,7 +257,7 @@ const ARExperience = () => {
                 className="hover:bg-heritage-700 cursor-pointer"
                 onClick={() => navigate('/update-password')}
               >
-                Settings
+                Update Password
               </DropdownMenuItem>
               <DropdownMenuItem 
                 className="hover:bg-heritage-700 cursor-pointer"

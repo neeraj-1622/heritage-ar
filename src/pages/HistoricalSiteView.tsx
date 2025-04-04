@@ -43,8 +43,8 @@ const HistoricalSiteView = () => {
   
   // Get site name from URL or use default
   const siteName = searchParams.get('siteName') || '';
-  // Get model ID based on site name
-  const sketchfabModelId = siteName ? getSketchfabModelId(siteName) : '';
+  // Get model ID directly from URL params or based on site name
+  const sketchfabId = searchParams.get('sketchfabId') || (siteName ? getSketchfabModelId(siteName) : '');
 
   useEffect(() => {
     // Load historical sites from the database
@@ -110,12 +110,27 @@ const HistoricalSiteView = () => {
   };
 
   const handleGoToAR = () => {
-    navigate('/ar');
+    if (selectedSite) {
+      const params = new URLSearchParams();
+      params.append('siteName', selectedSite.name);
+      navigate(`/ar?${params.toString()}`);
+    } else {
+      navigate('/ar');
+    }
   };
 
   const handleSiteSelect = (site: HistoricalSite) => {
     const params = new URLSearchParams(searchParams);
     params.set('siteName', site.name);
+    
+    // Add sketchfabId if available
+    const modelId = getSketchfabModelId(site.name);
+    if (modelId) {
+      params.set('sketchfabId', modelId);
+    } else {
+      params.delete('sketchfabId');
+    }
+    
     setSelectedSite(site);
     setSearchParams(params);
     setIsSiteMenuOpen(false);
@@ -130,9 +145,9 @@ const HistoricalSiteView = () => {
   return (
     <div className="h-screen w-screen bg-heritage-900 overflow-hidden relative">
       {/* 3D Model View */}
-      {sketchfabModelId ? (
+      {sketchfabId ? (
         <SketchfabEmbed 
-          modelId={sketchfabModelId}
+          modelId={sketchfabId}
           title={siteName}
           autoSpin={true}
           autoStart={true}
@@ -205,7 +220,7 @@ const HistoricalSiteView = () => {
                   className="hover:bg-heritage-700 cursor-pointer"
                   onClick={() => navigate('/update-password')}
                 >
-                  Settings
+                  Update Password
                 </DropdownMenuItem>
                 <DropdownMenuItem 
                   className="hover:bg-heritage-700 cursor-pointer"
