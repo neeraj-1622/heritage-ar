@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Rotate3d, RefreshCw, Camera } from "lucide-react";
+import { RefreshCw, Camera } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface CameraControlsProps {
@@ -13,6 +13,7 @@ interface CameraControlsProps {
   currentObject: string | null;
   onCaptureStart: () => void;
   onToggleCamera: () => void;
+  showCaptureButton?: boolean;
 }
 
 const CameraControls: React.FC<CameraControlsProps> = ({ 
@@ -23,13 +24,14 @@ const CameraControls: React.FC<CameraControlsProps> = ({
   detectionConfidence, 
   currentObject, 
   onCaptureStart, 
-  onToggleCamera 
+  onToggleCamera,
+  showCaptureButton = true
 }) => {
   if (!isStreamActive) return null;
   
   return (
     <div className="absolute bottom-4 right-4 z-20 flex space-x-2">
-      {!isCapturing && !isProcessing && (
+      {showCaptureButton && !isCapturing && !isProcessing && (
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -40,7 +42,7 @@ const CameraControls: React.FC<CameraControlsProps> = ({
                 onClick={onCaptureStart}
                 disabled={detectionConfidence < 70 || !currentObject}
               >
-                <Rotate3d className="h-5 w-5" />
+                <span className="sr-only">Capture in 3D</span>
               </Button>
             </TooltipTrigger>
             <TooltipContent>

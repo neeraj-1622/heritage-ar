@@ -15,9 +15,15 @@ import CameraControls from './CameraControls';
 import ImageGallery from './ImageGallery';
 import ErrorDisplay from './ErrorDisplay';
 import ProcessingOverlay from './ProcessingOverlay';
+import DirectionalGuidance from './DirectionalGuidance';
 
 // List of classes to filter out (human-related)
 const FILTERED_CLASSES = ['person', 'man', 'woman', 'child', 'boy', 'girl', 'face', 'human'];
+
+// Cube sides for directional guidance
+const CUBE_SIDES = [
+  'front', 'right', 'back', 'left', 'top', 'bottom'
+];
 
 const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({ 
   onDetection, 
@@ -37,6 +43,10 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
   const [captureProgress, setCaptureProgress] = useState(0);
   const [currentObject, setCurrentObject] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showModelButton, setShowModelButton] = useState(false);
+  const [currentSideIndex, setCurrentSideIndex] = useState(0);
+  const [objectDetectedTime, setObjectDetectedTime] = useState<number | null>(null);
+  const [lastCaptureTime, setLastCaptureTime] = useState<number>(0);
   
   useEffect(() => {
     const initializeModel = async () => {
@@ -71,6 +81,27 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
     };
   }, []);
 
+  // Auto-start capture when object is consistently detected
+  useEffect(() => {
+    if (!currentObject || detectionConfidence < 70 || isCapturing || isProcessing) {
+      setObjectDetectedTime(null);
+      return;
+    }
+    
+    // Start timer when object is first detected with good confidence
+    if (objectDetectedTime === null) {
+      setObjectDetectedTime(Date.now());
+      return;
+    }
+    
+    // If object has been detected continuously for 2 seconds, start capture
+    const detectionDuration = Date.now() - objectDetectedTime;
+    if (detectionDuration > 2000 && !isCapturing && !isProcessing) {
+      startMultiAngleCapture();
+    }
+    
+  }, [currentObject, detectionConfidence, isCapturing, isProcessing, objectDetectedTime]);
+
   const setupWebcam = async () => {
     if (!videoRef.current) return;
 
@@ -95,7 +126,7 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
         setIsCameraOn(true);
         toast({
           title: "Camera activated",
-          description: "Point your camera at an object to detect it",
+          description: "Point your camera at an object to start automatic 3D capture",
         });
       };
     } catch (error) {
@@ -195,6 +226,10 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
     
     // Add to captured images array
     setCapturedImages(prev => [...prev, imageDataUrl]);
+    setLastCaptureTime(Date.now());
+    
+    // Move to next side
+    setCurrentSideIndex(prev => (prev + 1) % CUBE_SIDES.length);
     
     return imageDataUrl;
   };
@@ -212,39 +247,50 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
     setIsCapturing(true);
     setCapturedImages([]);
     setCaptureProgress(0);
+    setCurrentSideIndex(0);
+    setLastCaptureTime(Date.now());
     
     toast({
-      title: "Starting capture sequence",
-      description: "Slowly rotate the object in front of the camera",
+      title: `Starting 3D capture of ${currentObject}`,
+      description: "We'll guide you through rotating the object",
     });
     
-    // Capture multiple images over time
-    let captureCount = 0;
-    const totalCaptures = 8; // Capture 8 angles
-    
-    const captureInterval = setInterval(() => {
-      const image = captureImage();
-      
-      if (image) {
-        captureCount++;
-        const progress = (captureCount / totalCaptures) * 100;
-        setCaptureProgress(progress);
-        
-        toast({
-          title: `Captured angle ${captureCount} of ${totalCaptures}`,
-          description: "Continue slowly rotating the object",
-        });
-        
-        if (captureCount >= totalCaptures) {
-          clearInterval(captureInterval);
-          setIsCapturing(false);
-          processImages(currentObject);
-        }
-      }
-    }, 1000); // Capture an image every second
-    
-    return () => clearInterval(captureInterval);
+    // First capture happens immediately
+    captureImage();
   };
+
+  // This effect manages the capture of images based on timing and user actions
+  useEffect(() => {
+    if (!isCapturing || isProcessing) return;
+    
+    const timeSinceLastCapture = Date.now() - lastCaptureTime;
+    
+    // Update progress based on captures
+    const progress = (capturedImages.length / CUBE_SIDES.length) * 100;
+    setCaptureProgress(progress);
+    
+    // If we've captured all sides, process the images
+    if (capturedImages.length >= CUBE_SIDES.length) {
+      setIsCapturing(false);
+      processImages(currentObject!);
+      return;
+    }
+    
+    // Automatic capture every 3 seconds if user hasn't manually captured
+    const captureTimeout = setTimeout(() => {
+      if (isCapturing && timeSinceLastCapture > 3000) {
+        captureImage();
+        
+        // Guide user for next side
+        toast({
+          title: `Captured ${CUBE_SIDES[currentSideIndex === 0 ? CUBE_SIDES.length - 1 : currentSideIndex - 1]} side`,
+          description: `Now show the ${CUBE_SIDES[currentSideIndex]} side of the object`,
+        });
+      }
+    }, 3000 - timeSinceLastCapture);
+    
+    return () => clearTimeout(captureTimeout);
+  }, [isCapturing, isProcessing, capturedImages.length, lastCaptureTime, currentSideIndex, currentObject]);
 
   const processImages = async (objectClass: string) => {
     if (capturedImages.length < 3) {
@@ -276,8 +322,23 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
       
       toast({
         title: "3D model created!",
-        description: "Your object has been successfully rendered in 3D",
+        description: "Click the 'Show 3D Model' button to view your object in AR",
+        action: (
+          <Button 
+            onClick={() => {
+              setShowModelButton(false);
+              // The parent component already has the model data from onDetection
+            }} 
+            variant="outline" 
+            className="bg-accent text-white hover:bg-accent/90"
+          >
+            Show 3D Model
+          </Button>
+        ),
+        duration: 10000,
       });
+      
+      setShowModelButton(true);
     } catch (error) {
       console.error('Error processing images:', error);
       toast({
@@ -365,6 +426,13 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
           progress={captureProgress} 
         />
 
+        <DirectionalGuidance 
+          isCapturing={isCapturing}
+          currentSide={CUBE_SIDES[currentSideIndex]}
+          sidesTotal={CUBE_SIDES.length}
+          sideCaptured={capturedImages.length}
+        />
+
         <ProcessingOverlay isProcessing={isProcessing} />
 
         <CameraControls 
@@ -376,6 +444,7 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
           currentObject={currentObject}
           onCaptureStart={startMultiAngleCapture}
           onToggleCamera={toggleCamera}
+          showCaptureButton={false} // Hide the manual capture button since it's automatic now
         />
       </div>
       
@@ -383,6 +452,7 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
         images={capturedImages}
         isCapturing={isCapturing}
         isProcessing={isProcessing}
+        sides={CUBE_SIDES}
       />
     </div>
   );
