@@ -56,7 +56,7 @@ const DirectionalGuidance: React.FC<DirectionalGuidanceProps> = ({
         </div>
       </div>
       
-      <div className="absolute bottom-20 left-4 right-4">
+      <div className="absolute bottom-36 left-4 right-4">
         <div className="bg-black/60 text-white p-3 rounded-lg text-sm backdrop-blur-sm text-center">
           {(() => {
             switch (currentSide) {
@@ -76,6 +76,7 @@ const DirectionalGuidance: React.FC<DirectionalGuidanceProps> = ({
                 return "Rotate the object slowly";
             }
           })()}
+          <p className="text-xs mt-2 text-white/70">Tap anywhere on screen to manually capture this side</p>
         </div>
       </div>
     </div>

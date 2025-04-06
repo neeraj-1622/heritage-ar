@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import * as tf from '@tensorflow/tfjs';
 import '@tensorflow/tfjs-backend-webgl';
@@ -47,6 +46,8 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
   const [currentSideIndex, setCurrentSideIndex] = useState(0);
   const [objectDetectedTime, setObjectDetectedTime] = useState<number | null>(null);
   const [lastCaptureTime, setLastCaptureTime] = useState<number>(0);
+  const [nextCaptureTimeoutId, setNextCaptureTimeoutId] = useState<NodeJS.Timeout | null>(null);
+  const [manualCaptureMode, setManualCaptureMode] = useState(false);
   
   useEffect(() => {
     const initializeModel = async () => {
@@ -77,6 +78,10 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
       if (videoRef.current?.srcObject) {
         const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
         tracks.forEach(track => track.stop());
+      }
+      // Clear any lingering timeouts on unmount
+      if (nextCaptureTimeoutId) {
+        clearTimeout(nextCaptureTimeoutId);
       }
     };
   }, []);
@@ -145,7 +150,7 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
     let isDetecting = true;
 
     const detectObjects = async () => {
-      if (!videoRef.current || !model || !isDetecting || isCapturing) return;
+      if (!videoRef.current || !model || !isDetecting || isProcessing) return;
 
       try {
         const predictions = await model.detect(videoRef.current);
@@ -207,7 +212,7 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
         videoRef.current.removeEventListener('loadeddata', detectObjects);
       }
     };
-  }, [model, enabled, onDetection, isCapturing]);
+  }, [model, enabled, onDetection, isProcessing]);
 
   const captureImage = () => {
     if (!canvasRef.current || !videoRef.current || !isStreamActive) return;
@@ -228,8 +233,18 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
     setCapturedImages(prev => [...prev, imageDataUrl]);
     setLastCaptureTime(Date.now());
     
+    // Log for debugging
+    console.log(`Captured side: ${CUBE_SIDES[currentSideIndex]} (${capturedImages.length + 1}/${CUBE_SIDES.length})`);
+    
     // Move to next side
     setCurrentSideIndex(prev => (prev + 1) % CUBE_SIDES.length);
+    
+    // Show toast for user
+    toast({
+      title: `Captured ${CUBE_SIDES[currentSideIndex]} side`,
+      description: `Now show the ${CUBE_SIDES[(currentSideIndex + 1) % CUBE_SIDES.length]} side of the object`,
+      duration: 2000,
+    });
     
     return imageDataUrl;
   };
@@ -249,6 +264,7 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
     setCaptureProgress(0);
     setCurrentSideIndex(0);
     setLastCaptureTime(Date.now());
+    setManualCaptureMode(false);
     
     toast({
       title: `Starting 3D capture of ${currentObject}`,
@@ -257,13 +273,35 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
     
     // First capture happens immediately
     captureImage();
+    
+    // Schedule the next capture
+    scheduleNextCapture();
+  };
+  
+  const scheduleNextCapture = () => {
+    // Clear any existing timeouts
+    if (nextCaptureTimeoutId) {
+      clearTimeout(nextCaptureTimeoutId);
+    }
+    
+    // Schedule next capture with a 3 second delay
+    const timeoutId = setTimeout(() => {
+      if (isCapturing && capturedImages.length < CUBE_SIDES.length) {
+        captureImage();
+        
+        // Schedule the next capture if we haven't captured all sides yet
+        if (capturedImages.length < CUBE_SIDES.length - 1) {
+          scheduleNextCapture();
+        }
+      }
+    }, 3000);
+    
+    setNextCaptureTimeoutId(timeoutId);
   };
 
-  // This effect manages the capture of images based on timing and user actions
+  // This effect manages the capture progress
   useEffect(() => {
     if (!isCapturing || isProcessing) return;
-    
-    const timeSinceLastCapture = Date.now() - lastCaptureTime;
     
     // Update progress based on captures
     const progress = (capturedImages.length / CUBE_SIDES.length) * 100;
@@ -271,26 +309,37 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
     
     // If we've captured all sides, process the images
     if (capturedImages.length >= CUBE_SIDES.length) {
+      console.log(`Captured all ${CUBE_SIDES.length} sides, processing...`);
       setIsCapturing(false);
+      if (nextCaptureTimeoutId) {
+        clearTimeout(nextCaptureTimeoutId);
+      }
       processImages(currentObject!);
+    }
+  }, [isCapturing, isProcessing, capturedImages.length, currentObject]);
+
+  // Manual capture mode
+  const handleManualCapture = () => {
+    if (!isCapturing) return;
+    
+    // Clear any scheduled automatic captures
+    if (nextCaptureTimeoutId) {
+      clearTimeout(nextCaptureTimeoutId);
+    }
+    
+    // Set to manual mode
+    setManualCaptureMode(true);
+    
+    // Capture the current image
+    captureImage();
+    
+    // If we've captured all sides, don't schedule another one
+    if (capturedImages.length >= CUBE_SIDES.length - 1) {
       return;
     }
     
-    // Automatic capture every 3 seconds if user hasn't manually captured
-    const captureTimeout = setTimeout(() => {
-      if (isCapturing && timeSinceLastCapture > 3000) {
-        captureImage();
-        
-        // Guide user for next side
-        toast({
-          title: `Captured ${CUBE_SIDES[currentSideIndex === 0 ? CUBE_SIDES.length - 1 : currentSideIndex - 1]} side`,
-          description: `Now show the ${CUBE_SIDES[currentSideIndex]} side of the object`,
-        });
-      }
-    }, 3000 - timeSinceLastCapture);
-    
-    return () => clearTimeout(captureTimeout);
-  }, [isCapturing, isProcessing, capturedImages.length, lastCaptureTime, currentSideIndex, currentObject]);
+    // Otherwise wait for the user to manually capture again
+  };
 
   const processImages = async (objectClass: string) => {
     if (capturedImages.length < 3) {
@@ -446,13 +495,24 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
           onToggleCamera={toggleCamera}
           showCaptureButton={false} // Hide the manual capture button since it's automatic now
         />
+        
+        {/* Manual capture overlay */}
+        {isCapturing && (
+          <div 
+            className="absolute inset-0 z-15 cursor-pointer"
+            onClick={handleManualCapture}
+            title="Tap to manually capture next angle"
+          >
+            {/* This is an invisible overlay that allows users to tap anywhere to manually capture */}
+          </div>
+        )}
       </div>
       
       <ImageGallery 
         images={capturedImages}
         isCapturing={isCapturing}
         isProcessing={isProcessing}
-        sides={CUBE_SIDES}
+        sides={CUBE_SIDES.slice(0, capturedImages.length)}
       />
     </div>
   );
