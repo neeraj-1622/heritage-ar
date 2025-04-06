@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { ArrowLeft, Info, Box, View, Menu, Camera, Cube } from 'lucide-react';
+import { ArrowLeft, Info, Box, View, Menu, Camera, Package } from 'lucide-react';
 import { defaultSites } from '@/backend/data/defaultSites';
 import { supabase } from '@/lib/supabase';
 import { HistoricalSite } from '@/lib/supabase';
@@ -400,7 +400,7 @@ const ARExperience = () => {
             onClick={() => setIsObjectView(true)}
             disabled={!objectDetection?.model}
           >
-            <Cube className="h-4 w-4 mr-1" />
+            <Package className="h-4 w-4 mr-1" />
             3D Object
           </Button>
           <Button
