@@ -22,10 +22,11 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { ArrowLeft, Info, Box, View, Menu, Camera } from 'lucide-react';
+import { ArrowLeft, Info, Box, View, Menu, Camera, Cube } from 'lucide-react';
 import { defaultSites } from '@/backend/data/defaultSites';
 import { supabase } from '@/lib/supabase';
 import { HistoricalSite } from '@/lib/supabase';
+import { ObjectModelData } from '@/utils/objectReconstructor';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,13 +40,13 @@ const ARExperience = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [showInstructions, setShowInstructions] = useState(false);
-  const [showCameraAlert, setShowCameraAlert] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
-  const [objectDetection, setObjectDetection] = useState<{ class: string; score: number } | null>(null);
+  const [objectDetection, setObjectDetection] = useState<{ class: string; score: number; model?: ObjectModelData } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSiteMenuOpen, setIsSiteMenuOpen] = useState(false);
   const [sitesList, setSitesList] = useState<HistoricalSite[]>(defaultSites);
   const [selectedSite, setSelectedSite] = useState<HistoricalSite | null>(null);
+  const [isObjectView, setIsObjectView] = useState(false);
 
   const modelUrl = searchParams.get('modelUrl') || '/models/monument.glb';
   const siteName = searchParams.get('siteName') || '';
@@ -129,6 +130,7 @@ const ARExperience = () => {
   const handleSelectSite = (site: HistoricalSite) => {
     setSelectedSite(site);
     setIsSiteMenuOpen(false);
+    setIsObjectView(false);
 
     toast({
       title: 'Selected Site',
@@ -147,7 +149,22 @@ const ARExperience = () => {
     }
   };
 
-  const handleObjectDetection = (detection: { class: string; score: number } | null) => {
+  const handleObjectDetection = (detection: { class: string; score: number; model?: ObjectModelData } | null) => {
+    // If model data is provided, it means a 3D model was created
+    if (detection && detection.model) {
+      console.log("Received 3D model data from detector:", detection.model);
+      setObjectDetection(detection);
+      setIsObjectView(true);
+      setIsCameraActive(false);
+      
+      toast({
+        title: '3D Object Created',
+        description: `Created 3D model of ${detection.class}`,
+        duration: 5000,
+      });
+      return;
+    }
+    
     // Filter out human-related detections
     const humanClasses = ['person', 'man', 'woman', 'child', 'boy', 'girl', 'face', 'human'];
     
@@ -181,8 +198,10 @@ const ARExperience = () => {
         <ol className="list-decimal pl-5 space-y-2">
           <li>Point your camera at an object to analyze and create a 3D model</li>
           <li>The camera will ignore human faces and focus on objects</li>
+          <li>To create a 3D model, click the 3D rotation button when an object is detected</li>
+          <li>Slowly rotate the object to capture multiple angles during the scanning process</li>
+          <li>After scanning, the 3D model will be displayed in AR view</li>
           <li>Click the "Historical Site" button to switch to historical site view</li>
-          <li>Select a historical site from the dropdown to view its 3D model</li>
         </ol>
       </div>
     </>
@@ -199,16 +218,22 @@ const ARExperience = () => {
       ) : (
         <ARView
           modelUrl={modelUrl}
-          selectedSite={selectedSite}
+          selectedSite={isObjectView ? null : selectedSite}
+          detectedObjectModel={isObjectView && objectDetection?.model ? objectDetection.model : null}
           showModel={true}
-          enableRotation={false}
+          enableRotation={isObjectView}
           onInfoClick={() => {
             // Show site info if available
-            if (selectedSite) {
+            if (selectedSite || isObjectView) {
               setShowInstructions(true);
             }
           }}
           onNextSite={() => {
+            // If in object view, do nothing
+            if (isObjectView) {
+              return;
+            }
+            
             // Handle next site selection
             if (sitesList.length > 0) {
               const currentIndex = selectedSite 
@@ -234,7 +259,9 @@ const ARExperience = () => {
           
           <div className="flex-1 text-center">
             <h2 className="text-white text-xl font-medium drop-shadow-md">
-              AR Experience
+              {isObjectView && objectDetection?.model 
+                ? `3D ${objectDetection.class}` 
+                : 'AR Experience'}
             </h2>
           </div>
           
@@ -255,6 +282,14 @@ const ARExperience = () => {
               >
                 Instructions
               </DropdownMenuItem>
+              {isObjectView && (
+                <DropdownMenuItem 
+                  className="hover:bg-heritage-700 cursor-pointer"
+                  onClick={() => setIsObjectView(false)}
+                >
+                  View Historical Sites
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem 
                 className="hover:bg-heritage-700 cursor-pointer"
                 onClick={() => navigate('/update-password')}
@@ -295,10 +330,21 @@ const ARExperience = () => {
         <Drawer open={showInstructions} onOpenChange={setShowInstructions}>
           <DrawerContent>
             <DrawerHeader>
-              <DrawerTitle>Instructions</DrawerTitle>
+              <DrawerTitle>
+                {isObjectView && objectDetection?.model 
+                  ? `About ${objectDetection.class} 3D Model` 
+                  : 'Instructions'}
+              </DrawerTitle>
             </DrawerHeader>
             <div className="px-4">
-              <Instructions />
+              {isObjectView && objectDetection?.model ? (
+                <div className="space-y-4">
+                  <p>This is a 3D model created from camera analysis of a {objectDetection.class}.</p>
+                  <p>The model was created by taking multiple images of the object from different angles and reconstructing its 3D structure.</p>
+                </div>
+              ) : (
+                <Instructions />
+              )}
             </div>
             <DrawerFooter>
               <Button onClick={() => setShowInstructions(false)}>Got it</Button>
@@ -312,12 +358,37 @@ const ARExperience = () => {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Instructions</DialogTitle>
+              <DialogTitle>
+                {isObjectView && objectDetection?.model 
+                  ? `About ${objectDetection.class} 3D Model` 
+                  : 'Instructions'}
+              </DialogTitle>
               <DialogDescription>
-                Learn how to use AR mode effectively
+                {isObjectView && objectDetection?.model 
+                  ? 'Details about your 3D reconstructed object' 
+                  : 'Learn how to use AR mode effectively'}
               </DialogDescription>
             </DialogHeader>
-            <Instructions />
+            
+            {isObjectView && objectDetection?.model ? (
+              <div className="space-y-4">
+                <p>This is a 3D model created from camera analysis of a {objectDetection.class}.</p>
+                <p>The model was created by taking multiple images of the object from different angles and reconstructing its 3D structure.</p>
+                
+                <div className="bg-heritage-100/10 p-3 rounded-md">
+                  <h4 className="font-medium mb-1">Technical Details:</h4>
+                  <ul className="space-y-1 text-sm">
+                    <li>Object type: {objectDetection.class}</li>
+                    <li>Model color: {objectDetection.model.color}</li>
+                    <li>Geometry type: {objectDetection.model.geometry}</li>
+                    <li>Scale factor: {objectDetection.model.scale}</li>
+                  </ul>
+                </div>
+              </div>
+            ) : (
+              <Instructions />
+            )}
+            
             <DialogFooter>
               <Button onClick={() => setShowInstructions(false)}>Got it</Button>
             </DialogFooter>
@@ -341,7 +412,18 @@ const ARExperience = () => {
           <Button
             variant="default"
             size="sm"
-            className="rounded-full bg-accent"
+            className={`rounded-full ${isObjectView ? 'bg-accent' : 'bg-transparent text-white'}`}
+            onClick={() => setIsObjectView(true)}
+            disabled={!objectDetection?.model}
+          >
+            <Cube className="h-4 w-4 mr-1" />
+            3D Object
+          </Button>
+          <Button
+            variant={isObjectView ? "outline" : "default"}
+            size="sm"
+            className={`rounded-full ${!isObjectView ? 'bg-accent' : 'bg-transparent text-white'}`}
+            onClick={() => setIsObjectView(false)}
           >
             <View className="h-4 w-4 mr-1" />
             AR View

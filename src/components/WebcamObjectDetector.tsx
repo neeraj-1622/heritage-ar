@@ -5,11 +5,13 @@ import '@tensorflow/tfjs-backend-webgl';
 import * as cocossd from '@tensorflow-models/coco-ssd';
 import { toast } from "@/hooks/use-toast";
 import { Button } from "./ui/button";
-import { Camera, RefreshCw, Plus, Scan } from "lucide-react";
+import { Camera, RefreshCw, Plus, Scan, Rotate3d, Check } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Progress } from "./ui/progress";
+import { createObjectModelFromImages } from '@/utils/objectReconstructor';
 
 interface WebcamObjectDetectorProps {
-  onDetection: (detection: { class: string; score: number } | null) => void;
+  onDetection: (detection: { class: string; score: number; model?: any } | null) => void;
   enabled?: boolean;
   className?: string;
 }
@@ -26,8 +28,12 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
   const [isStreamActive, setIsStreamActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isCameraOn, setIsCameraOn] = useState(false);
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [capturedImages, setCapturedImages] = useState<string[]>([]);
   const [detectionConfidence, setDetectionConfidence] = useState<number>(0);
+  const [isCapturing, setIsCapturing] = useState(false);
+  const [captureProgress, setCaptureProgress] = useState(0);
+  const [currentObject, setCurrentObject] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   
   // List of classes to filter out (human-related)
   const filteredClasses = ['person', 'man', 'woman', 'child', 'boy', 'girl', 'face', 'human'];
@@ -108,7 +114,7 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
     let isDetecting = true;
 
     const detectObjects = async () => {
-      if (!videoRef.current || !model || !isDetecting) return;
+      if (!videoRef.current || !model || !isDetecting || isCapturing) return;
 
       try {
         const predictions = await model.detect(videoRef.current);
@@ -130,13 +136,20 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
             });
             
             setDetectionConfidence(bestPrediction.score * 100);
+            
+            // Update current object being detected
+            if (bestPrediction.score > 0.7) {
+              setCurrentObject(bestPrediction.class);
+            }
           } else {
             onDetection(null);
             setDetectionConfidence(0);
+            setCurrentObject(null);
           }
         } else {
           onDetection(null);
           setDetectionConfidence(0);
+          setCurrentObject(null);
         }
       } catch (error) {
         console.error('Error detecting objects:', error);
@@ -163,7 +176,7 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
         videoRef.current.removeEventListener('loadeddata', detectObjects);
       }
     };
-  }, [model, enabled, onDetection]);
+  }, [model, enabled, onDetection, isCapturing]);
 
   const captureImage = () => {
     if (!canvasRef.current || !videoRef.current || !isStreamActive) return;
@@ -179,37 +192,101 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
     
     const imageDataUrl = canvas.toDataURL('image/png');
-    setCapturedImage(imageDataUrl);
     
-    // Detect objects in the captured image
-    if (model) {
-      model.detect(canvas).then(predictions => {
-        // Filter out human-related detections
-        const filteredPredictions = predictions.filter(
-          pred => !filteredClasses.includes(pred.class.toLowerCase())
-        );
-        
-        if (filteredPredictions.length > 0) {
-          // Find prediction with highest confidence
-          const topPrediction = filteredPredictions.reduce((prev, current) => 
-            (prev.score > current.score) ? prev : current
-          );
-          
-          onDetection({
-            class: topPrediction.class,
-            score: topPrediction.score
-          });
-          toast({
-            title: `Detected: ${topPrediction.class}`,
-            description: `Confidence: ${Math.round(topPrediction.score * 100)}%`
-          });
-        } else {
-          toast({
-            title: "No objects detected",
-            description: "Try again with a different object"
-          });
-        }
+    // Add to captured images array
+    setCapturedImages(prev => [...prev, imageDataUrl]);
+    
+    return imageDataUrl;
+  };
+
+  const startMultiAngleCapture = () => {
+    if (!currentObject || detectionConfidence < 70) {
+      toast({
+        title: "No clear object detected",
+        description: "Make sure an object is clearly visible",
+        variant: "destructive"
       });
+      return;
+    }
+    
+    setIsCapturing(true);
+    setCapturedImages([]);
+    setCaptureProgress(0);
+    
+    toast({
+      title: "Starting capture sequence",
+      description: "Slowly rotate the object in front of the camera",
+    });
+    
+    // Capture multiple images over time
+    let captureCount = 0;
+    const totalCaptures = 8; // Capture 8 angles
+    
+    const captureInterval = setInterval(() => {
+      const image = captureImage();
+      
+      if (image) {
+        captureCount++;
+        const progress = (captureCount / totalCaptures) * 100;
+        setCaptureProgress(progress);
+        
+        toast({
+          title: `Captured angle ${captureCount} of ${totalCaptures}`,
+          description: "Continue slowly rotating the object",
+        });
+        
+        if (captureCount >= totalCaptures) {
+          clearInterval(captureInterval);
+          setIsCapturing(false);
+          processImages(currentObject);
+        }
+      }
+    }, 1000); // Capture an image every second
+    
+    return () => clearInterval(captureInterval);
+  };
+
+  const processImages = async (objectClass: string) => {
+    if (capturedImages.length < 3) {
+      toast({
+        title: "Not enough images",
+        description: "We need more angles to create a 3D model",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsProcessing(true);
+    
+    toast({
+      title: "Processing images",
+      description: "Analyzing object structure...",
+    });
+    
+    try {
+      // Process images and create a 3D model representation
+      const modelData = await createObjectModelFromImages(capturedImages, objectClass);
+      
+      // Send result to parent component
+      onDetection({
+        class: objectClass,
+        score: 1.0,
+        model: modelData
+      });
+      
+      toast({
+        title: "3D model created!",
+        description: "Your object has been successfully rendered in 3D",
+      });
+    } catch (error) {
+      console.error('Error processing images:', error);
+      toast({
+        title: "Error creating 3D model",
+        description: "Please try again with clearer images",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -249,7 +326,24 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
             ></div>
           </div>
           <p className="text-xs text-white/80 mt-1 text-center">
-            Detection confidence: {Math.round(detectionConfidence)}%
+            {currentObject ? `Detected: ${currentObject} (${Math.round(detectionConfidence)}%)` : 'No object detected'}
+          </p>
+        </div>
+      </div>
+    );
+  };
+
+  // Render capture progress
+  const renderCaptureProgress = () => {
+    if (!isCapturing) return null;
+    
+    return (
+      <div className="absolute bottom-20 left-4 right-4 z-30">
+        <div className="bg-black/60 backdrop-blur-sm rounded-lg p-3">
+          <p className="text-white text-center mb-2">Capturing object from multiple angles</p>
+          <Progress value={captureProgress} className="h-2" />
+          <p className="text-xs text-white/80 mt-1 text-center">
+            {Math.round(captureProgress)}% complete - Keep rotating the object
           </p>
         </div>
       </div>
@@ -312,26 +406,41 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
 
         {/* Confidence indicator */}
         {renderConfidenceIndicator()}
+        
+        {/* Capture progress */}
+        {renderCaptureProgress()}
+
+        {isProcessing && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/70 z-20">
+            <div className="bg-heritage-800/90 rounded-lg p-6 text-center">
+              <div className="h-12 w-12 rounded-full border-4 border-accent/20 border-t-accent animate-spin mx-auto mb-4"></div>
+              <p className="text-white">Processing 3D model...</p>
+            </div>
+          </div>
+        )}
 
         {isStreamActive && (
           <div className="absolute bottom-4 right-4 z-20 flex space-x-2">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="secondary"
-                    size="icon"
-                    className="bg-black/50 hover:bg-black/70 text-white rounded-full shadow-lg"
-                    onClick={captureImage}
-                  >
-                    <Scan className="h-5 w-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Capture and analyze object</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            {!isCapturing && !isProcessing && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      className="bg-accent hover:bg-accent/90 text-white rounded-full shadow-lg"
+                      onClick={startMultiAngleCapture}
+                      disabled={detectionConfidence < 70 || !currentObject}
+                    >
+                      <Rotate3d className="h-5 w-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Capture object from multiple angles to create 3D model</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
             
             <TooltipProvider>
               <Tooltip>
@@ -357,6 +466,19 @@ const WebcamObjectDetector: React.FC<WebcamObjectDetectorProps> = ({
           </div>
         )}
       </div>
+      
+      {capturedImages.length > 0 && !isCapturing && !isProcessing && (
+        <div className="mt-4 p-3 bg-heritage-800/30 backdrop-blur-sm rounded-lg">
+          <p className="text-white text-sm mb-2">Captured images: {capturedImages.length}</p>
+          <div className="flex overflow-x-auto pb-2 gap-2">
+            {capturedImages.map((img, index) => (
+              <div key={index} className="flex-shrink-0 w-16 h-16 rounded-md overflow-hidden">
+                <img src={img} alt={`Angle ${index+1}`} className="w-full h-full object-cover" />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

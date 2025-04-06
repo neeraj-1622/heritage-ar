@@ -2,10 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { HistoricalSite } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
+import * as THREE from 'three';
+import { ObjectModelData, createThreeJsGeometryFromModelData } from '@/utils/objectReconstructor';
 
 interface ARViewProps {
   modelUrl?: string;
   selectedSite?: HistoricalSite | null;
+  detectedObjectModel?: ObjectModelData | null;
   showModel?: boolean;
   enableRotation?: boolean;
   onNextSite?: () => void;
@@ -15,6 +18,7 @@ interface ARViewProps {
 const ARView: React.FC<ARViewProps> = ({ 
   selectedSite, 
   modelUrl,
+  detectedObjectModel,
   showModel = true,
   enableRotation = false,
   onNextSite,
@@ -26,9 +30,10 @@ const ARView: React.FC<ARViewProps> = ({
   const [cameraReady, setCameraReady] = useState(false);
   const [modelPosition, setModelPosition] = useState({ x: 0, y: 0, z: 0 });
   const [rotation, setRotation] = useState(0);
+  const [objectScene, setObjectScene] = useState<THREE.Scene | null>(null);
 
   useEffect(() => {
-    if (!selectedSite && !modelUrl) return;
+    if (!selectedSite && !modelUrl && !detectedObjectModel) return;
     
     setIsLoading(true);
     setIsModelLoaded(false);
@@ -49,7 +54,7 @@ const ARView: React.FC<ARViewProps> = ({
       clearTimeout(timer1);
       clearTimeout(timer2);
     };
-  }, [selectedSite, modelUrl, showModel]);
+  }, [selectedSite, modelUrl, detectedObjectModel, showModel]);
 
   useEffect(() => {
     if (cameraReady && showModel && !isModelLoaded) {
@@ -97,11 +102,50 @@ const ARView: React.FC<ARViewProps> = ({
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, [isModelLoaded]);
 
+  // Create 3D representation if object model is provided
+  useEffect(() => {
+    if (detectedObjectModel && isModelLoaded) {
+      console.log("Creating 3D scene from detected object model", detectedObjectModel);
+      
+      // Create a new THREE scene
+      const scene = new THREE.Scene();
+      
+      // Create geometry based on model data
+      const geometry = createThreeJsGeometryFromModelData(detectedObjectModel);
+      
+      // Create material with the color from model data
+      const material = new THREE.MeshStandardMaterial({
+        color: detectedObjectModel.color,
+        roughness: 0.7,
+        metalness: 0.3
+      });
+      
+      // Create mesh and add to scene
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.scale.set(
+        detectedObjectModel.scale,
+        detectedObjectModel.scale,
+        detectedObjectModel.scale
+      );
+      scene.add(mesh);
+      
+      // Add lighting
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+      scene.add(ambientLight);
+      
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      directionalLight.position.set(1, 1, 1);
+      scene.add(directionalLight);
+      
+      setObjectScene(scene);
+    }
+  }, [detectedObjectModel, isModelLoaded]);
+
   const handleGoBack = () => {
     navigate('/');
   };
 
-  if (!selectedSite && !modelUrl) {
+  if (!selectedSite && !modelUrl && !detectedObjectModel) {
     return (
       <div className="relative h-full w-full flex items-center justify-center bg-heritage-100">
         <button 
@@ -122,9 +166,27 @@ const ARView: React.FC<ARViewProps> = ({
     );
   }
 
-  // Safely access properties with null checks
-  const imageUrl = selectedSite?.image_url || 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=2071&auto=format&fit=crop';
-  const siteName = selectedSite?.name || 'Historical Monument';
+  // Choose the image source - site image, object image, or default
+  const getImageSource = () => {
+    if (selectedSite?.image_url) {
+      return selectedSite.image_url;
+    } else if (detectedObjectModel) {
+      // In a real implementation, we would render the 3D object directly
+      // For now, use a placeholder image based on the object class
+      return `https://source.unsplash.com/500x500/?${detectedObjectModel.class}`;
+    }
+    return 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?q=80&w=2071&auto=format&fit=crop';
+  }
+  
+  // Get the display name - site name or object class
+  const getDisplayName = () => {
+    if (selectedSite?.name) {
+      return selectedSite.name;
+    } else if (detectedObjectModel) {
+      return `3D ${detectedObjectModel.class}`;
+    }
+    return 'Historical Monument';
+  }
 
   return (
     <div className="relative h-full w-full bg-black overflow-hidden">
@@ -161,8 +223,8 @@ const ARView: React.FC<ARViewProps> = ({
             }}
           >
             <img 
-              src={imageUrl} 
-              alt={`AR model of ${siteName}`} 
+              src={getImageSource()} 
+              alt={`AR model of ${getDisplayName()}`} 
               className="h-96 object-contain"
               style={{
                 filter: 'drop-shadow(0 10px 8px rgba(0, 0, 0, 0.4))',
@@ -189,11 +251,14 @@ const ARView: React.FC<ARViewProps> = ({
         </div>
       )}
 
-      {isModelLoaded && selectedSite && (
+      {isModelLoaded && (selectedSite || detectedObjectModel) && (
         <div className="absolute bottom-20 left-0 right-0 z-30 p-4">
           <div className="glass-panel rounded-2xl p-4 max-w-lg mx-auto animate-slide-up">
-            <h3 className="text-lg font-medium text-white">{selectedSite.name}</h3>
-            <p className="text-sm text-white/80 mt-1">{selectedSite.short_description}</p>
+            <h3 className="text-lg font-medium text-white">{getDisplayName()}</h3>
+            <p className="text-sm text-white/80 mt-1">
+              {selectedSite?.short_description || 
+               (detectedObjectModel && `3D model created from ${detectedObjectModel.class} object analysis`)}
+            </p>
             
             <div className="mt-3 flex space-x-2">
               <button 
