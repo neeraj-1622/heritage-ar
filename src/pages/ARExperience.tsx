@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
@@ -22,7 +21,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { ArrowLeft, Info, Box, View, Menu, Camera, Cube } from 'lucide-react';
+import { ArrowLeft, Info, Box, View, Menu, Camera, Box3d } from 'lucide-react';
 import { defaultSites } from '@/backend/data/defaultSites';
 import { supabase } from '@/lib/supabase';
 import { HistoricalSite } from '@/lib/supabase';
@@ -52,7 +51,6 @@ const ARExperience = () => {
   const siteName = searchParams.get('siteName') || '';
   
   useEffect(() => {
-    // Load historical sites from the database
     const fetchSites = async () => {
       setIsLoading(true);
       try {
@@ -69,7 +67,6 @@ const ARExperience = () => {
             variant: 'destructive',
           });
         } else if (data) {
-          // Map the database response to match the HistoricalSite type
           const mappedSites: HistoricalSite[] = data.map(site => ({
             id: site.id,
             name: site.name,
@@ -91,7 +88,6 @@ const ARExperience = () => {
 
           setSitesList(mappedSites);
 
-          // Check if there's a site name in the URL params
           if (siteName) {
             const site = mappedSites.find(site => site.name === siteName);
             if (site) {
@@ -108,7 +104,6 @@ const ARExperience = () => {
 
     fetchSites();
     
-    // Automatically activate camera when page loads
     setTimeout(() => {
       handleCameraToggle();
     }, 1000);
@@ -119,7 +114,6 @@ const ARExperience = () => {
   };
   
   const handleGoToHistoricalSite = () => {
-    // If a site is selected, include it in the URL params
     if (selectedSite) {
       navigate(`/historical-site?siteName=${encodeURIComponent(selectedSite.name)}`);
     } else {
@@ -150,7 +144,6 @@ const ARExperience = () => {
   };
 
   const handleObjectDetection = (detection: { class: string; score: number; model?: ObjectModelData } | null) => {
-    // If model data is provided, it means a 3D model was created
     if (detection && detection.model) {
       console.log("Received 3D model data from detector:", detection.model);
       setObjectDetection(detection);
@@ -165,12 +158,10 @@ const ARExperience = () => {
       return;
     }
     
-    // Filter out human-related detections
     const humanClasses = ['person', 'man', 'woman', 'child', 'boy', 'girl', 'face', 'human'];
     
     if (detection && detection.score > 0.7 && !humanClasses.includes(detection.class.toLowerCase())) {
       setObjectDetection(detection);
-      // Only show toast for significant changes to avoid spamming
       if (!objectDetection || objectDetection.class !== detection.class) {
         toast({
           title: `Detected ${detection.class}`,
@@ -183,7 +174,6 @@ const ARExperience = () => {
   };
 
   useEffect(() => {
-    // Show toast with camera instructions when the page loads
     toast({
       title: 'AR Experience Loaded',
       description: 'Camera is being activated automatically',
@@ -223,18 +213,15 @@ const ARExperience = () => {
           showModel={true}
           enableRotation={isObjectView}
           onInfoClick={() => {
-            // Show site info if available
             if (selectedSite || isObjectView) {
               setShowInstructions(true);
             }
           }}
           onNextSite={() => {
-            // If in object view, do nothing
             if (isObjectView) {
               return;
             }
             
-            // Handle next site selection
             if (sitesList.length > 0) {
               const currentIndex = selectedSite 
                 ? sitesList.findIndex(site => site.id === selectedSite.id)
@@ -313,7 +300,6 @@ const ARExperience = () => {
         </div>
       </div>
 
-      {/* Camera activation button */}
       <div className="absolute bottom-24 right-4 z-20">
         <Button
           variant="default"
@@ -325,7 +311,6 @@ const ARExperience = () => {
         </Button>
       </div>
       
-      {/* Instructions dialog/drawer */}
       {isMobile ? (
         <Drawer open={showInstructions} onOpenChange={setShowInstructions}>
           <DrawerContent>
@@ -396,7 +381,6 @@ const ARExperience = () => {
         </Dialog>
       )}
 
-      {/* Detection status indicator */}
       {isCameraActive && (
         <div className="absolute top-16 left-0 right-0 z-20 flex justify-center">
           <div className={`px-4 py-2 rounded-full ${objectDetection ? 'bg-accent' : 'bg-heritage-800/70'} text-white text-sm backdrop-blur-sm transition-all duration-300`}>
@@ -416,7 +400,7 @@ const ARExperience = () => {
             onClick={() => setIsObjectView(true)}
             disabled={!objectDetection?.model}
           >
-            <Cube className="h-4 w-4 mr-1" />
+            <Box3d className="h-4 w-4 mr-1" />
             3D Object
           </Button>
           <Button
@@ -440,7 +424,6 @@ const ARExperience = () => {
         </div>
       </div>
 
-      {/* Historical Site Selector Sheet */}
       <Sheet open={isSiteMenuOpen} onOpenChange={setIsSiteMenuOpen}>
         <SheetContent side="bottom" className="h-[70vh] bg-heritage-800/95 text-white border-heritage-700">
           <SheetHeader>
