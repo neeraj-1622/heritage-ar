@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import ARView from '@/components/ARView';
-import WebcamObjectDetector from '@/components/WebcamObjectDetector';
+import { WebcamObjectDetector } from '@/components/ObjectDetector';
 import {
   Drawer,
   DrawerContent,
