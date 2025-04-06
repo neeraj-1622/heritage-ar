@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ChevronsLeft, ChevronsRight, ChevronsUp, ChevronsDown, RotateCcw } from 'lucide-react';
+import { ChevronsLeft, ChevronsRight, ChevronsUp, ChevronsDown, RotateCcw, Camera } from 'lucide-react';
 
 interface DirectionalGuidanceProps {
   isCapturing: boolean;
@@ -21,7 +21,7 @@ const DirectionalGuidance: React.FC<DirectionalGuidanceProps> = ({
   const getDirectionIcon = () => {
     switch (currentSide) {
       case 'front':
-        return null; // Starting position
+        return <Camera className="h-8 w-8 text-white animate-pulse" />;
       case 'right':
         return <ChevronsRight className="h-8 w-8 text-white animate-pulse" />;
       case 'back':
@@ -35,6 +35,38 @@ const DirectionalGuidance: React.FC<DirectionalGuidanceProps> = ({
       default:
         return null;
     }
+  };
+
+  // Return a 3D rendering visualization of a cube with the current side highlighted
+  const getCubeVisualization = () => {
+    return (
+      <div className="relative w-20 h-20 transform-gpu" style={{ perspective: '800px' }}>
+        <div 
+          className={`absolute inset-0 border-2 ${currentSide === 'front' ? 'bg-accent/30 border-accent animate-pulse' : 'bg-black/20 border-white/30'}`}
+          style={{ transform: 'translateZ(10px)' }}
+        ></div>
+        <div 
+          className={`absolute inset-0 border-2 ${currentSide === 'back' ? 'bg-accent/30 border-accent animate-pulse' : 'bg-black/20 border-white/30'}`}
+          style={{ transform: 'translateZ(-10px)' }}
+        ></div>
+        <div 
+          className={`absolute inset-0 border-2 ${currentSide === 'right' ? 'bg-accent/30 border-accent animate-pulse' : 'bg-black/20 border-white/30'}`}
+          style={{ transform: 'rotateY(90deg) translateZ(10px)' }}
+        ></div>
+        <div 
+          className={`absolute inset-0 border-2 ${currentSide === 'left' ? 'bg-accent/30 border-accent animate-pulse' : 'bg-black/20 border-white/30'}`}
+          style={{ transform: 'rotateY(-90deg) translateZ(10px)' }}
+        ></div>
+        <div 
+          className={`absolute inset-0 border-2 ${currentSide === 'top' ? 'bg-accent/30 border-accent animate-pulse' : 'bg-black/20 border-white/30'}`}
+          style={{ transform: 'rotateX(90deg) translateZ(10px)' }}
+        ></div>
+        <div 
+          className={`absolute inset-0 border-2 ${currentSide === 'bottom' ? 'bg-accent/30 border-accent animate-pulse' : 'bg-black/20 border-white/30'}`}
+          style={{ transform: 'rotateX(-90deg) translateZ(10px)' }}
+        ></div>
+      </div>
+    );
   };
 
   return (
@@ -57,26 +89,31 @@ const DirectionalGuidance: React.FC<DirectionalGuidanceProps> = ({
       </div>
       
       <div className="absolute bottom-36 left-4 right-4">
-        <div className="bg-black/60 text-white p-3 rounded-lg text-sm backdrop-blur-sm text-center">
-          {(() => {
-            switch (currentSide) {
-              case 'front':
-                return "Position the object facing the camera";
-              case 'right':
-                return "Turn the object to show its right side";
-              case 'back':
-                return "Rotate to show the back of the object";
-              case 'left':
-                return "Turn to show the left side of the object";
-              case 'top':
-                return "Tilt to show the top of the object";
-              case 'bottom':
-                return "Tilt to show the bottom of the object";
-              default:
-                return "Rotate the object slowly";
-            }
-          })()}
-          <p className="text-xs mt-2 text-white/70">Tap anywhere on screen to manually capture this side</p>
+        <div className="bg-black/60 text-white p-3 rounded-lg text-sm backdrop-blur-sm flex items-center justify-center gap-4">
+          <div className="flex-shrink-0 hidden md:block">
+            {getCubeVisualization()}
+          </div>
+          <div className="flex-1">
+            {(() => {
+              switch (currentSide) {
+                case 'front':
+                  return "Position the object facing the camera";
+                case 'right':
+                  return "Turn the object to show its right side";
+                case 'back':
+                  return "Rotate to show the back of the object";
+                case 'left':
+                  return "Turn to show the left side of the object";
+                case 'top':
+                  return "Tilt to show the top of the object";
+                case 'bottom':
+                  return "Tilt to show the bottom of the object";
+                default:
+                  return "Rotate the object slowly";
+              }
+            })()}
+            <p className="text-xs mt-2 text-white/70">Tap anywhere on screen to manually capture this side</p>
+          </div>
         </div>
       </div>
     </div>

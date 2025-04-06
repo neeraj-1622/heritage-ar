@@ -31,6 +31,7 @@ const ARView: React.FC<ARViewProps> = ({
   const [modelPosition, setModelPosition] = useState({ x: 0, y: 0, z: 0 });
   const [rotation, setRotation] = useState(0);
   const [objectScene, setObjectScene] = useState<THREE.Scene | null>(null);
+  const [modelRendered, setModelRendered] = useState<boolean>(false);
 
   useEffect(() => {
     if (!selectedSite && !modelUrl && !detectedObjectModel) return;
@@ -138,6 +139,7 @@ const ARView: React.FC<ARViewProps> = ({
       scene.add(directionalLight);
       
       setObjectScene(scene);
+      setModelRendered(true);
     }
   }, [detectedObjectModel, isModelLoaded]);
 
@@ -206,7 +208,69 @@ const ARView: React.FC<ARViewProps> = ({
         )}
       </div>
 
-      {isModelLoaded && (
+      {isModelLoaded && detectedObjectModel && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center perspective preserve-3d animate-fade-in">
+          <div 
+            className="absolute w-60 h-20 rounded-full bg-black/30 blur-sm transform-gpu"
+            style={{ 
+              transform: `translateX(${modelPosition.x}px) translateY(120px) rotateX(60deg)`,
+            }}
+          ></div>
+          
+          <div 
+            className="relative transform-gpu"
+            style={{ 
+              transform: `translateX(${modelPosition.x}px) translateY(${modelPosition.y}px) rotateY(${rotation}deg)`,
+              transition: 'transform 0.1s ease-out',
+            }}
+          >
+            {/* Render model based on geometry type */}
+            {detectedObjectModel.geometry === 'cylinder' && (
+              <div className="relative w-40 h-60">
+                <div className="absolute inset-0 bg-gradient-to-b rounded-t-full rounded-b-full"
+                     style={{backgroundColor: detectedObjectModel.color, opacity: 0.9}}>
+                </div>
+                <div className="absolute inset-x-0 top-0 h-4 rounded-full"
+                     style={{backgroundColor: detectedObjectModel.color, opacity: 0.7}}>
+                </div>
+                <div className="absolute inset-x-0 bottom-0 h-4 rounded-full"
+                     style={{backgroundColor: detectedObjectModel.color, opacity: 0.7}}>
+                </div>
+              </div>
+            )}
+            
+            {detectedObjectModel.geometry === 'sphere' && (
+              <div className="relative w-56 h-56 rounded-full"
+                   style={{backgroundColor: detectedObjectModel.color, opacity: 0.9}}>
+                <div className="absolute top-6 left-6 w-10 h-10 rounded-full bg-white/30"></div>
+              </div>
+            )}
+            
+            {detectedObjectModel.geometry === 'box' && (
+              <div className="relative w-56 h-56 flex items-center justify-center">
+                <div className="relative w-48 h-48 transform-gpu"
+                     style={{backgroundColor: detectedObjectModel.color, opacity: 0.9,
+                             transform: 'perspective(800px) rotateX(20deg) rotateY(20deg)'}}>
+                  <div className="absolute inset-0 border-2 border-white/10"></div>
+                </div>
+              </div>
+            )}
+            
+            {!['cylinder', 'sphere', 'box'].includes(detectedObjectModel.geometry) && (
+              <img 
+                src={getImageSource()} 
+                alt={`AR model of ${getDisplayName()}`} 
+                className="h-96 object-contain"
+                style={{
+                  filter: 'drop-shadow(0 10px 8px rgba(0, 0, 0, 0.4))',
+                }}
+              />
+            )}
+          </div>
+        </div>
+      )}
+      
+      {isModelLoaded && selectedSite && !detectedObjectModel && (
         <div className="absolute inset-0 z-10 flex items-center justify-center perspective preserve-3d animate-fade-in">
           <div 
             className="absolute w-60 h-20 rounded-full bg-black/30 blur-sm transform-gpu"

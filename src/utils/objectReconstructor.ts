@@ -9,6 +9,11 @@ export interface ObjectModelData {
   color: string;    // Color representation
   scale: number;    // Scale factor
   class: string;    // Object class
+  dimensions?: {    // Optional dimensions for more precise modeling
+    width: number;
+    height: number;
+    depth: number;
+  };
 }
 
 /**
@@ -65,19 +70,33 @@ function generateBasicModelForClass(objectClass: string): ObjectModelData {
   // Choose geometry based on object type
   let geometryType: string;
   let scale: number = 1.0;
+  let dimensions = undefined;
   
-  if (['cup', 'bottle', 'vase', 'wine glass'].includes(lowerCaseClass)) {
+  if (['cup', 'bottle', 'vase', 'wine glass', 'glass'].includes(lowerCaseClass)) {
     geometryType = 'cylinder';
     scale = 0.8;
-  } else if (['book', 'cell phone', 'remote', 'keyboard'].includes(lowerCaseClass)) {
+    dimensions = { width: 1, height: 2, depth: 1 };
+  } else if (['book', 'cell phone', 'remote', 'keyboard', 'laptop'].includes(lowerCaseClass)) {
     geometryType = 'box';
     scale = 0.7;
+    
+    // Set different dimensions based on object type
+    if (lowerCaseClass === 'book') {
+      dimensions = { width: 2, height: 0.3, depth: 1.5 };
+    } else if (lowerCaseClass === 'cell phone') {
+      dimensions = { width: 1, height: 0.1, depth: 2 };
+    } else if (lowerCaseClass === 'laptop') {
+      dimensions = { width: 2, height: 0.2, depth: 1.5 };
+    } else {
+      dimensions = { width: 1.5, height: 0.3, depth: 1 };
+    }
   } else if (['apple', 'orange', 'ball', 'sports ball'].includes(lowerCaseClass)) {
     geometryType = 'sphere';
     scale = 0.6;
   } else if (['chair', 'table', 'desk'].includes(lowerCaseClass)) {
     geometryType = 'complex-furniture';
     scale = 1.2;
+    dimensions = { width: 2, height: 2, depth: 2 };
   } else {
     // Default to a basic shape
     geometryType = 'box';
@@ -88,7 +107,8 @@ function generateBasicModelForClass(objectClass: string): ObjectModelData {
     geometry: geometryType,
     color: getColorFromString(objectClass),
     scale: scale,
-    class: objectClass
+    class: objectClass,
+    dimensions
   };
 }
 
@@ -97,16 +117,19 @@ function generateBasicModelForClass(objectClass: string): ObjectModelData {
  * This is used to render the model in the AR view
  */
 export function createThreeJsGeometryFromModelData(modelData: ObjectModelData): THREE.BufferGeometry {
+  const dimensions = modelData.dimensions || { width: 1, height: 1, depth: 1 };
+  
   switch (modelData.geometry) {
     case 'sphere':
       return new THREE.SphereGeometry(1, 32, 32);
     case 'cylinder':
-      return new THREE.CylinderGeometry(0.5, 0.5, 2, 32);
+      return new THREE.CylinderGeometry(dimensions.width / 2, dimensions.width / 2, dimensions.height, 32);
     case 'complex-furniture':
       // For complex furniture, use a more detailed shape
-      return new THREE.BoxGeometry(2, 1, 1);
+      return new THREE.BoxGeometry(dimensions.width, dimensions.height, dimensions.depth);
     case 'box':
     default:
-      return new THREE.BoxGeometry(1, 1, 1);
+      return new THREE.BoxGeometry(dimensions.width, dimensions.height, dimensions.depth);
   }
 }
+

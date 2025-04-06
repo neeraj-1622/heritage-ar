@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
@@ -46,6 +47,7 @@ const ARExperience = () => {
   const [sitesList, setSitesList] = useState<HistoricalSite[]>(defaultSites);
   const [selectedSite, setSelectedSite] = useState<HistoricalSite | null>(null);
   const [isObjectView, setIsObjectView] = useState(false);
+  const [showModelToast, setShowModelToast] = useState(false);
 
   const modelUrl = searchParams.get('modelUrl') || '/models/monument.glb';
   const siteName = searchParams.get('siteName') || '';
@@ -150,10 +152,23 @@ const ARExperience = () => {
       setIsObjectView(true);
       setIsCameraActive(false);
       
+      // Show toast with action button
+      setShowModelToast(true);
       toast({
-        title: '3D Object Created',
-        description: `Created 3D model of ${detection.class}`,
-        duration: 5000,
+        title: '3D Model Created!',
+        description: `Click the 'Show 3D Model' button to view your ${detection.class} in AR`,
+        action: (
+          <Button 
+            onClick={() => {
+              // Already set to object view mode
+              setShowModelToast(false);
+            }}
+            className="bg-accent hover:bg-accent/90 text-white"
+          >
+            Show 3D Model
+          </Button>
+        ),
+        duration: 10000,
       });
       return;
     }
@@ -181,6 +196,35 @@ const ARExperience = () => {
     });
   }, []);
 
+  useEffect(() => {
+    // If showModelToast is true and we have a 3D model
+    if (showModelToast && objectDetection?.model) {
+      const toastId = toast({
+        title: '3D Model Created!',
+        description: `Click the 'Show 3D Model' button to view your ${objectDetection.class} in AR`,
+        action: (
+          <Button 
+            onClick={() => {
+              // Already set to object view mode
+              setShowModelToast(false);
+            }}
+            className="bg-accent hover:bg-accent/90 text-white"
+          >
+            Show 3D Model
+          </Button>
+        ),
+        duration: 0, // Persist until dismissed
+      });
+      
+      return () => {
+        // Cleanup toast when component unmounts or state changes
+        if (toastId) {
+          // Clear toast if toast API supports it
+        }
+      };
+    }
+  }, [showModelToast, objectDetection]);
+
   const Instructions = () => (
     <>
       <div className="space-y-4 mb-4">
@@ -188,10 +232,10 @@ const ARExperience = () => {
         <ol className="list-decimal pl-5 space-y-2">
           <li>Point your camera at an object to analyze and create a 3D model</li>
           <li>The camera will ignore human faces and focus on objects</li>
-          <li>To create a 3D model, click the 3D rotation button when an object is detected</li>
-          <li>Slowly rotate the object to capture multiple angles during the scanning process</li>
-          <li>After scanning, the 3D model will be displayed in AR view</li>
-          <li>Click the "Historical Site" button to switch to historical site view</li>
+          <li>When an object is detected, the system will guide you to rotate it to capture all sides</li>
+          <li>Follow the on-screen guidance to show all 6 sides: front, back, left, right, top, and bottom</li>
+          <li>After capturing all sides, a 3D model will be automatically created</li>
+          <li>Click "Show 3D Model" button in the notification to view your object in AR</li>
         </ol>
       </div>
     </>
@@ -326,6 +370,16 @@ const ARExperience = () => {
                 <div className="space-y-4">
                   <p>This is a 3D model created from camera analysis of a {objectDetection.class}.</p>
                   <p>The model was created by taking multiple images of the object from different angles and reconstructing its 3D structure.</p>
+                  
+                  <div className="bg-heritage-100/10 p-3 rounded-md">
+                    <h4 className="font-medium mb-1">Technical Details:</h4>
+                    <ul className="space-y-1 text-sm">
+                      <li>Object type: {objectDetection.class}</li>
+                      <li>Model color: {objectDetection.model.color}</li>
+                      <li>Geometry type: {objectDetection.model.geometry}</li>
+                      <li>Scale factor: {objectDetection.model.scale}</li>
+                    </ul>
+                  </div>
                 </div>
               ) : (
                 <Instructions />
@@ -367,6 +421,9 @@ const ARExperience = () => {
                     <li>Model color: {objectDetection.model.color}</li>
                     <li>Geometry type: {objectDetection.model.geometry}</li>
                     <li>Scale factor: {objectDetection.model.scale}</li>
+                    {objectDetection.model.dimensions && (
+                      <li>Dimensions: {objectDetection.model.dimensions.width} x {objectDetection.model.dimensions.height} x {objectDetection.model.dimensions.depth}</li>
+                    )}
                   </ul>
                 </div>
               </div>
