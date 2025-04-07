@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { Canvas } from '@react-three/fiber';
@@ -35,9 +35,23 @@ import {
 // Model component to display 3D GLB models
 const Model = ({ url }: { url: string }) => {
   const { scene } = useGLTF(url);
+  const [loaded, setLoaded] = useState(false);
   
+  useEffect(() => {
+    if (scene) {
+      setLoaded(true);
+      console.log("3D Model loaded successfully:", url);
+    }
+  }, [scene, url]);
+
   return (
-    <primitive object={scene} position={[0, 0, 0]} scale={1} />
+    <primitive 
+      object={scene} 
+      position={[0, 0, 0]} 
+      scale={1} 
+      onPointerOver={() => document.body.style.cursor = 'pointer'} 
+      onPointerOut={() => document.body.style.cursor = 'default'}
+    />
   );
 };
 
@@ -48,6 +62,15 @@ const PlaceholderModel = () => {
       <boxGeometry args={[1, 1, 1]} />
       <meshStandardMaterial color="white" wireframe />
     </mesh>
+  );
+};
+
+// Preload component to handle model loading
+const ModelWithFallback = ({ url }: { url: string }) => {
+  return (
+    <Suspense fallback={<PlaceholderModel />}>
+      <Model url={url} />
+    </Suspense>
   );
 };
 
@@ -63,6 +86,26 @@ const HistoricalSiteView = () => {
   // Get site name and model URL from URL
   const siteName = searchParams.get('siteName') || '';
   const modelUrl = searchParams.get('modelUrl') || '';
+
+  // Map of model URLs by site name
+  const MODEL_MAPPINGS: Record<string, string> = {
+    'The Colosseum': '/models/colosseum.glb',
+    'Parthenon': '/models/parthenon.glb',
+    'Taj Mahal': '/models/taj_mahal.glb',
+    'Stonehenge': '/models/monument.glb',
+    // Default model as fallback
+    'default': '/models/parthenon.glb'
+  };
+
+  // Determine which model URL to use
+  const getEffectiveModelUrl = () => {
+    if (modelUrl) return modelUrl;
+    if (selectedSite?.ar_model_url) return selectedSite.ar_model_url;
+    if (selectedSite?.name && MODEL_MAPPINGS[selectedSite.name]) {
+      return MODEL_MAPPINGS[selectedSite.name];
+    }
+    return MODEL_MAPPINGS.default;
+  };
 
   useEffect(() => {
     // Load historical sites from the database
@@ -103,18 +146,29 @@ const HistoricalSiteView = () => {
             created_by: site.created_by || undefined
           }));
 
-          setSitesList(mappedSites);
+          setSitesList(mappedSites.length > 0 ? mappedSites : defaultSites);
           
           // Set initially selected site based on URL param
           if (siteName) {
-            const site = mappedSites.find(site => site.name === siteName);
+            const site = mappedSites.find(site => site.name === siteName) || 
+                         defaultSites.find(site => site.name === siteName);
             if (site) {
               setSelectedSite(site);
+              console.log("Selected site:", site.name, "with model:", site.ar_model_url || "none");
             }
           }
         }
       } catch (error) {
         console.error('Error in fetchSites:', error);
+        // Use default sites as fallback
+        setSitesList(defaultSites);
+        
+        if (siteName) {
+          const site = defaultSites.find(site => site.name === siteName);
+          if (site) {
+            setSelectedSite(site);
+          }
+        }
       } finally {
         setIsLoading(false);
       }
@@ -133,6 +187,8 @@ const HistoricalSiteView = () => {
       params.append('siteName', selectedSite.name);
       if (selectedSite.ar_model_url) {
         params.append('modelUrl', selectedSite.ar_model_url);
+      } else if (MODEL_MAPPINGS[selectedSite.name]) {
+        params.append('modelUrl', MODEL_MAPPINGS[selectedSite.name]);
       }
       navigate(`/ar?${params.toString()}`);
     } else {
@@ -147,6 +203,8 @@ const HistoricalSiteView = () => {
     // Add model URL if available
     if (site.ar_model_url) {
       params.set('modelUrl', site.ar_model_url);
+    } else if (MODEL_MAPPINGS[site.name]) {
+      params.set('modelUrl', MODEL_MAPPINGS[site.name]);
     } else {
       params.delete('modelUrl');
     }
@@ -162,13 +220,6 @@ const HistoricalSiteView = () => {
     });
   };
 
-  // Function to get the effective model URL (either from the selected site or from URL params)
-  const getEffectiveModelUrl = () => {
-    if (modelUrl) return modelUrl;
-    if (selectedSite?.ar_model_url) return selectedSite.ar_model_url;
-    return '';
-  };
-
   return (
     <div className="h-screen w-screen bg-heritage-900 overflow-hidden relative">
       {/* 3D Model View */}
@@ -178,11 +229,7 @@ const HistoricalSiteView = () => {
           <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} />
           <PerspectiveCamera makeDefault position={[0, 0, 5]} />
           
-          {getEffectiveModelUrl() ? (
-            <Model url={getEffectiveModelUrl()} />
-          ) : (
-            <PlaceholderModel />
-          )}
+          <ModelWithFallback url={getEffectiveModelUrl()} />
           
           <OrbitControls enableZoom={true} autoRotate={true} autoRotateSpeed={0.5} />
         </Canvas>

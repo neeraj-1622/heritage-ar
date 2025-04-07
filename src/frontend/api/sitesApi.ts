@@ -1,3 +1,4 @@
+
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { HistoricalSite, HistoricalSiteInput } from '@/lib/supabase';
@@ -39,11 +40,11 @@ const fallbackSites = [
   },
   {
     id: '5',
-    name: 'Angkor Wat',
-    period: 'Khmer Empire',
-    location: 'Siem Reap, Cambodia',
-    short_description: 'A temple complex and the largest religious monument in the world, built in the early 12th century.',
-    image_url: 'https://images.unsplash.com/photo-1508159452718-d22f6734a00d?q=80&w=2070&auto=format&fit=crop',
+    name: 'Stonehenge',
+    period: 'Neolithic',
+    location: 'Wiltshire, England',
+    short_description: 'A prehistoric monument consisting of a ring of standing stones, each around 13 feet high, seven feet wide, and weighing around 25 tons.',
+    image_url: 'https://images.unsplash.com/photo-1564207550505-32a0f9c622b6?q=80&w=2065&auto=format&fit=crop',
   },
   {
     id: '6',

@@ -27,7 +27,8 @@ async function seedDatabase() {
         short_description: site.short_description,
         long_description: site.long_description,
         image_url: site.image_url,
-        coordinates: site.coordinates
+        coordinates: site.coordinates,
+        ar_model_url: site.ar_model_url
       })));
     
     if (insertError) {

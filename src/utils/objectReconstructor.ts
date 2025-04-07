@@ -14,6 +14,7 @@ export interface ObjectModelData {
     height: number;
     depth: number;
   };
+  modelUrl?: string; // URL to a 3D model if available
 }
 
 /**
@@ -71,8 +72,24 @@ function generateBasicModelForClass(objectClass: string): ObjectModelData {
   let geometryType: string;
   let scale: number = 1.0;
   let dimensions = undefined;
+  let modelUrl = undefined;
   
-  if (['cup', 'bottle', 'vase', 'wine glass', 'glass'].includes(lowerCaseClass)) {
+  // Check for historical sites
+  if (['colosseum', 'rome', 'roman', 'amphitheatre'].includes(lowerCaseClass)) {
+    geometryType = 'complex';
+    scale = 1.0;
+    modelUrl = '/models/colosseum.glb';
+  } else if (['taj mahal', 'india', 'agra', 'mausoleum'].includes(lowerCaseClass)) {
+    geometryType = 'complex';
+    scale = 1.0;
+    modelUrl = '/models/taj_mahal.glb';
+  } else if (['parthenon', 'athens', 'greek', 'temple'].includes(lowerCaseClass)) {
+    geometryType = 'complex';
+    scale = 1.0;
+    modelUrl = '/models/parthenon.glb';
+  } 
+  // Common objects 
+  else if (['cup', 'bottle', 'vase', 'wine glass', 'glass'].includes(lowerCaseClass)) {
     geometryType = 'cylinder';
     scale = 0.8;
     dimensions = { width: 1, height: 2, depth: 1 };
@@ -108,7 +125,8 @@ function generateBasicModelForClass(objectClass: string): ObjectModelData {
     color: getColorFromString(objectClass),
     scale: scale,
     class: objectClass,
-    dimensions
+    dimensions,
+    modelUrl
   };
 }
 
@@ -132,4 +150,3 @@ export function createThreeJsGeometryFromModelData(modelData: ObjectModelData): 
       return new THREE.BoxGeometry(dimensions.width, dimensions.height, dimensions.depth);
   }
 }
-
