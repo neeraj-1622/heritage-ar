@@ -1,5 +1,4 @@
-
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useGLTF, OrbitControls, Environment, PerspectiveCamera } from '@react-three/drei';
 import { Interactive, useXR, useHitTest } from '@react-three/xr';
@@ -46,7 +45,7 @@ function Model({ url, position = [0, 0, 0], scale = 1 }: { url: string, position
 
   useFrame((state) => {
     if (modelRef.current) {
-      // Optional: Add some subtle animation
+      // Add some subtle animation
       modelRef.current.rotation.y += 0.005;
     }
   });
@@ -130,7 +129,7 @@ const ARModelViewer: React.FC<ARModelViewerProps> = ({
   onModelToggle,
   cameraActive
 }) => {
-  const [modelUrl, setModelUrl] = useState<string>(MODEL_MAPPINGS.default);
+  const [modelUrl, setModelUrl] = useState<string>('');
   const [modelScale, setModelScale] = useState<number>(0.5);
   const [hasXRSupport, setHasXRSupport] = useState<boolean | null>(null);
   const [modelLoaded, setModelLoaded] = useState(false);
@@ -155,11 +154,18 @@ const ARModelViewer: React.FC<ARModelViewerProps> = ({
       console.log("Setting model for detected object:", detectedObject.class, objectModel.modelUrl);
       setModelLoaded(true);
     } else if (selectedSite) {
-      // Use the site-specific model if available, otherwise use the default
-      const siteModelUrl = MODEL_MAPPINGS[selectedSite.name] || MODEL_MAPPINGS.default;
-      setModelUrl(siteModelUrl);
-      setModelScale(0.5);
-      console.log("Setting model for selected site:", selectedSite.name, siteModelUrl);
+      // Use the site's specific model URL if available
+      if (selectedSite.ar_model_url) {
+        setModelUrl(selectedSite.ar_model_url);
+        setModelScale(0.5);
+        console.log("Using site's AR model URL:", selectedSite.ar_model_url);
+      } else {
+        // Otherwise use the name-based mapping
+        const siteModelUrl = MODEL_MAPPINGS[selectedSite.name] || MODEL_MAPPINGS.default;
+        setModelUrl(siteModelUrl);
+        setModelScale(0.5);
+        console.log("Setting model for selected site:", selectedSite.name, siteModelUrl);
+      }
       setModelLoaded(true);
     }
   }, [selectedSite, detectedObject]);
@@ -201,7 +207,7 @@ const ARModelViewer: React.FC<ARModelViewerProps> = ({
           <>
             <ambientLight intensity={1} />
             <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={1.5} castShadow />
-            <Model url={modelUrl} scale={modelScale} />
+            {modelUrl && <Model url={modelUrl} scale={modelScale} />}
             {enableRotation ? null : <OrbitControls enableZoom={true} enablePan={true} />}
             <Environment preset="sunset" />
           </>

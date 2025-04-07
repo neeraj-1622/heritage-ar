@@ -11,6 +11,7 @@ export const defaultSites: Omit<HistoricalSite, 'created_at' | 'updated_at'>[] =
     long_description: 'The Colosseum is an oval amphitheatre in the centre of the city of Rome, Italy, just east of the Roman Forum. It is the largest ancient amphitheatre ever built, and is still the largest standing amphitheatre in the world today, despite its age.',
     image_url: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?q=80&w=1996&auto=format&fit=crop',
     coordinates: { lat: 41.8902, lng: 12.4922 },
+    ar_model_url: '/models/colosseum.glb',
   },
   {
     id: '2',
@@ -31,6 +32,7 @@ export const defaultSites: Omit<HistoricalSite, 'created_at' | 'updated_at'>[] =
     long_description: 'The Parthenon is a former temple on the Athenian Acropolis, Greece, dedicated to the goddess Athena, whom the people of Athens considered their patron. Construction began in 447 BC when the Athenian Empire was at the peak of its power.',
     image_url: 'https://images.unsplash.com/photo-1603565816030-6b389eeb23cb?q=80&w=2070&auto=format&fit=crop',
     coordinates: { lat: 37.9715, lng: 23.7267 },
+    ar_model_url: '/models/parthenon.glb',
   },
   {
     id: '4',
@@ -41,6 +43,7 @@ export const defaultSites: Omit<HistoricalSite, 'created_at' | 'updated_at'>[] =
     long_description: 'The Taj Mahal is an ivory-white marble mausoleum on the south bank of the Yamuna river in the Indian city of Agra. It was commissioned in 1632 by the Mughal emperor, Shah Jahan, to house the tomb of his favourite wife, Mumtaz Mahal.',
     image_url: 'https://images.unsplash.com/photo-1548013146-72479768bada?q=80&w=2076&auto=format&fit=crop',
     coordinates: { lat: 27.1751, lng: 78.0421 },
+    ar_model_url: '/models/taj_mahal.glb',
   },
   {
     id: '5',
@@ -49,7 +52,7 @@ export const defaultSites: Omit<HistoricalSite, 'created_at' | 'updated_at'>[] =
     location: 'Siem Reap, Cambodia',
     short_description: 'A temple complex and the largest religious monument in the world, built in the early 12th century.',
     long_description: 'Angkor Wat is a temple complex in Cambodia and is the largest religious monument in the world, on a site measuring 162.6 hectares. Originally constructed as a Hindu temple dedicated to the god Vishnu for the Khmer Empire, it was gradually transformed into a Buddhist temple.',
-    image_url: 'https://images.unsplash.com/photo-1508159452718-d22f6734a00d?q=80&w=2070&auto=format&fit=crop',
+    image_url: '/lovable-uploads/c6841666-c9f4-4e59-878f-025699b7b516.png',
     coordinates: { lat: 13.4125, lng: 103.8670 },
   },
   {
