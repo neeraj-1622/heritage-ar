@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useGLTF, OrbitControls, Environment, PerspectiveCamera } from '@react-three/drei';
@@ -14,7 +15,7 @@ const MODEL_MAPPINGS: Record<string, string> = {
   'Machu Picchu': '/models/machu_picchu.glb',
   'Parthenon': '/models/parthenon.glb',
   'Taj Mahal': '/models/taj_mahal.glb',
-  'Angkor Wat': '/models/angkor_wat.glb',
+  'Stonehenge': '/models/monument.glb',
   'Chichen Itza': '/models/chichen_itza.glb',
   // Fallback to a default model if no matching model is found
   'default': '/models/monument.glb',

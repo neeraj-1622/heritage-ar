@@ -40,11 +40,11 @@ const fallbackSites = [
   },
   {
     id: '5',
-    name: 'Angkor Wat',
-    period: 'Khmer Empire',
-    location: 'Siem Reap, Cambodia',
-    short_description: 'A temple complex and the largest religious monument in the world, built in the early 12th century.',
-    image_url: '/lovable-uploads/ff9ed8d9-e61f-4f62-a68d-d0c81d61329a.png',
+    name: 'Stonehenge',
+    period: 'Neolithic',
+    location: 'Wiltshire, England',
+    short_description: 'A prehistoric monument consisting of a ring of standing stones, each around 13 feet high, seven feet wide, and weighing around 25 tons.',
+    image_url: 'https://images.unsplash.com/photo-1564207550505-32a0f9c622b6?q=80&w=2065&auto=format&fit=crop',
   },
   {
     id: '6',

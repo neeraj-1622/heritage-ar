@@ -92,6 +92,7 @@ const HistoricalSiteView = () => {
     'The Colosseum': '/models/colosseum.glb',
     'Parthenon': '/models/parthenon.glb',
     'Taj Mahal': '/models/taj_mahal.glb',
+    'Stonehenge': '/models/monument.glb',
     // Default model as fallback
     'default': '/models/parthenon.glb'
   };
