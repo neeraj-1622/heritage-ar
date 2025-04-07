@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useGLTF, OrbitControls, Environment, PerspectiveCamera } from '@react-three/drei';
 import { Interactive, useXR, useHitTest } from '@react-three/xr';
