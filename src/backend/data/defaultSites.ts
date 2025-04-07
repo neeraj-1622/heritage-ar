@@ -22,6 +22,7 @@ export const defaultSites: Omit<HistoricalSite, 'created_at' | 'updated_at'>[] =
     long_description: 'Machu Picchu is a 15th-century Inca citadel, located in the Eastern Cordillera of southern Peru, on a 2,430-meter (7,970 ft) mountain ridge. It was built as an estate for the Inca emperor Pachacuti (1438–1472).',
     image_url: 'https://images.unsplash.com/photo-1526392060635-9d6019884377?q=80&w=2070&auto=format&fit=crop',
     coordinates: { lat: -13.1631, lng: -72.5450 },
+    ar_model_url: '/models/parthenon.glb', // Fallback model
   },
   {
     id: '3',
@@ -54,7 +55,7 @@ export const defaultSites: Omit<HistoricalSite, 'created_at' | 'updated_at'>[] =
     long_description: 'Stonehenge is a prehistoric monument on Salisbury Plain in Wiltshire, England. It consists of an outer ring of vertical sarsen standing stones, each around 13 feet high, seven feet wide, and weighing around 25 tons, topped by connecting horizontal lintel stones. Inside is a ring of smaller bluestones. The whole monument, now ruined, is oriented towards the sunrise on the summer solstice.',
     image_url: 'https://images.unsplash.com/photo-1564207550505-32a0f9c622b6?q=80&w=2065&auto=format&fit=crop',
     coordinates: { lat: 51.1789, lng: -1.8262 },
-    ar_model_url: '/models/monument.glb',
+    ar_model_url: '/models/stonehenge.glb', // Updated to use stonehenge.glb
   },
   {
     id: '6',
@@ -65,5 +66,6 @@ export const defaultSites: Omit<HistoricalSite, 'created_at' | 'updated_at'>[] =
     long_description: 'Chichen Itza was a large pre-Columbian city built by the Maya people of the Terminal Classic period. The archaeological site is located in Tinúm Municipality, Yucatán State, Mexico. It was a major focal point of the Northern Maya Lowlands from the Late Classic through the Terminal Classic and into the early portion of the Postclassic period.',
     image_url: 'https://images.unsplash.com/photo-1518638150340-f706e86654de?q=80&w=2067&auto=format&fit=crop',
     coordinates: { lat: 20.6843, lng: -88.5699 },
+    ar_model_url: '/models/parthenon.glb', // Fallback model
   },
 ];

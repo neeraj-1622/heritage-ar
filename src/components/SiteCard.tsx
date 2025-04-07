@@ -24,6 +24,10 @@ const SiteCard: React.FC<SiteCardProps> = ({ site }) => {
             src={site.image_url}
             alt={site.name}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+            onError={(e) => {
+              // Fallback image if the original fails to load
+              e.currentTarget.src = 'https://images.unsplash.com/photo-1564207550505-32a0f9c622b6?q=80&w=2065&auto=format&fit=crop';
+            }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-4">

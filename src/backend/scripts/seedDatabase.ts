@@ -17,10 +17,40 @@ async function seedDatabase() {
     }
     console.log('Cleared existing data');
     
-    // Insert default sites
+    // Insert default sites with corrected model URLs
+    const sitesWithUpdatedModels = defaultSites.map(site => {
+      // Ensure model URLs are correctly set
+      let ar_model_url = site.ar_model_url;
+      
+      // Set model URLs based on site name if not already set
+      if (!ar_model_url) {
+        switch (site.name) {
+          case 'The Colosseum':
+            ar_model_url = '/models/colosseum.glb';
+            break;
+          case 'Parthenon':
+            ar_model_url = '/models/parthenon.glb';
+            break;
+          case 'Taj Mahal':
+            ar_model_url = '/models/taj_mahal.glb';
+            break;
+          case 'Stonehenge':
+            ar_model_url = '/models/stonehenge.glb';
+            break;
+          default:
+            ar_model_url = '/models/parthenon.glb'; // Default fallback
+        }
+      }
+      
+      return {
+        ...site,
+        ar_model_url
+      };
+    });
+    
     const { error: insertError } = await supabase
       .from('historical_sites')
-      .insert(defaultSites.map(site => ({
+      .insert(sitesWithUpdatedModels.map(site => ({
         name: site.name,
         period: site.period,
         location: site.location,
@@ -34,7 +64,7 @@ async function seedDatabase() {
     if (insertError) {
       throw insertError;
     }
-    console.log('Database seeded successfully with default data');
+    console.log('Database seeded successfully with default data and corrected model URLs');
     
   } catch (error) {
     console.error('Error seeding database:', error);

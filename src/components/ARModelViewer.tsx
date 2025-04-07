@@ -11,13 +11,12 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 // Default 3D models for historical sites
 const MODEL_MAPPINGS: Record<string, string> = {
   'The Colosseum': '/models/colosseum.glb',
-  'Machu Picchu': '/models/machu_picchu.glb',
+  'Machu Picchu': '/models/parthenon.glb',
   'Parthenon': '/models/parthenon.glb',
   'Taj Mahal': '/models/taj_mahal.glb',
-  'Stonehenge': '/models/monument.glb',
-  'Chichen Itza': '/models/chichen_itza.glb',
-  // Fallback to a default model if no matching model is found
-  'default': '/models/monument.glb',
+  'Stonehenge': '/models/stonehenge.glb',
+  'Chichen Itza': '/models/parthenon.glb',
+  'default': '/models/parthenon.glb',
 };
 
 // Fallback placeholder model when 3D model isn't available
@@ -45,12 +44,10 @@ function Model({ url, position = [0, 0, 0], scale = 1 }: { url: string, position
 
   useFrame((state) => {
     if (modelRef.current) {
-      // Add some subtle animation
       modelRef.current.rotation.y += 0.005;
     }
   });
 
-  // If there's an error loading the model, show a placeholder
   if (!modelLoaded) {
     return <PlaceholderModel position={position} scale={scale} />;
   }
@@ -71,7 +68,6 @@ function ARPlacement({ modelUrl }: { modelUrl: string }) {
   const [position, setPosition] = useState<[number, number, number]>([0, 0, 0]);
   const { isPresenting } = useXR();
   
-  // Hit test to place model on surfaces
   useHitTest((hitMatrix, hit) => {
     if (!placed) {
       hitMatrix.decompose(
@@ -135,7 +131,6 @@ const ARModelViewer: React.FC<ARModelViewerProps> = ({
   const [modelLoaded, setModelLoaded] = useState(false);
 
   useEffect(() => {
-    // Check if WebXR is supported
     if (navigator.xr) {
       navigator.xr.isSessionSupported('immersive-ar')
         .then(supported => setHasXRSupport(supported))
@@ -146,7 +141,6 @@ const ARModelViewer: React.FC<ARModelViewerProps> = ({
   }, []);
 
   useEffect(() => {
-    // Choose between site model or detected object model
     if (detectedObject && detectedObject.class) {
       const objectModel = getModelForObject(detectedObject.class);
       setModelUrl(objectModel.modelUrl);
@@ -154,13 +148,11 @@ const ARModelViewer: React.FC<ARModelViewerProps> = ({
       console.log("Setting model for detected object:", detectedObject.class, objectModel.modelUrl);
       setModelLoaded(true);
     } else if (selectedSite) {
-      // Use the site's specific model URL if available
       if (selectedSite.ar_model_url) {
         setModelUrl(selectedSite.ar_model_url);
         setModelScale(0.5);
         console.log("Using site's AR model URL:", selectedSite.ar_model_url);
       } else {
-        // Otherwise use the name-based mapping
         const siteModelUrl = MODEL_MAPPINGS[selectedSite.name] || MODEL_MAPPINGS.default;
         setModelUrl(siteModelUrl);
         setModelScale(0.5);
@@ -214,7 +206,6 @@ const ARModelViewer: React.FC<ARModelViewerProps> = ({
         )}
       </Canvas>
 
-      {/* Control buttons */}
       <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4 z-10">
         <TooltipProvider>
           <Tooltip>
@@ -256,7 +247,6 @@ const ARModelViewer: React.FC<ARModelViewerProps> = ({
         </TooltipProvider>
       </div>
 
-      {/* Loading overlay */}
       <div className="absolute top-0 left-0 right-0 bg-black/30 text-white p-2 text-sm text-center">
         {detectedObject ? 
           `Detected: ${detectedObject.class} (${Math.round(detectedObject.score * 100)}%)` : 

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, Suspense } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
@@ -32,7 +31,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-// Model component to display 3D GLB models
 const Model = ({ url }: { url: string }) => {
   const { scene } = useGLTF(url);
   const [loaded, setLoaded] = useState(false);
@@ -55,7 +53,6 @@ const Model = ({ url }: { url: string }) => {
   );
 };
 
-// Fallback model when no model is available
 const PlaceholderModel = () => {
   return (
     <mesh>
@@ -65,7 +62,6 @@ const PlaceholderModel = () => {
   );
 };
 
-// Preload component to handle model loading
 const ModelWithFallback = ({ url }: { url: string }) => {
   return (
     <Suspense fallback={<PlaceholderModel />}>
@@ -83,21 +79,17 @@ const HistoricalSiteView = () => {
   const [isSiteMenuOpen, setIsSiteMenuOpen] = useState(false);
   const [showSiteInfo, setShowSiteInfo] = useState(false);
   
-  // Get site name and model URL from URL
   const siteName = searchParams.get('siteName') || '';
   const modelUrl = searchParams.get('modelUrl') || '';
 
-  // Map of model URLs by site name
   const MODEL_MAPPINGS: Record<string, string> = {
     'The Colosseum': '/models/colosseum.glb',
     'Parthenon': '/models/parthenon.glb',
     'Taj Mahal': '/models/taj_mahal.glb',
-    'Stonehenge': '/models/monument.glb',
-    // Default model as fallback
+    'Stonehenge': '/models/stonehenge.glb',
     'default': '/models/parthenon.glb'
   };
 
-  // Determine which model URL to use
   const getEffectiveModelUrl = () => {
     if (modelUrl) return modelUrl;
     if (selectedSite?.ar_model_url) return selectedSite.ar_model_url;
@@ -108,7 +100,6 @@ const HistoricalSiteView = () => {
   };
 
   useEffect(() => {
-    // Load historical sites from the database
     const fetchSites = async () => {
       setIsLoading(true);
       try {
@@ -125,7 +116,6 @@ const HistoricalSiteView = () => {
             variant: 'destructive',
           });
         } else if (data) {
-          // Map the database response to match the HistoricalSite type
           const mappedSites: HistoricalSite[] = data.map(site => ({
             id: site.id,
             name: site.name,
@@ -135,7 +125,6 @@ const HistoricalSiteView = () => {
             long_description: site.long_description || undefined,
             image_url: site.image_url,
             ar_model_url: site.ar_model_url || undefined,
-            // Parse coordinates from Json to the expected format
             coordinates: site.coordinates ? 
               (typeof site.coordinates === 'string' 
                 ? JSON.parse(site.coordinates) 
@@ -148,7 +137,6 @@ const HistoricalSiteView = () => {
 
           setSitesList(mappedSites.length > 0 ? mappedSites : defaultSites);
           
-          // Set initially selected site based on URL param
           if (siteName) {
             const site = mappedSites.find(site => site.name === siteName) || 
                          defaultSites.find(site => site.name === siteName);
@@ -160,7 +148,6 @@ const HistoricalSiteView = () => {
         }
       } catch (error) {
         console.error('Error in fetchSites:', error);
-        // Use default sites as fallback
         setSitesList(defaultSites);
         
         if (siteName) {
@@ -200,7 +187,6 @@ const HistoricalSiteView = () => {
     const params = new URLSearchParams(searchParams);
     params.set('siteName', site.name);
     
-    // Add model URL if available
     if (site.ar_model_url) {
       params.set('modelUrl', site.ar_model_url);
     } else if (MODEL_MAPPINGS[site.name]) {
@@ -222,7 +208,6 @@ const HistoricalSiteView = () => {
 
   return (
     <div className="h-screen w-screen bg-heritage-900 overflow-hidden relative">
-      {/* 3D Model View */}
       <div className="h-full w-full">
         <Canvas>
           <ambientLight intensity={0.5} />
@@ -235,7 +220,6 @@ const HistoricalSiteView = () => {
         </Canvas>
       </div>
       
-      {/* Top Navigation */}
       <div className="absolute top-0 left-0 right-0 p-4 z-20">
         <div className="flex justify-between items-center">
           <Button 
@@ -298,7 +282,6 @@ const HistoricalSiteView = () => {
         </div>
       </div>
 
-      {/* Site Information Dialog */}
       <AlertDialog open={showSiteInfo} onOpenChange={setShowSiteInfo}>
         <AlertDialogContent className="bg-heritage-800/95 backdrop-blur-sm text-white border-heritage-700">
           <AlertDialogHeader>
@@ -323,7 +306,6 @@ const HistoricalSiteView = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Mode Switch Buttons */}
       <div className="absolute bottom-8 left-0 right-0 flex justify-center z-10">
         <div className="bg-black/50 rounded-full backdrop-blur-sm p-1">
           <Button
@@ -346,7 +328,6 @@ const HistoricalSiteView = () => {
         </div>
       </div>
       
-      {/* Site Selector Sheet */}
       <Sheet open={isSiteMenuOpen} onOpenChange={setIsSiteMenuOpen}>
         <SheetContent side="bottom" className="h-[70vh] bg-heritage-800/95 text-white border-heritage-700">
           <SheetHeader>
@@ -381,7 +362,6 @@ const HistoricalSiteView = () => {
         </SheetContent>
       </Sheet>
       
-      {/* Loading Indicator */}
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-heritage-900/80 z-50">
           <div className="h-12 w-12 border-4 border-t-accent border-r-accent/30 border-b-accent/10 border-l-accent/60 rounded-full animate-spin"></div>

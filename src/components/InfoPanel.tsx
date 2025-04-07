@@ -29,7 +29,7 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ site, className = '' }) => {
   
   return (
     <motion.div 
-      className={`glass-panel rounded-2xl p-6 ${className}`}
+      className={`bg-heritage-900/90 backdrop-blur-lg border border-heritage-800/50 shadow-lg rounded-2xl p-6 ${className}`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
@@ -41,7 +41,7 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ site, className = '' }) => {
           <span className="inline-block px-2 py-1 text-xs font-medium bg-heritage-800 rounded-full text-heritage-300">
             {site.period}
           </span>
-          <span className="text-sm text-heritage-400">{site.location}</span>
+          <span className="text-sm text-heritage-300">{site.location}</span>
         </div>
         
         <p className="text-heritage-300">

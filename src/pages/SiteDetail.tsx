@@ -111,10 +111,10 @@ const SiteDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-heritage-50">
+      <div className="min-h-screen bg-heritage-950">
         <Header showBackButton />
         <div className="container mx-auto pt-24 pb-16 px-4 flex justify-center items-center">
-          <Loader2 className="h-12 w-12 animate-spin text-heritage-600" />
+          <Loader2 className="h-12 w-12 animate-spin text-heritage-300" />
         </div>
       </div>
     );
@@ -122,12 +122,12 @@ const SiteDetail = () => {
 
   if (!site) {
     return (
-      <div className="min-h-screen bg-heritage-50">
+      <div className="min-h-screen bg-heritage-950">
         <Header showBackButton />
         <div className="container mx-auto pt-24 pb-16 px-4">
           <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">Site Not Found</h1>
-            <p className="mb-6">The historical site you're looking for doesn't exist or has been removed.</p>
+            <h1 className="text-2xl font-bold mb-4 text-heritage-100">Site Not Found</h1>
+            <p className="mb-6 text-heritage-300">The historical site you're looking for doesn't exist or has been removed.</p>
             <Button onClick={() => navigate('/')}>Return Home</Button>
           </div>
         </div>
@@ -154,7 +154,7 @@ const SiteDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-heritage-50">
+    <div className="min-h-screen bg-heritage-950">
       <Header showBackButton />
       
       <main className="container mx-auto pt-20 pb-16 px-4">
@@ -163,6 +163,10 @@ const SiteDetail = () => {
             src={site.image_url} 
             alt={site.name} 
             className="w-full h-full object-cover"
+            onError={(e) => {
+              // Fallback image if the original fails to load
+              e.currentTarget.src = 'https://images.unsplash.com/photo-1564207550505-32a0f9c622b6?q=80&w=2065&auto=format&fit=crop';
+            }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
           
@@ -182,7 +186,7 @@ const SiteDetail = () => {
         </div>
         
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-heritage-900">About this site</h2>
+          <h2 className="text-2xl font-bold text-heritage-100">About this site</h2>
           <div className="flex space-x-2">
             {site.ar_model_url && (
               <Button 
@@ -198,6 +202,7 @@ const SiteDetail = () => {
               <Button 
                 variant="outline"
                 onClick={handleView3DModel}
+                className="border-heritage-700 text-heritage-100 hover:bg-heritage-800"
               >
                 <Box className="mr-2 h-4 w-4" />
                 View 3D Model
@@ -208,7 +213,7 @@ const SiteDetail = () => {
               variant={isFavorite ? "default" : "outline"}
               onClick={toggleFavorite}
               disabled={favoriteLoading}
-              className={isFavorite ? "bg-red-500 hover:bg-red-600" : ""}
+              className={isFavorite ? "bg-red-500 hover:bg-red-600" : "border-heritage-700 text-heritage-100 hover:bg-heritage-800"}
             >
               {favoriteLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -221,24 +226,24 @@ const SiteDetail = () => {
         </div>
         
         <Tabs defaultValue="description" className="mb-8">
-          <TabsList className="mb-4">
-            <TabsTrigger value="description">Description</TabsTrigger>
-            <TabsTrigger value="history">History</TabsTrigger>
+          <TabsList className="mb-4 bg-heritage-800 text-heritage-200">
+            <TabsTrigger value="description" className="data-[state=active]:bg-accent data-[state=active]:text-white">Description</TabsTrigger>
+            <TabsTrigger value="history" className="data-[state=active]:bg-accent data-[state=active]:text-white">History</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="description" className="bg-white shadow-sm rounded-lg p-6 text-gray-700 leading-relaxed">
-            <div className="prose prose-slate max-w-none">
-              <p className="text-lg mb-4">{site.short_description}</p>
-              <p>{site.long_description || "No detailed description available for this historical site."}</p>
+          <TabsContent value="description" className="bg-heritage-900 shadow-sm rounded-lg p-6 text-heritage-200 leading-relaxed border border-heritage-800">
+            <div className="prose prose-invert max-w-none">
+              <p className="text-lg mb-4 text-heritage-100">{site.short_description}</p>
+              <p className="text-heritage-300">{site.long_description || "No detailed description available for this historical site."}</p>
             </div>
           </TabsContent>
           
-          <TabsContent value="history" className="bg-white shadow-sm rounded-lg p-6 text-gray-700 leading-relaxed">
-            <div className="prose prose-slate max-w-none">
-              <p className="text-lg mb-4">
+          <TabsContent value="history" className="bg-heritage-900 shadow-sm rounded-lg p-6 text-heritage-200 leading-relaxed border border-heritage-800">
+            <div className="prose prose-invert max-w-none">
+              <p className="text-lg mb-4 text-heritage-100">
                 {site.name} is from the {site.period} period and is located in {site.location}.
               </p>
-              <p>{site.long_description || "Historical information about this site is currently being compiled."}</p>
+              <p className="text-heritage-300">{site.long_description || "Historical information about this site is currently being compiled."}</p>
             </div>
           </TabsContent>
         </Tabs>
