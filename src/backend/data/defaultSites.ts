@@ -52,8 +52,9 @@ export const defaultSites: Omit<HistoricalSite, 'created_at' | 'updated_at'>[] =
     location: 'Siem Reap, Cambodia',
     short_description: 'A temple complex and the largest religious monument in the world, built in the early 12th century.',
     long_description: 'Angkor Wat is a temple complex in Cambodia and is the largest religious monument in the world, on a site measuring 162.6 hectares. Originally constructed as a Hindu temple dedicated to the god Vishnu for the Khmer Empire, it was gradually transformed into a Buddhist temple.',
-    image_url: '/lovable-uploads/c6841666-c9f4-4e59-878f-025699b7b516.png',
+    image_url: '/lovable-uploads/ff9ed8d9-e61f-4f62-a68d-d0c81d61329a.png',
     coordinates: { lat: 13.4125, lng: 103.8670 },
+    ar_model_url: '/models/angkor_wat.glb',
   },
   {
     id: '6',

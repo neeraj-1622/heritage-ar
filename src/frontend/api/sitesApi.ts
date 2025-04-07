@@ -1,3 +1,4 @@
+
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { HistoricalSite, HistoricalSiteInput } from '@/lib/supabase';
@@ -43,7 +44,7 @@ const fallbackSites = [
     period: 'Khmer Empire',
     location: 'Siem Reap, Cambodia',
     short_description: 'A temple complex and the largest religious monument in the world, built in the early 12th century.',
-    image_url: 'https://images.unsplash.com/photo-1508159452718-d22f6734a00d?q=80&w=2070&auto=format&fit=crop',
+    image_url: '/lovable-uploads/ff9ed8d9-e61f-4f62-a68d-d0c81d61329a.png',
   },
   {
     id: '6',
