@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -188,7 +187,7 @@ const SiteDetail = () => {
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-heritage-100">About this site</h2>
           <div className="flex space-x-2">
-            {site.ar_model_url && (
+            {site.ar_model_url && site.name !== 'Stonehenge' && (
               <Button 
                 className="bg-accent hover:bg-accent/90"
                 onClick={handleViewInAR}
@@ -198,29 +197,25 @@ const SiteDetail = () => {
               </Button>
             )}
             
-            {site.ar_model_url && (
-              <Button 
-                variant="outline"
-                onClick={handleView3DModel}
-                className="border-heritage-700 text-heritage-100 hover:bg-heritage-800"
-              >
-                <Box className="mr-2 h-4 w-4" />
-                View 3D Model
-              </Button>
-            )}
-            
+            <Button 
+              className="bg-heritage-700 hover:bg-heritage-600"
+              onClick={handleView3DModel}
+            >
+              <Box className="mr-2 h-4 w-4" />
+              View 3D Model
+            </Button>
+
             <Button
               variant={isFavorite ? "default" : "outline"}
+              className={`${
+                isFavorite 
+                  ? "bg-accent hover:bg-accent/90" 
+                  : "border-heritage-700 hover:bg-heritage-800"
+              }`}
               onClick={toggleFavorite}
               disabled={favoriteLoading}
-              className={isFavorite ? "bg-red-500 hover:bg-red-600" : "border-heritage-700 text-heritage-100 hover:bg-heritage-800"}
             >
-              {favoriteLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <HeartIcon className={`h-4 w-4 ${isFavorite ? "fill-white" : ""}`} />
-              )}
-              <span className="ml-2">{isFavorite ? "Favorited" : "Favorite"}</span>
+              <HeartIcon className={`h-4 w-4 ${isFavorite ? "fill-current" : ""}`} />
             </Button>
           </div>
         </div>

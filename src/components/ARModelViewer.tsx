@@ -15,7 +15,7 @@ const MODEL_MAPPINGS: Record<string, string> = {
   'Parthenon': '/models/parthenon.glb',
   'Taj Mahal': '/models/taj_mahal.glb',
   'Stonehenge': '/models/stonehenge.glb',
-  'Chichen Itza': '/models/parthenon.glb',
+  'Great Pyramid of Giza': '/models/pyramid.glb',
   'default': '/models/parthenon.glb',
 };
 

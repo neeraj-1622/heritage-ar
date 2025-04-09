@@ -87,6 +87,8 @@ const HistoricalSiteView = () => {
     'Parthenon': '/models/parthenon.glb',
     'Taj Mahal': '/models/taj_mahal.glb',
     'Stonehenge': '/models/stonehenge.glb',
+    'Great Pyramid of Giza': '/models/pyramid.glb',
+    'Machu Picchu': '/models/parthenon.glb', // Using parthenon as fallback
     'default': '/models/parthenon.glb'
   };
 
@@ -216,7 +218,13 @@ const HistoricalSiteView = () => {
           
           <ModelWithFallback url={getEffectiveModelUrl()} />
           
-          <OrbitControls enableZoom={true} autoRotate={true} autoRotateSpeed={0.5} />
+          <OrbitControls 
+            enableZoom={true} 
+            autoRotate={true} 
+            autoRotateSpeed={0.5}
+            minDistance={2}
+            maxDistance={10}
+          />
         </Canvas>
       </div>
       
@@ -237,7 +245,7 @@ const HistoricalSiteView = () => {
             </h2>
           </div>
           
-          <div className="flex space-x-2">
+          <div className="flex gap-2">
             <Button
               variant="outline" 
               size="icon" 
@@ -263,12 +271,6 @@ const HistoricalSiteView = () => {
                   onClick={() => setIsSiteMenuOpen(true)}
                 >
                   Select Historical Site
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  className="hover:bg-heritage-700 cursor-pointer"
-                  onClick={() => navigate('/update-password')}
-                >
-                  Update Password
                 </DropdownMenuItem>
                 <DropdownMenuItem 
                   className="hover:bg-heritage-700 cursor-pointer"

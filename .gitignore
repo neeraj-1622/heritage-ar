@@ -7,6 +7,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
 dist
 dist-ssr
@@ -22,3 +23,58 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment variables and sensitive data
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+*.p12
+
+# Large files and media
+*.glb
+*.gltf
+*.bin
+*.fbx
+*.obj
+*.mtl
+*.blend
+*.max
+*.3ds
+*.dae
+public/models/*
+!public/models/.gitkeep
+
+# Database and backup files
+*.sql
+*.sqlite
+*.sqlite3
+*.db
+dump.rdb
+
+# Build and cache directories
+.cache
+.build
+build/
+dist/
+out/
+
+# Testing and coverage
+coverage/
+.nyc_output/
+.jest/
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# Virtual environment
+venv/
+.venv/
+env/
+.env/
+.Python
