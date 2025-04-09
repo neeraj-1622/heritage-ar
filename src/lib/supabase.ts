@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 import { supabase as supabaseInstance } from '@/integrations/supabase/client';
 
@@ -228,6 +227,7 @@ export type HistoricalSite = {
   image_url: string;
   ar_model_url?: string;
   coordinates?: { lat: number; lng: number };
+  ar_enabled?: boolean;
   created_at?: string;
   updated_at?: string;
   created_by?: string;

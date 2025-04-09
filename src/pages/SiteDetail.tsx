@@ -187,7 +187,7 @@ const SiteDetail = () => {
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-heritage-100">About this site</h2>
           <div className="flex space-x-2">
-            {site.ar_model_url && site.name !== 'Stonehenge' && (
+            {site.ar_model_url && site.ar_enabled && (
               <Button 
                 className="bg-accent hover:bg-accent/90"
                 onClick={handleViewInAR}
