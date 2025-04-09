@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { Canvas } from '@react-three/fiber';
@@ -20,7 +20,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Box, View, Menu, Info } from 'lucide-react';
+import { ArrowLeft, Box, View, Menu, Info, Volume2, VolumeX } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { HistoricalSite } from '@/lib/supabase';
 import { defaultSites } from '@/backend/data/defaultSites';
@@ -30,6 +30,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import * as THREE from 'three';
 
 const Model = ({ url }: { url: string }) => {
   const { scene } = useGLTF(url);
@@ -37,6 +38,11 @@ const Model = ({ url }: { url: string }) => {
   
   useEffect(() => {
     if (scene) {
+      // Center the model
+      const box = new THREE.Box3().setFromObject(scene);
+      const center = box.getCenter(new THREE.Vector3());
+      scene.position.sub(center);
+      
       setLoaded(true);
       console.log("3D Model loaded successfully:", url);
     }
@@ -78,6 +84,9 @@ const HistoricalSiteView = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSiteMenuOpen, setIsSiteMenuOpen] = useState(false);
   const [showSiteInfo, setShowSiteInfo] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState<number>(8);
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
   
   const siteName = searchParams.get('siteName') || '';
   const modelUrl = searchParams.get('modelUrl') || '';
@@ -88,7 +97,7 @@ const HistoricalSiteView = () => {
     'Taj Mahal': '/models/taj_mahal.glb',
     'Stonehenge': '/models/stonehenge.glb',
     'Great Pyramid of Giza': '/models/pyramid.glb',
-    'Machu Picchu': '/models/parthenon.glb', // Using parthenon as fallback
+    'Machu Picchu': '/models/machupicchu.glb', 
     'default': '/models/parthenon.glb'
   };
 
@@ -208,22 +217,98 @@ const HistoricalSiteView = () => {
     });
   };
 
+  // Function to play audio narration using text-to-speech
+  const playAudioNarration = () => {
+    if (!selectedSite) return;
+    
+    // If speech is already playing, stop it
+    if (isPlaying && window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+      setIsPlaying(false);
+      return;
+    }
+
+    try {
+      // Create the text to be spoken
+      const text = `${selectedSite.name}. ${selectedSite.period}. Located in ${selectedSite.location}. ${selectedSite.long_description || selectedSite.short_description}`;
+      
+      // Create a new speech utterance if it doesn't exist
+      if (!speechRef.current) {
+        speechRef.current = new SpeechSynthesisUtterance(text);
+        
+        // Configure speech settings
+        speechRef.current.rate = 0.9; // Slightly slower than default
+        speechRef.current.pitch = 1;
+        
+        // Add event listeners
+        speechRef.current.onend = () => {
+          setIsPlaying(false);
+        };
+        
+        speechRef.current.onerror = (e) => {
+          console.error('Speech synthesis error:', e);
+          setIsPlaying(false);
+          toast({
+            title: 'Speech Synthesis Failed',
+            description: 'Unable to play the audio narration at this time.',
+            variant: 'destructive',
+          });
+        };
+      } else {
+        // Update text if it's a different site
+        speechRef.current.text = text;
+      }
+      
+      // Start speaking
+      window.speechSynthesis.speak(speechRef.current);
+      setIsPlaying(true);
+      
+    } catch (err) {
+      console.error('Failed to start speech synthesis:', err);
+      setIsPlaying(false);
+      toast({
+        title: 'Speech Synthesis Failed',
+        description: 'Unable to play the audio narration at this time.',
+        variant: 'destructive',
+      });
+    }
+  };
+  
+  // Clean up speech synthesis when component unmounts
+  useEffect(() => {
+    return () => {
+      if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+  
+  // Stop speech when selected site changes
+  useEffect(() => {
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+      setIsPlaying(false);
+    }
+  }, [selectedSite]);
+
   return (
     <div className="h-screen w-screen bg-heritage-900 overflow-hidden relative">
       <div className="h-full w-full">
         <Canvas>
           <ambientLight intensity={0.5} />
           <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} />
-          <PerspectiveCamera makeDefault position={[0, 0, 5]} />
+          <PerspectiveCamera makeDefault position={[0, 0, zoomLevel]} />
           
           <ModelWithFallback url={getEffectiveModelUrl()} />
           
           <OrbitControls 
             enableZoom={true} 
-            autoRotate={true} 
-            autoRotateSpeed={0.5}
+            autoRotate={false}
+            enablePan={true}
+            enableRotate={true}
             minDistance={2}
-            maxDistance={10}
+            maxDistance={40}
+            zoomSpeed={1.5}
           />
         </Canvas>
       </div>
@@ -284,7 +369,14 @@ const HistoricalSiteView = () => {
         </div>
       </div>
 
-      <AlertDialog open={showSiteInfo} onOpenChange={setShowSiteInfo}>
+      <AlertDialog open={showSiteInfo} onOpenChange={(open) => {
+        setShowSiteInfo(open);
+        // Stop speech when dialog is closed
+        if (!open && window.speechSynthesis.speaking) {
+          window.speechSynthesis.cancel();
+          setIsPlaying(false);
+        }
+      }}>
         <AlertDialogContent className="bg-heritage-800/95 backdrop-blur-sm text-white border-heritage-700">
           <AlertDialogHeader>
             <AlertDialogTitle>{selectedSite?.name || 'Historical Site Info'}</AlertDialogTitle>
@@ -300,7 +392,16 @@ const HistoricalSiteView = () => {
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="flex justify-between items-center">
+            <Button 
+              variant="outline"
+              size="icon"
+              className={`rounded-full ${isPlaying ? 'bg-accent text-white' : 'bg-heritage-700/50 text-white'}`}
+              onClick={playAudioNarration}
+              title={isPlaying ? "Stop Audio Narration" : "Play Audio Narration"}
+            >
+              {isPlaying ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+            </Button>
             <AlertDialogAction className="bg-accent hover:bg-accent/90">
               Close
             </AlertDialogAction>
@@ -330,39 +431,51 @@ const HistoricalSiteView = () => {
         </div>
       </div>
       
-      <Sheet open={isSiteMenuOpen} onOpenChange={setIsSiteMenuOpen}>
-        <SheetContent side="bottom" className="h-[70vh] bg-heritage-800/95 text-white border-heritage-700">
-          <SheetHeader>
-            <SheetTitle className="text-white">Historical Sites</SheetTitle>
-            <SheetDescription className="text-heritage-300">
-              Select a site to view in 3D
-            </SheetDescription>
-          </SheetHeader>
-          
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-6 max-h-[calc(70vh-120px)] overflow-y-auto">
-            {sitesList.map((site) => (
-              <Button 
-                key={site.id}
-                variant="outline"
-                className={`justify-start h-auto py-2 px-3 border-heritage-700 ${
-                  selectedSite?.id === site.id ? 'bg-accent/20 border-accent/50' : 'bg-heritage-700/50'
-                }`}
-                onClick={() => handleSiteSelect(site)}
-              >
-                <div className="flex flex-col items-center gap-2">
-                  <div className="w-16 h-16 rounded-md overflow-hidden">
-                    <img src={site.image_url} alt={site.name} className="w-full h-full object-cover" />
-                  </div>
-                  <div className="text-center">
-                    <p className="text-xs font-medium line-clamp-2">{site.name}</p>
-                    <p className="text-[10px] opacity-75">{site.period}</p>
-                  </div>
-                </div>
-              </Button>
-            ))}
-          </div>
-        </SheetContent>
-      </Sheet>
+      {/* Zoom controls - now hidden but keeping the code in case we want to restore later */}
+      {/* 
+      <div className="absolute bottom-20 right-4 z-20 flex flex-col gap-2">
+        <Button
+          variant="outline"
+          size="icon"
+          className="rounded-full bg-black/50 text-white hover:bg-black/70"
+          onClick={() => setZoomLevel(prev => Math.max(2, prev - 1.5))}
+          title="Zoom In"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            <line x1="11" y1="8" x2="11" y2="14"></line>
+            <line x1="8" y1="11" x2="14" y2="11"></line>
+          </svg>
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          className="rounded-full bg-black/50 text-white hover:bg-black/70"
+          onClick={() => setZoomLevel(prev => Math.min(40, prev + 1.5))}
+          title="Zoom Out"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            <line x1="8" y1="11" x2="14" y2="11"></line>
+          </svg>
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          className="rounded-full bg-black/50 text-white hover:bg-black/70"
+          onClick={() => setZoomLevel(40)}
+          title="Maximum Zoom Out"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M15 3h6v6"></path>
+            <path d="M10 14L21 3"></path>
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+          </svg>
+        </Button>
+      </div>
+      */}
       
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-heritage-900/80 z-50">
