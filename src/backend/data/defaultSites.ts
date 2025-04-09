@@ -1,8 +1,40 @@
-import { HistoricalSite } from '../../lib/supabase';
+import { HistoricalSite } from '../../../lib/supabase';
 
-export const defaultSites: Omit<HistoricalSite, 'created_at' | 'updated_at'>[] = [
+export const defaultSites: HistoricalSite[] = [
   {
     id: '1',
+    name: 'Great Pyramid of Giza',
+    period: 'Ancient Egyptian',
+    location: 'Giza, Egypt',
+    short_description: 'One of the Seven Wonders of the Ancient World, built around 2560 BCE.',
+    long_description: 'The Great Pyramid of Giza stands as the last surviving wonder of the ancient world. Built during the reign of Pharaoh Khufu, it served as both a tomb and a symbol of ancient Egyptian architectural mastery.',
+    mythology: 'Rising majestically from the edge of the Sahara, the Great Pyramid of Giza is more than a tomb—it is an eternal beacon of the power and ingenuity of ancient Egypt.',
+    image_url: 'https://example.com/pyramid.jpg',
+    ar_model_url: '/models/pyramid.glb',
+    coordinates: { lat: 29.9792, lng: 31.1342 },
+    ar_enabled: true,
+    created_by: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: '2',
+    name: 'Machu Picchu',
+    period: 'Inca',
+    location: 'Cusco Region, Peru',
+    short_description: '15th-century Inca citadel located in southern Peru.',
+    long_description: 'Machu Picchu is an ancient Inca city set high in the Andes Mountains. Built in the 15th century and later abandoned, it is renowned for its sophisticated dry-stone walls that fuse huge blocks without the use of mortar.',
+    mythology: 'Perched high in the Andean mountains and shrouded in a perpetual mist, Machu Picchu is a dazzling testament to the ingenuity and spirituality of the Inca Empire.',
+    image_url: 'https://example.com/machupicchu.jpg',
+    ar_model_url: '/models/machupicchu.glb',
+    coordinates: { lat: -13.1631, lng: -72.5450 },
+    ar_enabled: true,
+    created_by: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: '3',
     name: 'The Colosseum',
     period: 'Ancient Rome',
     location: 'Rome, Italy',
@@ -11,20 +43,13 @@ export const defaultSites: Omit<HistoricalSite, 'created_at' | 'updated_at'>[] =
     image_url: '/images/colosseum.jpg',
     coordinates: { lat: 41.8902, lng: 12.4922 },
     ar_model_url: '/models/colosseum.glb',
+    ar_enabled: true,
+    created_by: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   },
   {
-    id: '2',
-    name: 'Machu Picchu',
-    period: 'Inca Civilization',
-    location: 'Cusco Region, Peru',
-    short_description: 'A 15th-century Inca citadel situated on a mountain ridge above the Sacred Valley.',
-    long_description: 'Machu Picchu is a 15th-century Inca citadel, located in the Eastern Cordillera of southern Peru, on a 2,430-meter (7,970 ft) mountain ridge. It was built as an estate for the Inca emperor Pachacuti (1438–1472).',
-    image_url: '/images/machupicchu.jpg',
-    coordinates: { lat: -13.1631, lng: -72.5450 },
-    ar_model_url: '/models/parthenon.glb',
-  },
-  {
-    id: '3',
+    id: '4',
     name: 'Parthenon',
     period: 'Ancient Greece',
     location: 'Athens, Greece',
@@ -33,9 +58,13 @@ export const defaultSites: Omit<HistoricalSite, 'created_at' | 'updated_at'>[] =
     image_url: '/images/parthenon.jpg',
     coordinates: { lat: 37.9715, lng: 23.7267 },
     ar_model_url: '/models/parthenon.glb',
+    ar_enabled: true,
+    created_by: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   },
   {
-    id: '4',
+    id: '5',
     name: 'Taj Mahal',
     period: 'Mughal Empire',
     location: 'Agra, India',
@@ -44,9 +73,13 @@ export const defaultSites: Omit<HistoricalSite, 'created_at' | 'updated_at'>[] =
     image_url: '/images/tajmahal.jpg',
     coordinates: { lat: 27.1751, lng: 78.0421 },
     ar_model_url: '/models/taj_mahal.glb',
+    ar_enabled: true,
+    created_by: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   },
   {
-    id: '5',
+    id: '6',
     name: 'Stonehenge',
     period: 'Neolithic',
     location: 'Wiltshire, England',
@@ -55,16 +88,9 @@ export const defaultSites: Omit<HistoricalSite, 'created_at' | 'updated_at'>[] =
     image_url: '/images/stonehenge.jpg',
     coordinates: { lat: 51.1789, lng: -1.8262 },
     ar_model_url: '/models/stonehenge.glb',
-  },
-  {
-    id: '6',
-    name: 'Great Pyramid of Giza',
-    period: 'Ancient Egypt',
-    location: 'Giza, Egypt',
-    short_description: 'The oldest and largest of the three pyramids in the Giza pyramid complex.',
-    long_description: 'The Great Pyramid of Giza is the oldest and largest of the three pyramids in the Giza pyramid complex bordering present-day Giza in Greater Cairo, Egypt. It is the oldest of the Seven Wonders of the Ancient World, and the only one to remain largely intact.',
-    image_url: '/images/pyramid.jpg',
-    coordinates: { lat: 29.9792, lng: 31.1342 },
-    ar_model_url: '/models/pyramid.glb',
+    ar_enabled: true,
+    created_by: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   }
 ];

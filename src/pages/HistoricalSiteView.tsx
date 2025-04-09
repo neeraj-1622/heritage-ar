@@ -133,17 +133,19 @@ const HistoricalSiteView = () => {
             period: site.period,
             location: site.location,
             short_description: site.short_description,
-            long_description: site.long_description || undefined,
+            long_description: site.long_description || null,
+            mythology: site.mythology || null,
             image_url: site.image_url,
-            ar_model_url: site.ar_model_url || undefined,
+            ar_model_url: site.ar_model_url || null,
             coordinates: site.coordinates ? 
               (typeof site.coordinates === 'string' 
                 ? JSON.parse(site.coordinates) 
                 : site.coordinates as { lat: number; lng: number }) 
-              : undefined,
+              : null,
+            ar_enabled: site.ar_enabled || false,
+            created_by: site.created_by || null,
             created_at: site.created_at,
-            updated_at: site.updated_at,
-            created_by: site.created_by || undefined
+            updated_at: site.updated_at
           }));
 
           setSitesList(mappedSites.length > 0 ? mappedSites : defaultSites);
@@ -219,10 +221,25 @@ const HistoricalSiteView = () => {
 
   // Function to play audio narration using text-to-speech
   const playAudioNarration = () => {
-    if (!selectedSite) return;
+    if (!selectedSite) {
+      console.log("No site selected");
+      return;
+    }
     
+    // Check if speech synthesis is available
+    if (!window.speechSynthesis) {
+      console.error("Speech synthesis not supported");
+      toast({
+        title: 'Speech Synthesis Not Available',
+        description: 'Your browser does not support text-to-speech.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     // If speech is already playing, stop it
     if (isPlaying && window.speechSynthesis.speaking) {
+      console.log("Stopping current speech");
       window.speechSynthesis.cancel();
       setIsPlaying(false);
       return;
@@ -231,37 +248,43 @@ const HistoricalSiteView = () => {
     try {
       // Create the text to be spoken
       const text = `${selectedSite.name}. ${selectedSite.period}. Located in ${selectedSite.location}. ${selectedSite.long_description || selectedSite.short_description}`;
+      console.log("Text to speak:", text);
       
-      // Create a new speech utterance if it doesn't exist
-      if (!speechRef.current) {
-        speechRef.current = new SpeechSynthesisUtterance(text);
-        
-        // Configure speech settings
-        speechRef.current.rate = 0.9; // Slightly slower than default
-        speechRef.current.pitch = 1;
-        
-        // Add event listeners
-        speechRef.current.onend = () => {
-          setIsPlaying(false);
-        };
-        
-        speechRef.current.onerror = (e) => {
-          console.error('Speech synthesis error:', e);
-          setIsPlaying(false);
-          toast({
-            title: 'Speech Synthesis Failed',
-            description: 'Unable to play the audio narration at this time.',
-            variant: 'destructive',
-          });
-        };
-      } else {
-        // Update text if it's a different site
-        speechRef.current.text = text;
-      }
+      // Create a new speech utterance
+      const utterance = new SpeechSynthesisUtterance(text);
+      
+      // Configure speech settings
+      utterance.rate = 0.9; // Slightly slower than default
+      utterance.pitch = 1;
+      utterance.volume = 1;
+      
+      // Add event listeners
+      utterance.onstart = () => {
+        console.log("Speech started");
+        setIsPlaying(true);
+      };
+      
+      utterance.onend = () => {
+        console.log("Speech ended");
+        setIsPlaying(false);
+      };
+      
+      utterance.onerror = (e) => {
+        console.error('Speech synthesis error:', e);
+        setIsPlaying(false);
+        toast({
+          title: 'Speech Synthesis Failed',
+          description: 'Unable to play the audio narration at this time.',
+          variant: 'destructive',
+        });
+      };
+      
+      // Store the utterance in ref for future use
+      speechRef.current = utterance;
       
       // Start speaking
-      window.speechSynthesis.speak(speechRef.current);
-      setIsPlaying(true);
+      console.log("Starting speech synthesis");
+      window.speechSynthesis.speak(utterance);
       
     } catch (err) {
       console.error('Failed to start speech synthesis:', err);
@@ -369,14 +392,7 @@ const HistoricalSiteView = () => {
         </div>
       </div>
 
-      <AlertDialog open={showSiteInfo} onOpenChange={(open) => {
-        setShowSiteInfo(open);
-        // Stop speech when dialog is closed
-        if (!open && window.speechSynthesis.speaking) {
-          window.speechSynthesis.cancel();
-          setIsPlaying(false);
-        }
-      }}>
+      <AlertDialog open={showSiteInfo} onOpenChange={setShowSiteInfo}>
         <AlertDialogContent className="bg-heritage-800/95 backdrop-blur-sm text-white border-heritage-700">
           <AlertDialogHeader>
             <AlertDialogTitle>{selectedSite?.name || 'Historical Site Info'}</AlertDialogTitle>
@@ -430,52 +446,6 @@ const HistoricalSiteView = () => {
           </Button>
         </div>
       </div>
-      
-      {/* Zoom controls - now hidden but keeping the code in case we want to restore later */}
-      {/* 
-      <div className="absolute bottom-20 right-4 z-20 flex flex-col gap-2">
-        <Button
-          variant="outline"
-          size="icon"
-          className="rounded-full bg-black/50 text-white hover:bg-black/70"
-          onClick={() => setZoomLevel(prev => Math.max(2, prev - 1.5))}
-          title="Zoom In"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            <line x1="11" y1="8" x2="11" y2="14"></line>
-            <line x1="8" y1="11" x2="14" y2="11"></line>
-          </svg>
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          className="rounded-full bg-black/50 text-white hover:bg-black/70"
-          onClick={() => setZoomLevel(prev => Math.min(40, prev + 1.5))}
-          title="Zoom Out"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            <line x1="8" y1="11" x2="14" y2="11"></line>
-          </svg>
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          className="rounded-full bg-black/50 text-white hover:bg-black/70"
-          onClick={() => setZoomLevel(40)}
-          title="Maximum Zoom Out"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M15 3h6v6"></path>
-            <path d="M10 14L21 3"></path>
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-          </svg>
-        </Button>
-      </div>
-      */}
       
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-heritage-900/80 z-50">

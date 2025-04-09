@@ -223,15 +223,17 @@ export type HistoricalSite = {
   period: string;
   location: string;
   short_description: string;
-  long_description?: string;
+  long_description: string | null;
+  mythology: string | null;
+  cultural_aspects: string | null;
   image_url: string;
-  ar_model_url?: string;
-  coordinates?: { lat: number; lng: number };
-  ar_enabled?: boolean;
-  created_at?: string;
-  updated_at?: string;
-  created_by?: string;
-}
+  ar_model_url: string | null;
+  coordinates: { lat: number; lng: number } | null;
+  ar_enabled: boolean;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
 
 export type HistoricalSiteInput = Omit<HistoricalSite, 'id' | 'created_at' | 'updated_at' | 'created_by'>;
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
@@ -6,9 +6,12 @@ import { toast } from '@/hooks/use-toast';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { HeartIcon, MapPinIcon, CalendarIcon, View, Box, Loader2 } from 'lucide-react';
+import { HeartIcon, MapPinIcon, CalendarIcon, View, Box, Volume2, VolumeX, Loader2 } from 'lucide-react';
 import { isSiteFavorited, addToFavorites, removeFromFavorites } from '@/lib/supabase';
 import type { HistoricalSite } from '@/lib/supabase';
+import type { Database } from '../lib/database.types';
+
+type DatabaseHistoricalSite = Database['public']['Tables']['historical_sites']['Row'];
 
 const SiteDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -16,8 +19,111 @@ const SiteDetail = () => {
   const [loading, setLoading] = useState(true);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTab, setCurrentTab] = useState('description');
+  const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  // Function to play audio narration using text-to-speech
+  const playAudioNarration = () => {
+    if (!site) {
+      console.log("No site selected");
+      return;
+    }
+    
+    // Check if speech synthesis is available
+    if (!window.speechSynthesis) {
+      console.error("Speech synthesis not supported");
+      toast({
+        title: 'Speech Synthesis Not Available',
+        description: 'Your browser does not support text-to-speech.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // If speech is already playing, stop it
+    if (isPlaying && window.speechSynthesis.speaking) {
+      console.log("Stopping current speech");
+      window.speechSynthesis.cancel();
+      setIsPlaying(false);
+      return;
+    }
+
+    try {
+      // Create the text to be spoken based on current tab
+      let text = '';
+      if (currentTab === 'description') {
+        text = `${site.name}. ${site.short_description}. ${site.long_description || ''}`;
+      } else if (currentTab === 'mythology') {
+        text = `${site.mythology || 'No mythological information is available for this site.'}`;
+      }
+      console.log("Text to speak:", text);
+      
+      // Create a new speech utterance
+      const utterance = new SpeechSynthesisUtterance(text);
+      
+      // Configure speech settings
+      utterance.rate = 0.9; // Slightly slower than default
+      utterance.pitch = 1;
+      utterance.volume = 1;
+      
+      // Add event listeners
+      utterance.onstart = () => {
+        console.log("Speech started");
+        setIsPlaying(true);
+      };
+      
+      utterance.onend = () => {
+        console.log("Speech ended");
+        setIsPlaying(false);
+      };
+      
+      utterance.onerror = (e) => {
+        console.error('Speech synthesis error:', e);
+        setIsPlaying(false);
+        toast({
+          title: 'Speech Synthesis Failed',
+          description: 'Unable to play the audio narration at this time.',
+          variant: 'destructive',
+        });
+      };
+      
+      // Store the utterance in ref for future use
+      speechRef.current = utterance;
+      
+      // Start speaking
+      console.log("Starting speech synthesis");
+      window.speechSynthesis.speak(utterance);
+      
+    } catch (err) {
+      console.error('Failed to start speech synthesis:', err);
+      setIsPlaying(false);
+      toast({
+        title: 'Speech Synthesis Failed',
+        description: 'Unable to play the audio narration at this time.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Clean up speech synthesis when component unmounts
+  useEffect(() => {
+    return () => {
+      if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+  // Stop speech when tab changes
+  useEffect(() => {
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+      setIsPlaying(false);
+    }
+  }, [currentTab]);
 
   useEffect(() => {
     const fetchSiteDetail = async () => {
@@ -44,7 +150,28 @@ const SiteDetail = () => {
         }
 
         console.log("Site data loaded:", data);
-        setSite(data as HistoricalSite);
+        
+        // Create a properly typed site object from the database response
+        const dbSite = data as DatabaseHistoricalSite;
+        const typedSite: HistoricalSite = {
+          id: dbSite.id,
+          name: dbSite.name,
+          period: dbSite.period,
+          location: dbSite.location,
+          short_description: dbSite.short_description,
+          long_description: dbSite.long_description,
+          mythology: dbSite.mythology,
+          cultural_aspects: dbSite.cultural_aspects,
+          image_url: dbSite.image_url,
+          ar_model_url: dbSite.ar_model_url,
+          coordinates: dbSite.coordinates,
+          ar_enabled: dbSite.ar_enabled,
+          created_by: dbSite.created_by,
+          created_at: dbSite.created_at,
+          updated_at: dbSite.updated_at
+        };
+
+        setSite(typedSite);
 
         // Check if site is favorited by current user
         if (isAuthenticated && user?.id) {
@@ -220,11 +347,23 @@ const SiteDetail = () => {
           </div>
         </div>
         
-        <Tabs defaultValue="description" className="mb-8">
-          <TabsList className="mb-4 bg-heritage-800 text-heritage-200">
-            <TabsTrigger value="description" className="data-[state=active]:bg-accent data-[state=active]:text-white">Description</TabsTrigger>
-            <TabsTrigger value="history" className="data-[state=active]:bg-accent data-[state=active]:text-white">History</TabsTrigger>
-          </TabsList>
+        <Tabs defaultValue="description" className="space-y-4" onValueChange={setCurrentTab}>
+          <div className="flex justify-between items-center">
+            <TabsList className="bg-heritage-800 text-heritage-200">
+              <TabsTrigger value="description" className="data-[state=active]:bg-accent data-[state=active]:text-white">Description</TabsTrigger>
+              <TabsTrigger value="mythology" className="data-[state=active]:bg-accent data-[state=active]:text-white">Mythology</TabsTrigger>
+            </TabsList>
+            
+            <Button 
+              variant="outline"
+              size="icon"
+              className={`rounded-full ${isPlaying ? 'bg-accent text-white' : 'bg-heritage-700/50 text-white'}`}
+              onClick={playAudioNarration}
+              title={isPlaying ? "Stop Audio Narration" : "Play Audio Narration"}
+            >
+              {isPlaying ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+            </Button>
+          </div>
           
           <TabsContent value="description" className="bg-heritage-900 shadow-sm rounded-lg p-6 text-heritage-200 leading-relaxed border border-heritage-800">
             <div className="prose prose-invert max-w-none">
@@ -233,12 +372,11 @@ const SiteDetail = () => {
             </div>
           </TabsContent>
           
-          <TabsContent value="history" className="bg-heritage-900 shadow-sm rounded-lg p-6 text-heritage-200 leading-relaxed border border-heritage-800">
+          <TabsContent value="mythology" className="bg-heritage-900 shadow-sm rounded-lg p-6 text-heritage-200 leading-relaxed border border-heritage-800">
             <div className="prose prose-invert max-w-none">
-              <p className="text-lg mb-4 text-heritage-100">
-                {site.name} is from the {site.period} period and is located in {site.location}.
+              <p className="text-heritage-300">
+                {site.mythology || "Mythological information about this site is currently being compiled."}
               </p>
-              <p className="text-heritage-300">{site.long_description || "Historical information about this site is currently being compiled."}</p>
             </div>
           </TabsContent>
         </Tabs>

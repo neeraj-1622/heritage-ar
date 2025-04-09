@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS historical_sites (
   location TEXT NOT NULL,
   short_description TEXT NOT NULL,
   long_description TEXT,
+  mythology TEXT,
+  cultural_aspects TEXT,
   image_url TEXT NOT NULL,
   ar_model_url TEXT,
   coordinates JSONB,
@@ -197,84 +199,77 @@ CREATE TRIGGER create_profile_on_signup
   FOR EACH ROW
   EXECUTE FUNCTION public.create_user_profile();
 
--- Clear existing data from historical_sites table
-TRUNCATE TABLE historical_sites CASCADE;
+-- Add mythology and cultural_aspects columns if they don't exist
+DO $$ 
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 
+    FROM information_schema.columns 
+    WHERE table_name = 'historical_sites' 
+    AND column_name = 'mythology'
+  ) THEN
+    ALTER TABLE historical_sites ADD COLUMN mythology TEXT;
+  END IF;
 
--- Insert historical sites data
-INSERT INTO historical_sites (
-  name,
-  period,
-  location,
-  short_description,
-  long_description,
-  image_url,
-  ar_model_url,
-  coordinates,
-  ar_enabled
-) VALUES
-(
-  'Stonehenge',
-  'Neolithic',
-  'Wiltshire, England',
-  'A prehistoric monument consisting of a ring of standing stones.',
-  'Stonehenge is a prehistoric monument in Wiltshire, England, consisting of a ring of standing stones, each around 13 feet high, seven feet wide, and weighing around 25 tons. The stones are set within earthworks in the middle of the most dense complex of Neolithic and Bronze Age monuments in England.',
-  'https://xtobcqnmdqkhhcpahjiw.supabase.co/storage/v1/object/public/heritage-ar/historical-sites-images/stonehenge.jpg',
-  'https://xtobcqnmdqkhhcpahjiw.supabase.co/storage/v1/object/public/heritage-ar/historical-sites-models/stonehenge.glb',
-  '{"lat": 0, "lng": 0, "distance": 5, "scale": 1.0, "rotation": 0}',
-  false
-),
-(
-  'The Colosseum',
-  'Ancient Rome',
-  'Rome, Italy',
-  'An oval amphitheatre in the centre of Rome, built of travertine limestone, tuff, and brick-faced concrete.',
-  'The Colosseum is an oval amphitheatre in the centre of the city of Rome, Italy, just east of the Roman Forum. It is the largest ancient amphitheatre ever built, and is still the largest standing amphitheatre in the world today, despite its age.',
-  'https://xtobcqnmdqkhhcpahjiw.supabase.co/storage/v1/object/public/heritage-ar/historical-sites-images/colosseum.jpg',
-  'https://raw.githubusercontent.com/neerajreddy1622/heritage-ar/main/public/models/colosseum.glb',
-  '{"lat": 0, "lng": 0, "distance": 8, "scale": 1.5, "rotation": 0}',
-  false
-),
-(
-  'Parthenon',
-  'Ancient Greece',
-  'Athens, Greece',
-  'A former temple dedicated to the goddess Athena, completed in 438 BC.',
-  'The Parthenon is a former temple on the Athenian Acropolis, Greece, dedicated to the goddess Athena, whom the people of Athens considered their patron. Construction began in 447 BC when the Athenian Empire was at the peak of its power.',
-  'https://xtobcqnmdqkhhcpahjiw.supabase.co/storage/v1/object/public/heritage-ar/historical-sites-images/parthenon.jpg',
-  'https://xtobcqnmdqkhhcpahjiw.supabase.co/storage/v1/object/public/heritage-ar/historical-sites-models/parthenon.glb',
-  '{"lat": 0, "lng": 0, "distance": 6, "scale": 1.2, "rotation": 0}',
-  false
-),
-(
-  'Taj Mahal',
-  'Mughal Empire',
-  'Agra, India',
-  'An ivory-white marble mausoleum commissioned in 1632 by the Mughal emperor Shah Jahan.',
-  'The Taj Mahal is an ivory-white marble mausoleum on the south bank of the Yamuna river in the Indian city of Agra. It was commissioned in 1632 by the Mughal emperor, Shah Jahan, to house the tomb of his favourite wife, Mumtaz Mahal.',
-  'https://xtobcqnmdqkhhcpahjiw.supabase.co/storage/v1/object/public/heritage-ar/historical-sites-images/tajmahal.jpg',
-  'https://xtobcqnmdqkhhcpahjiw.supabase.co/storage/v1/object/public/heritage-ar/historical-sites-models/taj_mahal.glb',
-  '{"lat": 0, "lng": 0, "distance": 7, "scale": 1.3, "rotation": 0}',
-  false
-),
-(
-  'Great Pyramid of Giza',
-  'Ancient Egypt',
-  'Giza, Egypt',
-  'The oldest and largest of the three pyramids in the Giza pyramid complex.',
-  'The Great Pyramid of Giza is the oldest and largest of the three pyramids in the Giza pyramid complex bordering present-day Giza in Greater Cairo, Egypt. It is the oldest of the Seven Wonders of the Ancient World, and the only one to remain largely intact.',
-  'https://xtobcqnmdqkhhcpahjiw.supabase.co/storage/v1/object/public/heritage-ar/historical-sites-images/pyramid.jpg',
-  'https://raw.githubusercontent.com/neerajreddy1622/heritage-ar/main/public/models/pyramid.glb',
-  '{"lat": 0, "lng": 0, "distance": 10, "scale": 2.0, "rotation": 0}',
-  false
-),
-(
-  'Machu Picchu',
-  'Inca Empire',
-  'Cusco Region, Peru',
-  'A 15th-century Inca citadel located in the Eastern Cordillera of southern Peru.',
-  'Machu Picchu is a 15th-century Inca citadel located in the Eastern Cordillera of southern Peru on a 2,430-meter mountain ridge. It is located in the Machupicchu District within Urubamba Province above the Sacred Valley.',
-  'https://xtobcqnmdqkhhcpahjiw.supabase.co/storage/v1/object/public/heritage-ar/historical-sites-images/machupicchu.jpg',
-  'https://raw.githubusercontent.com/neerajreddy1622/heritage-ar/main/public/models/machupicchu.glb',
-  '{"lat": 0, "lng": 0, "distance": 8, "scale": 1.4, "rotation": 0}',
-  false
-);
+  IF NOT EXISTS (
+    SELECT 1 
+    FROM information_schema.columns 
+    WHERE table_name = 'historical_sites' 
+    AND column_name = 'cultural_aspects'
+  ) THEN
+    ALTER TABLE historical_sites ADD COLUMN cultural_aspects TEXT;
+  END IF;
+END $$;
+
+-- Clear existing data from historical_sites table
+DELETE FROM historical_sites;
+
+-- Insert sample historical sites with mythology and cultural aspects
+INSERT INTO historical_sites (name, period, location, short_description, long_description, mythology, cultural_aspects, image_url, ar_enabled) VALUES
+('Great Pyramid of Giza', 'Ancient Egyptian', 'Giza, Egypt', 
+'One of the Seven Wonders of the Ancient World, built around 2560 BCE.',
+'The Great Pyramid of Giza stands as the last surviving wonder of the ancient world. Built during the reign of Pharaoh Khufu, it served as both a tomb and a symbol of ancient Egyptian architectural mastery.',
+'Rising majestically from the edge of the Sahara, the Great Pyramid of Giza is more than a tomb—it is an eternal beacon of the power and ingenuity of ancient Egypt. Constructed around 2560 BCE during the reign of Pharaoh Khufu, this colossal structure was built as a staircase to the divine, a monumental gateway guiding the fallen king into the afterlife.',
+'Built during the Old Kingdom of Egypt (around 2580–2560 BCE), the Great Pyramid represents the pinnacle of ancient Egyptian civilization. The site reflects deep cultural traditions including elaborate funerary rituals, religious practices honoring gods like Ra and Osiris, and sophisticated architectural techniques. The ancient Egyptian language, with its hieroglyphs, was used for religious texts and monumental inscriptions. The pyramid''s construction showcases advanced understanding of mathematics and astronomy, while its artistic elements include tomb paintings and carvings that served both decorative and religious functions. Traditional Egyptian diet included bread, beer, and vegetables, while clothing was typically made from linen, with elaborate garments for nobility.',
+'https://xtobcqnmdqkhhcpahjiw.supabase.co/storage/v1/object/public/heritage-ar/historical-sites-images/pyramid.jpg', 
+true),
+
+('Machu Picchu', 'Inca', 'Cusco Region, Peru',
+'15th-century Inca citadel located in southern Peru.',
+'Machu Picchu is an ancient Inca city set high in the Andes Mountains. Built in the 15th century and later abandoned, it is renowned for its sophisticated dry-stone walls that fuse huge blocks without the use of mortar.',
+'Perched high in the Andean mountains and shrouded in a perpetual mist, Machu Picchu is a dazzling testament to the ingenuity and spirituality of the Inca Empire.',
+'Machu Picchu embodies the rich cultural heritage of the Inca civilization. The site preserves the Quechua language tradition, which remains widely spoken in Andean communities. Incan customs centered on ceremonies honoring natural deities, particularly the sun god Inti and earth goddess Pachamama. The site''s remarkable stonework demonstrates sophisticated masonry techniques, while textile traditions feature intricate patterns and symbolism. Traditional Andean cuisine includes staples like potatoes, maize, and quinoa. The location and design of Machu Picchu reflect the Incan worldview integrating astronomy, agriculture, and spirituality.',
+'https://xtobcqnmdqkhhcpahjiw.supabase.co/storage/v1/object/public/heritage-ar/historical-sites-images/machupicchu.jpg',
+true),
+
+('Parthenon', 'Ancient Greek', 'Athens, Greece',
+'Ancient Greek temple dedicated to the goddess Athena.',
+'The Parthenon is a former temple on the Athenian Acropolis, Greece, dedicated to the goddess Athena, whom the people of Athens considered their patron.',
+'Dominating the skyline of ancient Athens, the Parthenon is the quintessential symbol of classical beauty, political power, and cultural refinement.',
+'The Parthenon, built in the 5th century BCE, represents the pinnacle of Classical Greek civilization. Ancient Greek language and literature, including epic poetry and philosophical works, shaped Western intellectual traditions. Athenian society fostered democratic ideals and public discourse, while religious festivals like the Panathenaia celebrated civic and spiritual life. The Mediterranean diet featured olives, wine, and bread, while clothing included the chiton and himation. The site exemplifies Greek architectural precision and artistic achievement, influencing Western architecture and art for millennia.',
+'https://xtobcqnmdqkhhcpahjiw.supabase.co/storage/v1/object/public/heritage-ar/historical-sites-images/parthenon.jpg',
+true),
+
+('Stonehenge', 'Neolithic', 'Wiltshire, England',
+'Prehistoric monument in Wiltshire, England.',
+'Stonehenge is a prehistoric monument in Wiltshire, England, consisting of a ring of standing stones. Each stone is around 13 feet high, seven feet wide, and weighs around 25 tons.',
+'Shrouded in mists of prehistoric mystery, Stonehenge is one of the world''s most enigmatic monuments.',
+'Constructed during the late Neolithic to early Bronze Age (3000-2000 BCE), Stonehenge reflects prehistoric British cultural practices. While the builders'' language remains unknown, the site suggests sophisticated ceremonial and astronomical knowledge. The monument likely served for religious ceremonies and seasonal celebrations, particularly during solstices. Archaeological evidence indicates a society of farmers and hunters, with clothing made from natural fibers and animal hides. The precise stone arrangement demonstrates advanced understanding of astronomy and engineering, inspiring countless cultural interpretations through the ages.',
+'https://xtobcqnmdqkhhcpahjiw.supabase.co/storage/v1/object/public/heritage-ar/historical-sites-images/stonehenge.jpg',
+true),
+
+('Taj Mahal', 'Mughal', 'Agra, India',
+'17th-century marble mausoleum built by Emperor Shah Jahan.',
+'The Taj Mahal is an ivory-white marble mausoleum on the right bank of the river Yamuna in Agra, India. It was commissioned in 1632 by the Mughal emperor Shah Jahan to house the tomb of his favorite wife, Mumtaz Mahal.',
+'In the heart of Agra, along the serene banks of the Yamuna River, the Taj Mahal rises as a beacon of love and artistic genius.',
+'Built in the mid-17th century, the Taj Mahal exemplifies Mughal cultural synthesis. Persian was the court language, while Urdu flourished among the people. The monument reflects Islamic and Hindu architectural traditions, featuring intricate calligraphy and floral patterns. Mughal culture introduced rich culinary traditions combining Persian and Indian influences, particularly in dishes like biryani. Traditional dress included elaborate robes and jewelry, reflecting social status and artistic traditions. The site represents the height of Mughal architectural and engineering achievement.',
+'https://xtobcqnmdqkhhcpahjiw.supabase.co/storage/v1/object/public/heritage-ar/historical-sites-images/tajmahal.jpg',
+true),
+
+('The Colosseum', 'Ancient Roman', 'Rome, Italy',
+'Ancient amphitheater in the heart of Rome.',
+'The Colosseum is an oval amphitheatre in the centre of the city of Rome, Italy. Built of travertine limestone, tuff, and brick-faced concrete, it is the largest amphitheatre ever built.',
+'In the heart of ancient Rome, the Colosseum emerges as a monumental arena where grandeur, violence, and spectacle converged to define an entire civilization.',
+'Built between 70-80 CE, the Colosseum embodies Roman cultural achievements. Latin, the empire''s language, influenced Western languages and legal systems. The venue hosted gladiatorial games and public spectacles that were central to Roman civic life. Roman cuisine featured Mediterranean ingredients and elaborate banquets, while clothing distinctions, particularly the toga, marked social status. The structure showcases Roman engineering excellence, using innovative architectural techniques that influenced Western building practices for centuries.',
+'https://xtobcqnmdqkhhcpahjiw.supabase.co/storage/v1/object/public/heritage-ar/historical-sites-images/colosseum.jpg',
+true);
