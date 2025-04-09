@@ -220,7 +220,7 @@ INSERT INTO historical_sites (
   'Stonehenge is a prehistoric monument in Wiltshire, England, consisting of a ring of standing stones, each around 13 feet high, seven feet wide, and weighing around 25 tons. The stones are set within earthworks in the middle of the most dense complex of Neolithic and Bronze Age monuments in England.',
   'https://xtobcqnmdqkhhcpahjiw.supabase.co/storage/v1/object/public/heritage-ar/historical-sites-images/stonehenge.jpg',
   'https://xtobcqnmdqkhhcpahjiw.supabase.co/storage/v1/object/public/heritage-ar/historical-sites-models/stonehenge.glb',
-  '{"lat": 51.1789, "lng": -1.8262}',
+  '{"lat": 0, "lng": 0, "distance": 5, "scale": 1.0, "rotation": 0}',
   false
 ),
 (
@@ -231,7 +231,7 @@ INSERT INTO historical_sites (
   'The Colosseum is an oval amphitheatre in the centre of the city of Rome, Italy, just east of the Roman Forum. It is the largest ancient amphitheatre ever built, and is still the largest standing amphitheatre in the world today, despite its age.',
   'https://xtobcqnmdqkhhcpahjiw.supabase.co/storage/v1/object/public/heritage-ar/historical-sites-images/colosseum.jpg',
   'https://raw.githubusercontent.com/neerajreddy1622/heritage-ar/main/public/models/colosseum.glb',
-  '{"lat": 41.8902, "lng": 12.4922}',
+  '{"lat": 0, "lng": 0, "distance": 8, "scale": 1.5, "rotation": 0}',
   false
 ),
 (
@@ -242,7 +242,7 @@ INSERT INTO historical_sites (
   'The Parthenon is a former temple on the Athenian Acropolis, Greece, dedicated to the goddess Athena, whom the people of Athens considered their patron. Construction began in 447 BC when the Athenian Empire was at the peak of its power.',
   'https://xtobcqnmdqkhhcpahjiw.supabase.co/storage/v1/object/public/heritage-ar/historical-sites-images/parthenon.jpg',
   'https://xtobcqnmdqkhhcpahjiw.supabase.co/storage/v1/object/public/heritage-ar/historical-sites-models/parthenon.glb',
-  '{"lat": 37.9715, "lng": 23.7267}',
+  '{"lat": 0, "lng": 0, "distance": 6, "scale": 1.2, "rotation": 0}',
   false
 ),
 (
@@ -253,7 +253,7 @@ INSERT INTO historical_sites (
   'The Taj Mahal is an ivory-white marble mausoleum on the south bank of the Yamuna river in the Indian city of Agra. It was commissioned in 1632 by the Mughal emperor, Shah Jahan, to house the tomb of his favourite wife, Mumtaz Mahal.',
   'https://xtobcqnmdqkhhcpahjiw.supabase.co/storage/v1/object/public/heritage-ar/historical-sites-images/tajmahal.jpg',
   'https://xtobcqnmdqkhhcpahjiw.supabase.co/storage/v1/object/public/heritage-ar/historical-sites-models/taj_mahal.glb',
-  '{"lat": 27.1751, "lng": 78.0421}',
+  '{"lat": 0, "lng": 0, "distance": 7, "scale": 1.3, "rotation": 0}',
   false
 ),
 (
@@ -264,7 +264,7 @@ INSERT INTO historical_sites (
   'The Great Pyramid of Giza is the oldest and largest of the three pyramids in the Giza pyramid complex bordering present-day Giza in Greater Cairo, Egypt. It is the oldest of the Seven Wonders of the Ancient World, and the only one to remain largely intact.',
   'https://xtobcqnmdqkhhcpahjiw.supabase.co/storage/v1/object/public/heritage-ar/historical-sites-images/pyramid.jpg',
   'https://raw.githubusercontent.com/neerajreddy1622/heritage-ar/main/public/models/pyramid.glb',
-  '{"lat": 29.9792, "lng": 31.1342}',
+  '{"lat": 0, "lng": 0, "distance": 10, "scale": 2.0, "rotation": 0}',
   false
 ),
 (
@@ -275,6 +275,6 @@ INSERT INTO historical_sites (
   'Machu Picchu is a 15th-century Inca citadel located in the Eastern Cordillera of southern Peru on a 2,430-meter mountain ridge. It is located in the Machupicchu District within Urubamba Province above the Sacred Valley.',
   'https://xtobcqnmdqkhhcpahjiw.supabase.co/storage/v1/object/public/heritage-ar/historical-sites-images/machupicchu.jpg',
   'https://raw.githubusercontent.com/neerajreddy1622/heritage-ar/main/public/models/machupicchu.glb',
-  '{"lat": -13.1631, "lng": -72.5450}',
+  '{"lat": 0, "lng": 0, "distance": 8, "scale": 1.4, "rotation": 0}',
   false
 );
