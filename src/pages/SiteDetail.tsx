@@ -55,7 +55,7 @@ const SiteDetail = () => {
       // Create the text to be spoken based on current tab
       let text = '';
       if (currentTab === 'description') {
-        text = `${site.name}. ${site.short_description}. ${site.long_description || ''}`;
+        text = `${site.name}. ${site.short_description}. ${site.long_description || ''}. Cultural Aspects: ${site.cultural_aspects || 'Cultural information about this site is currently being compiled.'}`;
       } else if (currentTab === 'mythology') {
         text = `${site.mythology || 'No mythological information is available for this site.'}`;
       }
@@ -347,7 +347,7 @@ const SiteDetail = () => {
           </div>
         </div>
         
-        <Tabs defaultValue="description" className="space-y-4" onValueChange={setCurrentTab}>
+        <Tabs defaultValue="description" className="space-y-4 mb-8" onValueChange={setCurrentTab}>
           <div className="flex justify-between items-center">
             <TabsList className="bg-heritage-800 text-heritage-200">
               <TabsTrigger value="description" className="data-[state=active]:bg-accent data-[state=active]:text-white">Description</TabsTrigger>
@@ -380,6 +380,17 @@ const SiteDetail = () => {
             </div>
           </TabsContent>
         </Tabs>
+
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold text-heritage-100 mb-4">Cultural Aspects</h2>
+          <div className="bg-heritage-900 shadow-sm rounded-lg p-6 text-heritage-200 leading-relaxed border border-heritage-800">
+            <div className="prose prose-invert max-w-none">
+              <p className="text-heritage-300">
+                {site.cultural_aspects || "Cultural information about this site is currently being compiled."}
+              </p>
+            </div>
+          </div>
+        </div>
       </main>
     </div>
   );
