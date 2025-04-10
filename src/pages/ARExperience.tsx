@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
@@ -34,6 +33,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import type { Database } from '@/lib/database.types';
+
+type DatabaseHistoricalSite = Database['public']['Tables']['historical_sites']['Row'];
 
 const ARExperience = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -69,23 +71,26 @@ const ARExperience = () => {
             variant: 'destructive',
           });
         } else if (data) {
-          const mappedSites: HistoricalSite[] = data.map(site => ({
+          const mappedSites: HistoricalSite[] = data.map((site: DatabaseHistoricalSite) => ({
             id: site.id,
             name: site.name,
             period: site.period,
             location: site.location,
             short_description: site.short_description,
-            long_description: site.long_description || undefined,
+            long_description: site.long_description || null,
+            mythology: null,
+            cultural_aspects: null,
             image_url: site.image_url,
-            ar_model_url: site.ar_model_url || undefined,
+            ar_model_url: site.ar_model_url || null,
             coordinates: site.coordinates ? 
               (typeof site.coordinates === 'string' 
                 ? JSON.parse(site.coordinates) 
                 : site.coordinates as { lat: number; lng: number }) 
-              : undefined,
+              : null,
+            ar_enabled: false,
             created_at: site.created_at,
             updated_at: site.updated_at,
-            created_by: site.created_by || undefined
+            created_by: site.created_by || null
           }));
 
           setSitesList(mappedSites);

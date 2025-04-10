@@ -31,6 +31,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import * as THREE from 'three';
+import type { Database } from '@/lib/database.types';
+
+type DatabaseHistoricalSite = Database['public']['Tables']['historical_sites']['Row'];
 
 const Model = ({ url }: { url: string }) => {
   const { scene } = useGLTF(url);
@@ -127,14 +130,15 @@ const HistoricalSiteView = () => {
             variant: 'destructive',
           });
         } else if (data) {
-          const mappedSites: HistoricalSite[] = data.map(site => ({
+          const mappedSites: HistoricalSite[] = data.map((site: DatabaseHistoricalSite) => ({
             id: site.id,
             name: site.name,
             period: site.period,
             location: site.location,
             short_description: site.short_description,
             long_description: site.long_description || null,
-            mythology: site.mythology || null,
+            mythology: null,
+            cultural_aspects: null,
             image_url: site.image_url,
             ar_model_url: site.ar_model_url || null,
             coordinates: site.coordinates ? 
@@ -142,7 +146,7 @@ const HistoricalSiteView = () => {
                 ? JSON.parse(site.coordinates) 
                 : site.coordinates as { lat: number; lng: number }) 
               : null,
-            ar_enabled: site.ar_enabled || false,
+            ar_enabled: false,
             created_by: site.created_by || null,
             created_at: site.created_at,
             updated_at: site.updated_at
