@@ -9,6 +9,8 @@ lerna-debug.log*
 
 # Dependencies
 node_modules
+.pnp
+.pnp.js
 dist
 dist-ssr
 *.local
@@ -34,18 +36,22 @@ dist-ssr
 *.p12
 
 # Large files and media
+public/models/
+public/images/
 *.glb
 *.gltf
 *.bin
-*.fbx
 *.obj
-*.mtl
-*.blend
-*.max
-*.3ds
-*.dae
-public/models/*
-!public/models/.gitkeep
+*.fbx
+*.mp4
+*.mov
+*.avi
+*.webm
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
 
 # Database and backup files
 *.sql
@@ -62,7 +68,7 @@ dist/
 out/
 
 # Testing and coverage
-coverage/
+coverage
 .nyc_output/
 .jest/
 
@@ -78,3 +84,21 @@ venv/
 env/
 .env/
 .Python
+
+# Production
+dist
+dist-ssr
+*.local
+
+# Environment Variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# TypeScript
+*.tsbuildinfo
+
+# Local Netlify folder
+.netlify

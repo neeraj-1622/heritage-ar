@@ -508,3 +508,5 @@ Engineering and Urbanism: The organizational skills and engineering advancements
 Legacy of Civic Entertainment: The concept of public entertainment, civic engagement, and the role of spectacles in society continue to influence modern sports, performance arts, and public gatherings.',
 'https://xtobcqnmdqkhhcpahjiw.supabase.co/storage/v1/object/public/heritage-ar/historical-sites-images/colosseum.jpg',
 true);
+
+ALTER TABLE historical_sites ENABLE ROW SECURITY;

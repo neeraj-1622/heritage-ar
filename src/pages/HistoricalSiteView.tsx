@@ -322,8 +322,14 @@ const HistoricalSiteView = () => {
     <div className="h-screen w-screen bg-heritage-900 overflow-hidden relative">
       <div className="h-full w-full">
         <Canvas>
-          <ambientLight intensity={0.5} />
-          <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} />
+          <ambientLight intensity={3.0} />
+          <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={3.0} />
+          <directionalLight position={[-5, 5, -5]} intensity={2.0} />
+          <directionalLight position={[5, 5, 5]} intensity={2.0} />
+          <directionalLight position={[0, 10, 0]} intensity={2.0} />
+          <hemisphereLight intensity={2.0} groundColor="white" />
+          <pointLight position={[0, 0, 5]} intensity={1.5} />
+          <pointLight position={[0, 5, 0]} intensity={1.5} />
           <PerspectiveCamera makeDefault position={[0, 0, zoomLevel]} />
           
           <ModelWithFallback url={getEffectiveModelUrl()} />
@@ -395,6 +401,37 @@ const HistoricalSiteView = () => {
           </div>
         </div>
       </div>
+
+      <Sheet open={isSiteMenuOpen} onOpenChange={setIsSiteMenuOpen}>
+        <SheetContent side="bottom" className="h-[70vh] bg-heritage-800/95 text-white border-heritage-700">
+          <SheetHeader>
+            <SheetTitle className="text-white">Select Historical Site</SheetTitle>
+          </SheetHeader>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-6 max-h-[calc(70vh-120px)] overflow-y-auto">
+            {sitesList.map((site) => (
+              <Button 
+                key={site.id}
+                variant="outline"
+                className={`justify-start h-auto py-2 px-3 border-heritage-700 ${
+                  selectedSite?.id === site.id ? 'bg-accent/20 border-accent/50' : 'bg-heritage-700/50'
+                }`}
+                onClick={() => handleSiteSelect(site)}
+              >
+                <div className="flex flex-col items-center gap-2">
+                  <div className="w-16 h-16 rounded-md overflow-hidden">
+                    <img src={site.image_url} alt={site.name} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xs font-medium line-clamp-2">{site.name}</p>
+                    <p className="text-[10px] opacity-75">{site.period}</p>
+                  </div>
+                </div>
+              </Button>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
 
       <AlertDialog open={showSiteInfo} onOpenChange={setShowSiteInfo}>
         <AlertDialogContent className="bg-heritage-800/95 backdrop-blur-sm text-white border-heritage-700">

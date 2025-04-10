@@ -1,4 +1,3 @@
-
 import React from 'react';
 import AnimatedHeader from '../components/AnimatedHeader';
 import { motion } from 'framer-motion';
@@ -97,6 +96,26 @@ const Terms: React.FC = () => {
                 Historical information, 3D models, and educational content provided through the Service are based on public domain 
                 information, licensed materials, or original content created by HeritageAR. Attribution for specific content is 
                 provided where applicable.
+              </p>
+            </motion.div>
+            
+            <motion.div className="mb-8" variants={itemVariants}>
+              <div className="flex items-center mb-4">
+                <Copyright className="h-6 w-6 text-accent mr-3" />
+                <h2 className="text-2xl font-bold text-heritage-100">Historical Sites and User Content</h2>
+              </div>
+              <p className="text-heritage-300 mb-4">
+                Users may contribute historical site information and cultural content to the platform. By submitting content, you:
+              </p>
+              <ul className="list-disc pl-6 text-heritage-300 space-y-2">
+                <li>Grant HeritageAR a worldwide, non-exclusive license to use, modify, and display the content</li>
+                <li>Confirm that you have the right to share the content and it doesn't infringe on others' rights</li>
+                <li>Understand that content may be reviewed for accuracy and appropriateness</li>
+                <li>Accept that HeritageAR may remove content that violates our guidelines</li>
+              </ul>
+              <p className="text-heritage-300 mt-4 mb-4">
+                Historical site information, including mythology and cultural aspects, is provided for educational purposes. 
+                While we strive for accuracy, we cannot guarantee the completeness or accuracy of all historical information.
               </p>
             </motion.div>
             

@@ -8,6 +8,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { AuthProvider } from "@/context/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import ScrollToTop from "@/components/ScrollToTop";
+import ChatBot from "@/components/ChatBot";
 import Index from "./pages/Index";
 import SiteDetail from "./pages/SiteDetail";
 import ARExperience from "./pages/ARExperience";
@@ -19,9 +20,11 @@ import About from "./pages/About";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Contact from "./pages/Contact";
+import Blog from "./pages/Blog";
 import Footer from "./components/Footer";
 import Profile from './pages/Profile';
 import UpdatePassword from './pages/UpdatePassword';
+import Tour from './pages/Tour';
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient({
@@ -73,6 +76,7 @@ const AnimationLayout = () => {
   }, []);
 
   const isARPage = location.pathname === '/ar' || location.pathname === '/historical-site';
+  const showChatBot = ['/', '/about', '/privacy', '/terms', '/blog', '/historical-site'].includes(location.pathname);
 
   return (
     <AnimatePresence mode="wait">
@@ -93,12 +97,18 @@ const AnimationLayout = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/about" element={<About />} />
+          <Route path="/blog" element={<Blog />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/ar" element={
             <ProtectedRoute>
               <ARExperience />
+            </ProtectedRoute>
+          } />
+          <Route path="/tour" element={
+            <ProtectedRoute>
+              <Tour />
             </ProtectedRoute>
           } />
           <Route path="/historical-site" element={
@@ -118,6 +128,7 @@ const AnimationLayout = () => {
           <Route path="*" element={<NotFound />} />
         </Routes>
         {!isARPage && <Footer />}
+        {showChatBot && <ChatBot />}
       </motion.div>
     </AnimatePresence>
   );

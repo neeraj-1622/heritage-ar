@@ -1,4 +1,3 @@
-
 import React from 'react';
 import AnimatedHeader from '../components/AnimatedHeader';
 import { motion } from 'framer-motion';
@@ -79,7 +78,15 @@ const Privacy: React.FC = () => {
               <ul className="list-disc pl-6 text-heritage-300 space-y-2">
                 <li>
                   <span className="font-medium text-heritage-200">Personal Identifiers:</span> Such as name, email address, 
-                  and other similar information when you register for an account.
+                  display name, and other profile information when you register for an account.
+                </li>
+                <li>
+                  <span className="font-medium text-heritage-200">User Preferences:</span> Including your favorite historical 
+                  sites and interaction history with various cultural heritage locations.
+                </li>
+                <li>
+                  <span className="font-medium text-heritage-200">User-Generated Content:</span> Any historical site information, 
+                  cultural aspects, or mythology details that you contribute to the platform.
                 </li>
                 <li>
                   <span className="font-medium text-heritage-200">Usage Data:</span> Information about how you use our website 
@@ -91,7 +98,7 @@ const Privacy: React.FC = () => {
                 </li>
                 <li>
                   <span className="font-medium text-heritage-200">Location Data:</span> With your permission, we may collect and 
-                  process information about your location to provide relevant AR experiences.
+                  process information about your location to provide relevant AR experiences and nearby historical sites.
                 </li>
               </ul>
             </motion.div>
@@ -141,9 +148,27 @@ const Privacy: React.FC = () => {
                 access, alteration, disclosure, or destruction. However, no method of transmission over the Internet 
                 or electronic storage is 100% secure, and we cannot guarantee absolute security.
               </p>
-              <p className="text-heritage-300">
-                If you have any questions about our privacy practices or would like to exercise your rights regarding 
-                your personal data, please contact us at privacy@heritagear.example.com.
+            </motion.div>
+
+            <motion.div className="mb-8" variants={itemVariants}>
+              <div className="flex items-center mb-4">
+                <Database className="h-6 w-6 text-accent mr-3" />
+                <h2 className="text-2xl font-bold text-heritage-100">Data Retention and Your Rights</h2>
+              </div>
+              <p className="text-heritage-300 mb-4">
+                We retain your personal data only for as long as necessary to fulfill the purposes for which we collected it. 
+                You have the right to:
+              </p>
+              <ul className="list-disc pl-6 text-heritage-300 space-y-2">
+                <li>Access your personal data</li>
+                <li>Correct inaccurate personal data</li>
+                <li>Request deletion of your personal data</li>
+                <li>Object to our processing of your personal data</li>
+                <li>Export your personal data in a portable format</li>
+              </ul>
+              <p className="text-heritage-300 mt-4">
+                To exercise any of these rights or if you have any questions about our privacy practices, 
+                please contact us at privacy@heritagear.example.com.
               </p>
             </motion.div>
           </div>

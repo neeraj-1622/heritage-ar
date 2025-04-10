@@ -1,8 +1,7 @@
-
 import React from 'react';
 import AnimatedHeader from '../components/AnimatedHeader';
 import { motion } from 'framer-motion';
-import { BookOpen, Camera, Globe, History, Server } from 'lucide-react';
+import { Camera, View, Map, History, Volume2 } from 'lucide-react';
 
 const About: React.FC = () => {
   const containerVariants = {
@@ -28,28 +27,28 @@ const About: React.FC = () => {
   const features = [
     {
       icon: <Camera className="h-8 w-8 text-accent" />,
-      title: "AR Visualization",
-      description: "Experience historical sites in augmented reality directly through your device's camera."
+      title: "AR Experience",
+      description: "View historical monuments in augmented reality through your device's camera, with real-time object detection and 3D model creation."
+    },
+    {
+      icon: <View className="h-8 w-8 text-accent" />,
+      title: "3D Model Viewer",
+      description: "Interact with detailed 3D models of historical monuments like the Taj Mahal, Colosseum, Parthenon, and more."
+    },
+    {
+      icon: <Map className="h-8 w-8 text-accent" />,
+      title: "City Explorer Tour",
+      description: "Take guided tours of cities with categorized locations including food spots, cultural centers, nature parks, and shopping districts."
     },
     {
       icon: <History className="h-8 w-8 text-accent" />,
-      title: "Historical Context",
-      description: "Access detailed information about each site including its historical significance and cultural impact."
+      title: "Historical Information",
+      description: "Access comprehensive details about each monument including its period, location, and historical significance."
     },
     {
-      icon: <Globe className="h-8 w-8 text-accent" />,
-      title: "Global Coverage",
-      description: "Explore historical sites from different civilizations and time periods across the world."
-    },
-    {
-      icon: <Server className="h-8 w-8 text-accent" />,
-      title: "Offline Access",
-      description: "Download content for offline access when traveling to locations with limited connectivity."
-    },
-    {
-      icon: <BookOpen className="h-8 w-8 text-accent" />,
-      title: "Educational Resources",
-      description: "Access educational materials and guided tours designed for different age groups and learning levels."
+      icon: <Volume2 className="h-8 w-8 text-accent" />,
+      title: "Audio Narration",
+      description: "Listen to detailed narrations about each historical site with built-in text-to-speech functionality."
     }
   ];
 
@@ -74,10 +73,9 @@ const About: React.FC = () => {
             
             <h1 className="text-4xl font-bold text-center text-heritage-100 mb-4">Our Mission</h1>
             <p className="text-heritage-300 text-lg text-center">
-              At HeritageAR, we're on a mission to make history more accessible and engaging through 
-              the power of augmented reality. We believe that by allowing people to visualize and interact 
-              with historical sites and artifacts in their own environments, we can create more meaningful 
-              connections to our shared human heritage.
+              HeritageAR brings historical monuments to life through immersive augmented reality experiences. 
+              Our platform combines cutting-edge AR technology with detailed 3D models to let you explore 
+              and learn about iconic historical sites from anywhere in the world.
             </p>
           </motion.div>
           
@@ -101,23 +99,22 @@ const About: React.FC = () => {
           </motion.div>
           
           <motion.div className="glass-panel rounded-2xl p-8 max-w-3xl mx-auto" variants={itemVariants}>
-            <h2 className="text-3xl font-bold text-heritage-100 mb-4">Our Story</h2>
+            <h2 className="text-3xl font-bold text-heritage-100 mb-4">How It Works</h2>
             <p className="text-heritage-300 mb-4">
-              HeritageAR began as a collaborative project between historians, archaeologists, and technologists 
-              who shared a passion for making history more engaging and accessible to everyone. We recognized that 
-              while museums and historical sites offer invaluable experiences, not everyone has the opportunity to 
-              visit these locations in person.
+              HeritageAR uses advanced augmented reality and 3D modeling technologies to create immersive 
+              experiences. When you point your device's camera at an object, our system can detect and analyze it, 
+              potentially creating a 3D model in real-time.
             </p>
             <p className="text-heritage-300 mb-4">
-              By leveraging augmented reality technology, we've created a platform that brings historical sites 
-              and artifacts directly to users, regardless of their location. Our team works closely with historians 
-              and cultural institutions to ensure that our digital reconstructions are accurate and respectful of 
-              the cultural significance of each site.
+              Our platform features a collection of meticulously crafted 3D models of famous historical monuments, 
+              from the Taj Mahal to the Colosseum. You can view these models in AR, rotate them in 360 degrees, 
+              and learn about their history through detailed information panels and audio narrations.
             </p>
             <p className="text-heritage-300">
-              Today, HeritageAR is used by educators, students, tourists, and history enthusiasts around the world. 
-              We continue to expand our library of historical sites and improve our technology to provide the most 
-              immersive and educational experience possible.
+              Beyond individual monuments, HeritageAR also offers a City Explorer Tour feature that helps you 
+              discover various points of interest in different categories. Whether you're interested in local 
+              cuisine, cultural spots, nature parks, or shopping districts, our platform helps you explore and 
+              experience cities in a new way.
             </p>
           </motion.div>
         </div>

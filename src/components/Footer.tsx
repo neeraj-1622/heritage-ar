@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -7,6 +6,7 @@ import { Facebook, Twitter, Instagram, Youtube } from 'lucide-react';
 const Footer: React.FC = () => {
   const footerLinks = [
     { name: 'About', path: '/about' },
+    { name: 'Blog', path: '/blog' },
     { name: 'Privacy', path: '/privacy' },
     { name: 'Terms', path: '/terms' },
     { name: 'Contact', path: '/contact' },
