@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build"
+  command = "npm ci && npm run build"
   publish = "dist"
 
 [[redirects]]
@@ -14,4 +14,7 @@
   CI = "true"
 
 [build.processing]
-  skip_processing = false 
+  skip_processing = false
+
+[functions]
+  node_bundler = "esbuild" 
