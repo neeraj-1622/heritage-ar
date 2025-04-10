@@ -44,7 +44,10 @@ CREATE TABLE IF NOT EXISTS user_favorites (
 );
 
 -- Enable Row Level Security
-ALTER TABLE historical_sites ENABLE ROW LEVEL SECURITY;
+BEGIN;
+  alter table if exists "historical_sites" enable row level security;
+EXCEPTION WHEN OTHERS THEN NULL;
+COMMIT;
 
 -- Create policies for historical_sites
 DROP POLICY IF EXISTS "Historical sites are viewable by everyone" ON historical_sites;
