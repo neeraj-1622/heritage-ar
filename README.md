@@ -1,85 +1,166 @@
+# Heritage AR 🏛️
 
-# HeritageAR
+An immersive Augmented Reality experience for exploring historical monuments and sites. View famous landmarks like the Taj Mahal, Colosseum, and Parthenon in 3D and AR, right from your browser!
 
-An augmented reality application for exploring historical sites.
+## 🌟 Features
 
-## Project Structure
+### 🏰 Historical Sites Exploration
+- Gallery view of historical monuments
+- Detailed information pages for each site
+- User favorites system
+- Educational content about each monument
+
+### 📱 AR & 3D Features
+- View monuments in Augmented Reality
+- Interactive 3D model viewing
+- Real-world object detection
+- Place and manipulate 3D models in your environment
+- Orbit controls for 3D model interaction
+
+### 👤 User Features
+- Secure authentication system
+- Personal profile management
+- Favorite sites collection
+- Password recovery system
+
+## 🛠️ Technology Stack
+
+### Frontend
+- **React** with **TypeScript**
+- **Three.js** & **React Three Fiber** for 3D rendering
+- **@react-three/drei** & **@react-three/xr** for AR
+- **Framer Motion** for animations
+- **Tailwind CSS** & **Shadcn UI** for styling
+- **React Hook Form** with **Zod** validation
+- **Lucide React** for icons
+
+### Backend
+- **Supabase**
+  - PostgreSQL database
+  - Authentication
+  - Storage for assets
+  - Real-time updates
+
+### AR/3D Technologies
+- **WebXR** API
+- **GLB/GLTF** model format
+- **THREE.js** ecosystem
+- Object detection capabilities
+
+## 📁 Project Structure
 
 ```
-HeritageAR/
-├── README.md
-├── public/                # Static assets
+heritage-ar/
 ├── src/
-│   ├── frontend/          # Frontend code
-│   │   ├── api/           # API clients for data fetching
-│   │   └── ...
-│   ├── backend/           # Backend server
-│   │   ├── database/      # Database connection
-│   │   ├── models/        # Data models
-│   │   ├── repositories/  # Data access layer
-│   │   ├── services/      # Business logic
-│   │   ├── middleware/    # Express middlewares
-│   │   ├── scripts/       # Utility scripts
-│   │   ├── server.ts      # Express server entry point
-│   │   └── package.json   # Backend dependencies
-│   ├── components/        # React components
-│   ├── context/           # React contexts
-│   ├── hooks/             # Custom React hooks
-│   ├── lib/               # Utility functions
-│   ├── pages/             # Page components
-│   └── ...
-└── package.json           # Frontend dependencies
+│   ├── components/          # Reusable UI components
+│   │   ├── ui/             # Shadcn UI components
+│   │   ├── ARView.tsx      # AR visualization component
+│   │   └── ARModelViewer.tsx
+│   ├── pages/              # Route pages
+│   ├── lib/                # Utilities and helpers
+│   │   ├── supabase.ts     # Supabase client
+│   │   └── database.types.ts
+│   ├── hooks/              # Custom React hooks
+│   ├── utils/              # Helper functions
+│   │   ├── objectReconstructor.ts
+│   │   └── objectToModelMapper.ts
+│   └── integrations/       # External service integrations
+├── public/
+│   ├── models/            # 3D model files (.glb)
+│   └── images/           # Static images
+├── supabase/             # Supabase configuration
+├── .env                  # Environment variables
+├── tailwind.config.ts    # Tailwind configuration
+├── vite.config.ts        # Vite configuration
+└── package.json          # Dependencies and scripts
 ```
 
-## Getting Started
+## 🗄️ Database Structure
 
-### Prerequisites
+### Historical Sites Table
+- Site information (name, period, location)
+- Descriptions and media URLs
+- AR configuration (coordinates, scaling)
+- Creation and update metadata
 
-- Node.js (v14+)
-- MongoDB (local instance or MongoDB Atlas)
+### User Profiles Table
+- User information
+- Authentication details
+- Profile customization
 
-### Installation
+### User Favorites Table
+- User-site relationships
+- Favorite sites tracking
 
-1. Clone the repository
-2. Install frontend dependencies:
+## 🚀 Getting Started
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/your-username/heritage-ar.git
+   cd heritage-ar
+   ```
+
+2. **Install dependencies**
    ```bash
    npm install
    ```
-3. Install backend dependencies:
-   ```bash
-   cd src/backend
-   npm install
-   ```
 
-### Running the Application
-
-1. Start MongoDB (if using a local instance)
-2. Start the backend server:
+3. **Set up environment variables**
    ```bash
-   cd src/backend
-   npm run dev
+   cp .env.example .env
    ```
-3. Start the frontend development server:
+   Fill in your Supabase and other API credentials.
+
+4. **Start development server**
    ```bash
    npm run dev
    ```
 
-## Features
+## 🔒 Environment Variables
 
-- User authentication (login/register)
-- Explore historical sites
-- View site details
-- AR visualization of historical sites (requires login)
+```env
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_OPENROUTER_API_KEY=your_openrouter_key
+```
 
-## API Endpoints
+## 🌐 Deployment
 
-### Authentication
-- `POST /api/auth/register` - Register a new user
-- `POST /api/auth/login` - Log in a user
+The project is configured for deployment on Netlify:
 
-### Historical Sites
-- `GET /api/sites` - Get all sites (public)
-- `GET /api/sites/:id` - Get a specific site (protected)
-- `POST /api/sites` - Create a new site (protected)
-- `PUT /api/sites/:id` - Update a site (protected)
-- `DELETE /api/sites/:id` - Delete a site (protected)
+1. Connect your GitHub repository
+2. Configure build settings:
+   - Build command: `npm run build`
+   - Publish directory: `dist`
+3. Set environment variables in Netlify dashboard
+4. Deploy!
+
+## 🔐 Security
+
+- Row Level Security (RLS) implemented in Supabase
+- Protected routes for authenticated users
+- Secure environment variable handling
+- API key protection
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
+
+## 📝 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🙏 Acknowledgments
+
+- Three.js community
+- Supabase team
+- React Three Fiber contributors
+- All contributors and users of the project
+
+---
+
+Built with ❤️ using React, Three.js, and Supabase
