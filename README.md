@@ -154,13 +154,6 @@ The project is configured for deployment on Netlify:
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 🙏 Acknowledgments
-
-- Three.js community
-- Supabase team
-- React Three Fiber contributors
-- All contributors and users of the project
-
 ---
 
 Built with ❤️ using React, Three.js, and Supabase
