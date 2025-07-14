@@ -1,11 +1,8 @@
 # Heritage AR 🏛️
 
-<<<<<<< HEAD
 An immersive Augmented Reality experience for exploring historical monuments and sites. View famous landmarks like the Taj Mahal, Colosseum, and Parthenon in 3D and AR, right from your browser! Visit the Website https://heritage-ar.netlify.app/
-=======
-An immersive Augmented Reality experience for exploring historical monuments and sites. View famous landmarks like the Taj Mahal, Colosseum, and Parthenon in 3D and AR, right from your browser!
-Visit the Website https://heritage-ar.netlify.app/
->>>>>>> bdbe15b211db99536c5db083012b309331156ada
+
+---
 
 ## 🌟 Features
 
@@ -27,6 +24,8 @@ Visit the Website https://heritage-ar.netlify.app/
 - Personal profile management
 - Favorite sites collection
 - Password recovery system
+
+---
 
 ## 🛠️ Technology Stack
 
@@ -51,6 +50,8 @@ Visit the Website https://heritage-ar.netlify.app/
 - **GLB/GLTF** model format
 - **THREE.js** ecosystem
 - Object detection capabilities
+
+---
 
 ## 📁 Project Structure
 
@@ -80,6 +81,8 @@ heritage-ar/
 └── package.json          # Dependencies and scripts
 ```
 
+---
+
 ## 🗄️ Database Structure
 
 ### Historical Sites Table
@@ -96,6 +99,8 @@ heritage-ar/
 ### User Favorites Table
 - User-site relationships
 - Favorite sites tracking
+
+---
 
 ## 🚀 Getting Started
 
@@ -121,22 +126,8 @@ heritage-ar/
    npm run dev
    ```
 
-## 🔒 Environment Variables
-
-```env
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-VITE_OPENROUTER_API_KEY=your_openrouter_key
-```
 ---
 
 ## 📝 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-<<<<<<< HEAD
-=======
----
-
-Built with ❤️ using React, Three.js, and Supabase
->>>>>>> bdbe15b211db99536c5db083012b309331156ada
