@@ -1,6 +1,11 @@
 # Heritage AR 🏛️
 
+<<<<<<< HEAD
 An immersive Augmented Reality experience for exploring historical monuments and sites. View famous landmarks like the Taj Mahal, Colosseum, and Parthenon in 3D and AR, right from your browser! Visit the Website https://heritage-ar.netlify.app/
+=======
+An immersive Augmented Reality experience for exploring historical monuments and sites. View famous landmarks like the Taj Mahal, Colosseum, and Parthenon in 3D and AR, right from your browser!
+Visit the Website https://heritage-ar.netlify.app/
+>>>>>>> bdbe15b211db99536c5db083012b309331156ada
 
 ## 🌟 Features
 
@@ -129,3 +134,9 @@ VITE_OPENROUTER_API_KEY=your_openrouter_key
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
+<<<<<<< HEAD
+=======
+---
+
+Built with ❤️ using React, Three.js, and Supabase
+>>>>>>> bdbe15b211db99536c5db083012b309331156ada
